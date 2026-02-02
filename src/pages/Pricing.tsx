@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +14,13 @@ import {
   Star,
   Quote,
   CreditCard,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
+import { useFarm } from "@/hooks/useFarm";
+import { supabase } from "@/integrations/supabase/client";
 import farmBackground from "@/assets/farm-background.jpg";
 
 const features = [
@@ -130,27 +133,135 @@ const pricingTiers = [
 
 export default function Pricing() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const { subscription, isActive, isTrialing, daysRemaining } = useSubscription();
+  const { farm } = useFarm();
+  const { subscription, isActive, isTrialing, daysRemaining, refetch: refetchSubscription } = useSubscription();
   const { toast } = useToast();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "yoco" | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingMethod, setProcessingMethod] = useState<"paypal" | "yoco" | null>(null);
+
+  // Handle payment callbacks
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const provider = searchParams.get("provider");
+    
+    if (paymentStatus === "success") {
+      toast({
+        title: "Payment Successful!",
+        description: `Your subscription is now active. Welcome to FarmTrack!`,
+      });
+      refetchSubscription();
+      // Clear URL params
+      navigate("/pricing", { replace: true });
+    } else if (paymentStatus === "cancelled") {
+      toast({
+        title: "Payment Cancelled",
+        description: "Your payment was cancelled. You can try again when ready.",
+        variant: "destructive",
+      });
+      navigate("/pricing", { replace: true });
+    } else if (paymentStatus === "failed") {
+      toast({
+        title: "Payment Failed",
+        description: "There was an issue processing your payment. Please try again.",
+        variant: "destructive",
+      });
+      navigate("/pricing", { replace: true });
+    }
+  }, [searchParams, toast, navigate, refetchSubscription]);
 
   const handleSelectPlan = (tier: string) => {
     if (!user) {
       navigate("/auth");
       return;
     }
+    if (!farm) {
+      toast({
+        title: "No Farm Found",
+        description: "Please create a farm first before subscribing.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSelectedTier(tier);
   };
 
-  const handlePayment = (method: "paypal" | "yoco") => {
-    setPaymentMethod(method);
-    toast({
-      title: "Payment Integration",
-      description: `${method === "paypal" ? "PayPal" : "Yoco"} payment integration coming soon. Your trial continues!`,
-    });
-    // TODO: Integrate with actual payment providers
+  const handlePayPalPayment = async (tier: string) => {
+    if (!user || !farm) return;
+    
+    setIsProcessing(true);
+    setProcessingMethod("paypal");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("create-paypal-order", {
+        body: {
+          tier,
+          farmId: farm.id,
+          userId: user.id,
+          returnUrl: `${window.location.origin}/pricing?payment=success&provider=paypal`,
+          cancelUrl: `${window.location.origin}/pricing?payment=cancelled`,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      // Redirect to PayPal approval page
+      if (data.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error("No approval URL returned from PayPal");
+      }
+    } catch (error) {
+      console.error("PayPal payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: error instanceof Error ? error.message : "Failed to initiate PayPal payment",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      setProcessingMethod(null);
+    }
+  };
+
+  const handleYocoPayment = async (tier: string) => {
+    if (!user || !farm) return;
+    
+    setIsProcessing(true);
+    setProcessingMethod("yoco");
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("create-yoco-checkout", {
+        body: {
+          tier,
+          farmId: farm.id,
+          userId: user.id,
+          successUrl: `${window.location.origin}/pricing?payment=success&provider=yoco`,
+          cancelUrl: `${window.location.origin}/pricing?payment=cancelled`,
+        },
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error);
+
+      // Redirect to Yoco checkout page
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        throw new Error("No redirect URL returned from Yoco");
+      }
+    } catch (error) {
+      console.error("Yoco payment error:", error);
+      toast({
+        title: "Payment Error",
+        description: error instanceof Error ? error.message : "Failed to initiate Yoco payment",
+        variant: "destructive",
+      });
+      setIsProcessing(false);
+      setProcessingMethod(null);
+    }
   };
 
   return (
@@ -299,22 +410,33 @@ export default function Pricing() {
                       </p>
                       <Button
                         className="w-full bg-[#0070ba] hover:bg-[#005a94]"
-                        onClick={() => handlePayment("paypal")}
+                        onClick={() => handlePayPalPayment(tier.tier)}
+                        disabled={isProcessing}
                       >
-                        <CreditCard className="w-4 h-4 mr-2" />
+                        {isProcessing && processingMethod === "paypal" ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CreditCard className="w-4 h-4 mr-2" />
+                        )}
                         Pay with PayPal
                       </Button>
                       <Button
                         className="w-full bg-[#00b67a] hover:bg-[#009966]"
-                        onClick={() => handlePayment("yoco")}
+                        onClick={() => handleYocoPayment(tier.tier)}
+                        disabled={isProcessing}
                       >
-                        <CreditCard className="w-4 h-4 mr-2" />
+                        {isProcessing && processingMethod === "yoco" ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CreditCard className="w-4 h-4 mr-2" />
+                        )}
                         Pay with Yoco
                       </Button>
                       <Button
                         variant="ghost"
                         className="w-full"
                         onClick={() => setSelectedTier(null)}
+                        disabled={isProcessing}
                       >
                         Cancel
                       </Button>
