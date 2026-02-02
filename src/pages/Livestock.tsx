@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { LivestockCard, Animal, AnimalStatus } from "@/components/LivestockCard";
 import { Button } from "@/components/ui/button";
@@ -19,20 +19,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { mockAnimals } from "@/data/mockData";
 import { Plus, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useFarm } from "@/hooks/useFarm";
+import { supabase } from "@/integrations/supabase/client";
 
 const statusOptions: AnimalStatus[] = ["Healthy", "Under Observation", "Sick", "Pregnant"];
 const typeOptions = ["Cattle", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Horse"];
 
 export default function Livestock() {
-  const [animals, setAnimals] = useState<Animal[]>(mockAnimals);
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { farm } = useFarm();
 
   const [newAnimal, setNewAnimal] = useState({
     name: "",
@@ -44,6 +47,47 @@ export default function Livestock() {
     status: "Healthy" as AnimalStatus,
     feedType: "",
   });
+
+  useEffect(() => {
+    if (!farm?.id) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchLivestock = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("livestock")
+        .select("*")
+        .eq("farm_id", farm.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching livestock:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load livestock data.",
+          variant: "destructive",
+        });
+      } else {
+        setAnimals(data.map(a => ({
+          id: a.id,
+          name: a.name,
+          type: a.type,
+          breed: a.breed || "",
+          tag: a.tag,
+          age: a.age || "",
+          weight: a.weight || "",
+          status: a.status as AnimalStatus,
+          lastFed: a.last_fed ? new Date(a.last_fed).toLocaleString() : "Not yet fed",
+          feedType: a.feed_type || "",
+        })));
+      }
+      setLoading(false);
+    };
+
+    fetchLivestock();
+  }, [farm?.id, toast]);
 
   const filteredAnimals = animals.filter((animal) => {
     const matchesSearch = 
@@ -57,7 +101,16 @@ export default function Livestock() {
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const handleAddAnimal = () => {
+  const handleAddAnimal = async () => {
+    if (!farm?.id) {
+      toast({
+        title: "No Farm Selected",
+        description: "Please select a farm first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!newAnimal.name || !newAnimal.type || !newAnimal.tag) {
       toast({
         title: "Missing Information",
@@ -67,10 +120,43 @@ export default function Livestock() {
       return;
     }
 
+    const { data, error } = await supabase
+      .from("livestock")
+      .insert({
+        farm_id: farm.id,
+        name: newAnimal.name,
+        type: newAnimal.type,
+        breed: newAnimal.breed || null,
+        tag: newAnimal.tag,
+        age: newAnimal.age || null,
+        weight: newAnimal.weight || null,
+        status: newAnimal.status,
+        feed_type: newAnimal.feedType || null,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error adding animal:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add animal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const animal: Animal = {
-      id: Date.now().toString(),
-      ...newAnimal,
+      id: data.id,
+      name: data.name,
+      type: data.type,
+      breed: data.breed || "",
+      tag: data.tag,
+      age: data.age || "",
+      weight: data.weight || "",
+      status: data.status as AnimalStatus,
       lastFed: "Not yet fed",
+      feedType: data.feed_type || "",
     };
 
     setAnimals([animal, ...animals]);
@@ -92,16 +178,41 @@ export default function Livestock() {
     });
   };
 
-  const handleFeed = (id: string) => {
+  const handleFeed = async (id: string) => {
     const animal = animals.find((a) => a.id === id);
+    
+    await supabase
+      .from("livestock")
+      .update({ last_fed: new Date().toISOString() })
+      .eq("id", id);
+
+    setAnimals(animals.map(a => 
+      a.id === id ? { ...a, lastFed: new Date().toLocaleString() } : a
+    ));
+
     toast({
       title: "Feeding Recorded",
       description: `${animal?.name} has been fed.`,
     });
   };
 
-  const handleRemove = (id: string) => {
+  const handleRemove = async (id: string) => {
     const animal = animals.find((a) => a.id === id);
+    
+    const { error } = await supabase
+      .from("livestock")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove animal.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setAnimals(animals.filter((a) => a.id !== id));
     toast({
       title: "Animal Removed",
@@ -116,6 +227,19 @@ export default function Livestock() {
     Sick: animals.filter((a) => a.status === "Sick").length,
     Pregnant: animals.filter((a) => a.status === "Pregnant").length,
   };
+
+  if (!farm) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-foreground mb-2">No Farm Selected</h2>
+            <p className="text-muted-foreground">Create or select a farm to manage livestock.</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -319,20 +443,32 @@ export default function Livestock() {
         </div>
 
         {/* Animal Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredAnimals.map((animal) => (
-            <LivestockCard
-              key={animal.id}
-              animal={animal}
-              onFeed={handleFeed}
-              onRemove={handleRemove}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredAnimals.map((animal) => (
+              <LivestockCard
+                key={animal.id}
+                animal={animal}
+                onFeed={handleFeed}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+        )}
 
-        {filteredAnimals.length === 0 && (
+        {!loading && filteredAnimals.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No animals found matching your criteria.</p>
+            <p className="text-muted-foreground">
+              {animals.length === 0 
+                ? "No animals added yet. Click 'Add Animal' to get started."
+                : "No animals found matching your criteria."}
+            </p>
           </div>
         )}
       </div>
