@@ -41,7 +41,7 @@ const mockZones: TrackingZone[] = [
     id: "1", 
     name: "Main Grazing Area", 
     coordinates: [[-25.7400, 28.2200], [-25.7400, 28.2350], [-25.7520, 28.2350], [-25.7520, 28.2200]], 
-    color: "#2d5a27" 
+    color: "hsl(var(--primary))" 
   },
 ];
 
@@ -98,7 +98,7 @@ export default function Tracking() {
       id: Date.now().toString(),
       name: `Zone ${zones.length + 1}`,
       coordinates,
-      color: "#2d5a27",
+      color: "hsl(var(--primary))",
     };
     setZones([...zones, newZone]);
     
