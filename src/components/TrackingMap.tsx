@@ -1,9 +1,10 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, useMapEvents } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import "leaflet-draw";
+import "leaflet-draw/dist/leaflet.draw.css";
 
-// Fix for default marker icons in React-Leaflet
+// Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -45,33 +46,37 @@ interface TrackingMapProps {
   isAddingOutpost?: boolean;
 }
 
-function MapClickHandler({ isAddingOutpost, onAddOutpost }: { 
-  isAddingOutpost: boolean; 
-  onAddOutpost?: (position: [number, number]) => void 
-}) {
-  const map = useMap();
+function getThemeHsl(cssVar: string, fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement)
+    .getPropertyValue(cssVar)
+    .trim();
+  return raw ? `hsl(${raw})` : fallback;
+}
 
-  useMapEvents({
-    click(e) {
-      if (isAddingOutpost && onAddOutpost) {
-        onAddOutpost([e.latlng.lat, e.latlng.lng]);
-      }
-    }
-  });
+function buildPopupEl(title: string, subtitle: string, meta?: string) {
+  const root = document.createElement("div");
+  root.className = "p-2";
 
-  useEffect(() => {
-    if (isAddingOutpost) {
-      map.getContainer().style.cursor = "crosshair";
-    } else {
-      map.getContainer().style.cursor = "";
-    }
-    
-    return () => {
-      map.getContainer().style.cursor = "";
-    };
-  }, [isAddingOutpost, map]);
+  const h = document.createElement("h4");
+  h.className = "font-semibold text-foreground";
+  h.textContent = title;
 
-  return null;
+  const sub = document.createElement("p");
+  sub.className = "text-sm text-muted-foreground";
+  sub.textContent = subtitle;
+
+  root.appendChild(h);
+  root.appendChild(sub);
+
+  if (meta) {
+    const m = document.createElement("p");
+    m.className = "text-xs text-muted-foreground mt-1";
+    m.textContent = meta;
+    root.appendChild(m);
+  }
+
+  return root;
 }
 
 export function TrackingMap({
@@ -79,60 +84,171 @@ export function TrackingMap({
   zoom = 13,
   outposts,
   zones,
+  onAddZone,
   onAddOutpost,
   isAddingOutpost = false,
 }: TrackingMapProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const zonesLayerRef = useRef<L.LayerGroup | null>(null);
+  const outpostsLayerRef = useRef<L.LayerGroup | null>(null);
+  const primaryColorRef = useRef<string>("hsl(120 30% 20%)");
+  const onAddOutpostRef = useRef<typeof onAddOutpost>(onAddOutpost);
+  const onAddZoneRef = useRef<TrackingMapProps["onAddZone"]>(onAddZone);
+
+  useEffect(() => {
+    onAddOutpostRef.current = onAddOutpost;
+  }, [onAddOutpost]);
+
+  useEffect(() => {
+    onAddZoneRef.current = onAddZone;
+  }, [onAddZone]);
+
+  useEffect(() => {
+    // Initialize map once (plain Leaflet to avoid React Context consumer crashes)
+    if (mapRef.current) return;
+    if (!containerRef.current) return;
+
+    primaryColorRef.current = getThemeHsl("--primary", "hsl(120 30% 20%)");
+
+    const map = L.map(containerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: true,
+    }).setView(center, zoom);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    zonesLayerRef.current = L.layerGroup().addTo(map);
+    outpostsLayerRef.current = L.layerGroup().addTo(map);
+
+    const drawControl = new (L.Control as any).Draw({
+      position: "topright",
+      draw: {
+        rectangle: {
+          shapeOptions: {
+            color: primaryColorRef.current,
+            fillColor: primaryColorRef.current,
+            fillOpacity: 0.2,
+            weight: 2,
+          },
+        },
+        polygon: {
+          allowIntersection: false,
+          shapeOptions: {
+            color: primaryColorRef.current,
+            fillColor: primaryColorRef.current,
+            fillOpacity: 0.2,
+            weight: 2,
+          },
+        },
+        circle: false,
+        circlemarker: false,
+        marker: false,
+        polyline: false,
+      },
+      edit: false,
+    });
+
+    map.addControl(drawControl);
+
+    map.on((L as any).Draw.Event.CREATED, (e: any) => {
+      if (!e?.layer) return;
+      if (e.layerType !== "polygon" && e.layerType !== "rectangle") return;
+
+      const latLngs = e.layer.getLatLngs?.()?.[0] ?? [];
+      const coordinates = latLngs.map((latlng: L.LatLng) => [
+        latlng.lat,
+        latlng.lng,
+      ]) as [number, number][];
+
+      onAddZoneRef.current?.(coordinates);
+    });
+
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep view in sync
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.setView(center, zoom);
+  }, [center[0], center[1], zoom]);
+
+  // Toggle click-to-add-outpost mode
+  useEffect(() => {
+    const map = mapRef.current;
+    const container = map?.getContainer();
+    if (!map || !container) return;
+
+    const handleClick = (e: L.LeafletMouseEvent) => {
+      if (!isAddingOutpost) return;
+      onAddOutpostRef.current?.([e.latlng.lat, e.latlng.lng]);
+    };
+
+    map.on("click", handleClick);
+    container.style.cursor = isAddingOutpost ? "crosshair" : "";
+
+    return () => {
+      map.off("click", handleClick);
+      container.style.cursor = "";
+    };
+  }, [isAddingOutpost]);
+
+  // Render zones
+  useEffect(() => {
+    const layer = zonesLayerRef.current;
+    if (!layer) return;
+
+    layer.clearLayers();
+
+    zones.forEach((zone) => {
+      const color = zone.color || primaryColorRef.current;
+
+      const polygon = L.polygon(zone.coordinates as any, {
+        color,
+        fillColor: color,
+        fillOpacity: 0.2,
+        weight: 2,
+      });
+
+      polygon.bindPopup(buildPopupEl(zone.name, "Tracking zone"));
+      polygon.addTo(layer);
+    });
+  }, [zones]);
+
+  // Render outposts
+  useEffect(() => {
+    const layer = outpostsLayerRef.current;
+    if (!layer) return;
+
+    layer.clearLayers();
+
+    outposts.forEach((outpost) => {
+      const marker = L.marker(outpost.position as any, { icon: outpostIcon });
+      marker.bindPopup(
+        buildPopupEl(
+          outpost.name,
+          outpost.type,
+          `${outpost.position[0].toFixed(4)}, ${outpost.position[1].toFixed(4)}`
+        )
+      );
+      marker.addTo(layer);
+    });
+  }, [outposts]);
+
   return (
-    <div className="h-full w-full rounded-xl overflow-hidden border border-border">
-      <MapContainer
-        center={center}
-        zoom={zoom}
-        className="h-full w-full"
-        scrollWheelZoom={true}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
-        <MapClickHandler isAddingOutpost={isAddingOutpost} onAddOutpost={onAddOutpost} />
-
-        {/* Render existing zones as polygons */}
-        {zones.map((zone) => (
-          <Polygon
-            key={zone.id}
-            positions={zone.coordinates}
-            pathOptions={{ 
-              color: zone.color, 
-              fillColor: zone.color,
-              fillOpacity: 0.2,
-              weight: 2
-            }}
-          >
-            <Popup>
-              <div className="p-2">
-                <h4 className="font-semibold">{zone.name}</h4>
-                <p className="text-sm text-gray-600">Tracking Zone</p>
-              </div>
-            </Popup>
-          </Polygon>
-        ))}
-
-        {/* Render outposts */}
-        {outposts.map((outpost) => (
-          <Marker key={outpost.id} position={outpost.position} icon={outpostIcon}>
-            <Popup>
-              <div className="p-2">
-                <h4 className="font-semibold">{outpost.name}</h4>
-                <p className="text-sm text-gray-600 capitalize">{outpost.type}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {outpost.position[0].toFixed(4)}, {outpost.position[1].toFixed(4)}
-                </p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
+    <div
+      ref={containerRef}
+      className="h-full w-full rounded-xl overflow-hidden border border-border"
+      aria-label="Tracking map"
+    />
   );
 }
