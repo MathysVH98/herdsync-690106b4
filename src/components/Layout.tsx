@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
+import { FarmSwitcher } from "@/components/FarmSwitcher";
 import farmBackground from "@/assets/farm-background.jpg";
 
 interface LayoutProps {
@@ -82,17 +83,15 @@ export function Layout({ children }: LayoutProps) {
             <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
               <Wheat className="w-6 h-6 text-sidebar-primary-foreground" />
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-sidebar-foreground font-display">
                 FarmTrack
               </h1>
-              <p className="text-xs text-sidebar-foreground/60">
-                {farm?.name || "Farm Management"}
-              </p>
+              <FarmSwitcher />
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="ml-auto lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
+              className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
             >
               <X className="w-5 h-5" />
             </button>
@@ -149,9 +148,6 @@ export function Layout({ children }: LayoutProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-sidebar-foreground truncate">
                     {user.email}
-                  </p>
-                  <p className="text-xs text-sidebar-foreground/60 truncate">
-                    {farm?.name || "No farm"}
                   </p>
                 </div>
                 <button
