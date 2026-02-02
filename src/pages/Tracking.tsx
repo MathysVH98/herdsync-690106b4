@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { TrackingMap, Outpost, TrackingZone } from "@/components/TrackingMap";
+import { LocationSearch } from "@/components/LocationSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +27,8 @@ import {
   Wifi,
   Layers,
   Target,
-  Trash2
+  Trash2,
+  Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -146,6 +148,22 @@ export default function Tracking() {
               )}
             </Button>
           </div>
+        </div>
+
+        {/* Location Search */}
+        <div className="card-elevated p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Search className="w-4 h-4 text-primary" />
+            <h3 className="font-display font-semibold text-foreground">Search Location</h3>
+          </div>
+          <LocationSearch 
+            onLocationSelect={(lat, lng, name) => {
+              toast({
+                title: "Location Found",
+                description: `Navigated to ${name.split(",")[0]}`,
+              });
+            }}
+          />
         </div>
 
         {isAddingOutpost && (
