@@ -6,15 +6,19 @@ import { CommodityDetailDialog } from "@/components/market/CommodityDetailDialog
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TrendingUp, Search, RefreshCw, AlertCircle } from "lucide-react";
+import { TrendingUp, Search, RefreshCw, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MarketArea() {
   const { data, isLoading, error, refetch, isFetching } = useMarketPrices();
   const [selectedCommodity, setSelectedCommodity] =
     useState<CommodityWithPrices | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isFetchingPrices, setIsFetchingPrices] = useState(false);
+  const { toast } = useToast();
 
   const filteredData = data?.groupedByCategory.map((group) => ({
     ...group,
@@ -24,6 +28,40 @@ export default function MarketArea() {
   })).filter((group) => group.commodities.length > 0);
 
   const today = format(new Date(), "EEEE, dd MMMM yyyy");
+
+  const handleFetchLatestPrices = async () => {
+    setIsFetchingPrices(true);
+    try {
+      const { data: result, error: fetchError } = await supabase.functions.invoke(
+        "fetch-market-prices"
+      );
+
+      if (fetchError) {
+        throw fetchError;
+      }
+
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      toast({
+        title: "Prices Updated",
+        description: `Successfully updated ${result.prices?.length || 0} commodity prices from ${result.source}`,
+      });
+
+      // Refetch to show new prices
+      refetch();
+    } catch (err) {
+      console.error("Error fetching prices:", err);
+      toast({
+        title: "Failed to Update Prices",
+        description: err instanceof Error ? err.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsFetchingPrices(false);
+    }
+  };
 
   return (
     <Layout>
@@ -44,6 +82,14 @@ export default function MarketArea() {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              onClick={handleFetchLatestPrices}
+              disabled={isFetchingPrices}
+              className="bg-gradient-primary"
+            >
+              <Sparkles className={`w-4 h-4 mr-2 ${isFetchingPrices ? "animate-pulse" : ""}`} />
+              {isFetchingPrices ? "Fetching..." : "Get Latest Prices"}
+            </Button>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -58,6 +104,7 @@ export default function MarketArea() {
               size="icon"
               onClick={() => refetch()}
               disabled={isFetching}
+              title="Refresh from database"
             >
               <RefreshCw
                 className={`w-4 h-4 ${isFetching ? "animate-spin" : ""}`}
@@ -119,11 +166,11 @@ export default function MarketArea() {
         )}
 
         {/* Info Banner */}
-        <div className="bg-muted/50 border border-border rounded-xl p-4">
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">
-            <strong>Note:</strong> Prices shown are sample data. You can manually
-            update prices through the database or connect a live market data
-            source for real-time pricing.
+            <strong className="text-foreground">💡 AI-Powered Prices:</strong> Click "Get Latest Prices" 
+            to fetch current South African agricultural commodity prices using AI. 
+            Prices are estimates based on market knowledge and trends.
           </p>
         </div>
       </div>
