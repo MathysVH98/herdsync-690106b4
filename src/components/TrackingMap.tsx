@@ -1,8 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet-draw";
-import "leaflet-draw/dist/leaflet.draw.css";
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -59,11 +57,13 @@ function buildPopupEl(title: string, subtitle: string, meta?: string) {
   root.className = "p-2";
 
   const h = document.createElement("h4");
-  h.className = "font-semibold text-foreground";
+  h.className = "font-semibold";
+  h.style.color = "#1a1a1a";
   h.textContent = title;
 
   const sub = document.createElement("p");
-  sub.className = "text-sm text-muted-foreground";
+  sub.className = "text-sm";
+  sub.style.color = "#666";
   sub.textContent = subtitle;
 
   root.appendChild(h);
@@ -71,7 +71,8 @@ function buildPopupEl(title: string, subtitle: string, meta?: string) {
 
   if (meta) {
     const m = document.createElement("p");
-    m.className = "text-xs text-muted-foreground mt-1";
+    m.className = "text-xs mt-1";
+    m.style.color = "#888";
     m.textContent = meta;
     root.appendChild(m);
   }
@@ -80,11 +81,10 @@ function buildPopupEl(title: string, subtitle: string, meta?: string) {
 }
 
 export function TrackingMap({
-  center = [-25.7479, 28.2293], // Default: Pretoria, South Africa
+  center = [-25.7479, 28.2293],
   zoom = 13,
   outposts,
   zones,
-  onAddZone,
   onAddOutpost,
   isAddingOutpost = false,
 }: TrackingMapProps) {
@@ -94,18 +94,27 @@ export function TrackingMap({
   const outpostsLayerRef = useRef<L.LayerGroup | null>(null);
   const primaryColorRef = useRef<string>("hsl(120 30% 20%)");
   const onAddOutpostRef = useRef<typeof onAddOutpost>(onAddOutpost);
-  const onAddZoneRef = useRef<TrackingMapProps["onAddZone"]>(onAddZone);
 
   useEffect(() => {
     onAddOutpostRef.current = onAddOutpost;
   }, [onAddOutpost]);
 
+  // Expose flyTo for external search
+  const flyTo = useCallback((lat: number, lng: number, zoomLevel?: number) => {
+    if (mapRef.current) {
+      mapRef.current.flyTo([lat, lng], zoomLevel ?? 15, { duration: 1.5 });
+    }
+  }, []);
+
+  // Attach flyTo to window for external access
   useEffect(() => {
-    onAddZoneRef.current = onAddZone;
-  }, [onAddZone]);
+    (window as any).__trackingMapFlyTo = flyTo;
+    return () => {
+      delete (window as any).__trackingMapFlyTo;
+    };
+  }, [flyTo]);
 
   useEffect(() => {
-    // Initialize map once (plain Leaflet to avoid React Context consumer crashes)
     if (mapRef.current) return;
     if (!containerRef.current) return;
 
@@ -124,49 +133,6 @@ export function TrackingMap({
     zonesLayerRef.current = L.layerGroup().addTo(map);
     outpostsLayerRef.current = L.layerGroup().addTo(map);
 
-    const drawControl = new (L.Control as any).Draw({
-      position: "topright",
-      draw: {
-        rectangle: {
-          shapeOptions: {
-            color: primaryColorRef.current,
-            fillColor: primaryColorRef.current,
-            fillOpacity: 0.2,
-            weight: 2,
-          },
-        },
-        polygon: {
-          allowIntersection: false,
-          shapeOptions: {
-            color: primaryColorRef.current,
-            fillColor: primaryColorRef.current,
-            fillOpacity: 0.2,
-            weight: 2,
-          },
-        },
-        circle: false,
-        circlemarker: false,
-        marker: false,
-        polyline: false,
-      },
-      edit: false,
-    });
-
-    map.addControl(drawControl);
-
-    map.on((L as any).Draw.Event.CREATED, (e: any) => {
-      if (!e?.layer) return;
-      if (e.layerType !== "polygon" && e.layerType !== "rectangle") return;
-
-      const latLngs = e.layer.getLatLngs?.()?.[0] ?? [];
-      const coordinates = latLngs.map((latlng: L.LatLng) => [
-        latlng.lat,
-        latlng.lng,
-      ]) as [number, number][];
-
-      onAddZoneRef.current?.(coordinates);
-    });
-
     mapRef.current = map;
 
     return () => {
@@ -180,7 +146,7 @@ export function TrackingMap({
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.setView(center, zoom);
-  }, [center[0], center[1], zoom]);
+  }, [center, zoom]);
 
   // Toggle click-to-add-outpost mode
   useEffect(() => {
@@ -212,7 +178,7 @@ export function TrackingMap({
     zones.forEach((zone) => {
       const color = zone.color || primaryColorRef.current;
 
-      const polygon = L.polygon(zone.coordinates as any, {
+      const polygon = L.polygon(zone.coordinates as L.LatLngExpression[], {
         color,
         fillColor: color,
         fillOpacity: 0.2,
@@ -232,7 +198,7 @@ export function TrackingMap({
     layer.clearLayers();
 
     outposts.forEach((outpost) => {
-      const marker = L.marker(outpost.position as any, { icon: outpostIcon });
+      const marker = L.marker(outpost.position as L.LatLngExpression, { icon: outpostIcon });
       marker.bindPopup(
         buildPopupEl(
           outpost.name,
