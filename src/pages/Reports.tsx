@@ -16,7 +16,9 @@ import {
   Cell,
   Legend
 } from "recharts";
-import { TrendingUp, DollarSign, Scale, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Scale, Calendar, FileDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useReportPdf } from "@/hooks/useReportPdf";
 
 const COLORS = ['hsl(142, 45%, 35%)', 'hsl(38, 85%, 55%)', 'hsl(200, 80%, 50%)', 'hsl(0, 72%, 51%)', 'hsl(280, 60%, 50%)'];
 
@@ -40,6 +42,7 @@ export default function Reports() {
   const [livestock, setLivestock] = useState<LivestockItem[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const { generatePdf } = useReportPdf();
 
   useEffect(() => {
     if (!farm?.id) {
@@ -123,17 +126,43 @@ export default function Reports() {
     );
   }
 
+  const handleExportPdf = () => {
+    if (!farm) return;
+    
+    generatePdf({
+      farmName: farm.name,
+      totalDailyCost,
+      totalWeeklyCost,
+      totalMonthlyCost,
+      totalAnimals: livestock.length,
+      livestockStats,
+      dailyCosts,
+      healthData,
+      feedConsumption,
+    });
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold font-display text-foreground">
-            Reports & Analytics
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive insights into your farm operations
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold font-display text-foreground">
+              Reports & Analytics
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive insights into your farm operations
+            </p>
+          </div>
+          <Button 
+            onClick={handleExportPdf} 
+            disabled={loading || (livestock.length === 0 && inventory.length === 0)}
+            className="gap-2"
+          >
+            <FileDown className="h-4 w-4" />
+            Export PDF
+          </Button>
         </div>
 
         {/* Cost Summary */}
