@@ -22,6 +22,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
+import farmBackground from "@/assets/farm-background.jpg";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -53,7 +54,10 @@ export function Layout({ children }: LayoutProps) {
   const { farm } = useFarm();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div 
+      className="min-h-screen flex farm-background"
+      style={{ '--farm-bg-image': `url(${farmBackground})` } as React.CSSProperties}
+    >
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

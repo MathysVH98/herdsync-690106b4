@@ -138,17 +138,40 @@
   body {
     @apply text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
-    background: 
-      radial-gradient(ellipse at 20% 0%, hsl(142 30% 92% / 0.4) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 100%, hsl(38 40% 90% / 0.5) 0%, transparent 50%),
-      radial-gradient(ellipse at 60% 50%, hsl(40 30% 95% / 0.3) 0%, transparent 40%),
-      linear-gradient(180deg, hsl(40 35% 97%) 0%, hsl(40 25% 94%) 50%, hsl(38 30% 92%) 100%);
-    background-attachment: fixed;
     min-height: 100vh;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Playfair Display', serif;
+  }
+  
+  /* Farm background applied to app container */
+  .farm-background {
+    position: relative;
+  }
+  
+  .farm-background::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--farm-bg-image);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+  }
+  
+  .farm-background::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(
+      to bottom,
+      hsl(40 30% 97% / 0.85) 0%,
+      hsl(40 30% 97% / 0.75) 30%,
+      hsl(40 30% 97% / 0.80) 100%
+    );
   }
 }
 
