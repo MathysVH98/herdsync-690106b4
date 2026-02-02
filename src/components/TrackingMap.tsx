@@ -2,6 +2,8 @@ import { useEffect, useRef, useCallback } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+const DEFAULT_CENTER: [number, number] = [-25.7479, 28.2293];
+
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -82,7 +84,7 @@ function buildPopupEl(title: string, subtitle: string, meta?: string) {
 }
 
 export function TrackingMap({
-  center = [-25.7479, 28.2293],
+  center = DEFAULT_CENTER,
   zoom = 13,
   outposts,
   zones,
@@ -151,7 +153,8 @@ export function TrackingMap({
   useEffect(() => {
     if (!mapRef.current) return;
     mapRef.current.setView(center, zoom);
-  }, [center, zoom]);
+    // IMPORTANT: depend on primitive values to avoid resetting view on every render
+  }, [center[0], center[1], zoom]);
 
   // Toggle click mode
   useEffect(() => {
