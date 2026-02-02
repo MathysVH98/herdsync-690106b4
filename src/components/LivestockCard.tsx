@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Utensils, Stethoscope, Trash2 } from "lucide-react";
+import { getAnimalImage } from "@/utils/animalImages";
 
 export type AnimalStatus = "Healthy" | "Under Observation" | "Sick" | "Pregnant";
 
@@ -39,23 +40,18 @@ const statusStyles: Record<AnimalStatus, string> = {
   "Pregnant": "badge-pregnant",
 };
 
-const animalEmojis: Record<string, string> = {
-  "Cattle": "🐄",
-  "Sheep": "🐑",
-  "Goat": "🐐",
-  "Pig": "🐷",
-  "Chicken": "🐔",
-  "Duck": "🦆",
-  "Horse": "🐴",
-};
 
 export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove }: LivestockCardProps) {
   return (
     <div className="card-elevated p-5 group">
       <div className="flex items-start gap-4">
         {/* Animal Avatar */}
-        <div className="w-14 h-14 rounded-xl bg-secondary flex items-center justify-center text-3xl shrink-0">
-          {animalEmojis[animal.type] || "🐾"}
+        <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-border">
+          <img 
+            src={getAnimalImage(animal.type)} 
+            alt={animal.type}
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* Info */}
