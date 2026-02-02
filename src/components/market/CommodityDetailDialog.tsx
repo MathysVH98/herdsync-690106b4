@@ -44,8 +44,8 @@ export function CommodityDetailDialog({
 
   const getTrendColor = () => {
     if (priceChange === null) return "text-muted-foreground";
-    if (priceChange > 0) return "text-destructive";
-    if (priceChange < 0) return "text-success";
+    if (priceChange > 0) return "text-success";
+    if (priceChange < 0) return "text-destructive";
     return "text-muted-foreground";
   };
 
