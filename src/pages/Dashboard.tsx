@@ -11,6 +11,7 @@ import {
   getLivestockStats,
   getLowStockItems 
 } from "@/data/mockData";
+import { getAnimalImage } from "@/utils/animalImages";
 import { 
   PawPrint, 
   Heart, 
@@ -97,19 +98,21 @@ export default function Dashboard() {
               <h3 className="font-display font-semibold text-lg text-foreground mb-4">
                 Livestock Breakdown
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {Object.entries(stats.byType).map(([type, count]) => (
-                  <div key={type} className="bg-muted/50 rounded-lg p-4 text-center">
-                    <p className="text-3xl mb-2">
-                      {type === "Cattle" ? "🐄" : 
-                       type === "Sheep" ? "🐑" : 
-                       type === "Goat" ? "🐐" : 
-                       type === "Pig" ? "🐷" : 
-                       type === "Chicken" ? "🐔" : 
-                       type === "Horse" ? "🐴" : "🐾"}
-                    </p>
-                    <p className="text-2xl font-bold text-foreground">{count}</p>
-                    <p className="text-sm text-muted-foreground">{type}</p>
+                  <div key={type} className="bg-muted/50 rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-all hover:shadow-md">
+                    <div className="aspect-square relative">
+                      <img 
+                        src={getAnimalImage(type)} 
+                        alt={type}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute bottom-2 left-2 right-2">
+                        <p className="text-2xl font-bold text-white">{count}</p>
+                        <p className="text-xs text-white/90">{type}</p>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
