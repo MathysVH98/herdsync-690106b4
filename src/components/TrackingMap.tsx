@@ -103,20 +103,20 @@ export function TrackingMap({
     onMapClickRef.current = onMapClick;
   }, [onMapClick]);
 
-  // Expose flyTo for external search
-  const flyTo = useCallback((lat: number, lng: number, zoomLevel?: number) => {
-    if (mapRef.current) {
-      mapRef.current.flyTo([lat, lng], zoomLevel ?? 15, { duration: 1.5 });
-    }
-  }, []);
-
-  // Attach flyTo to window for external access
+  // Expose flyTo for external search - attach directly to window without useCallback dependency
   useEffect(() => {
-    (window as any).__trackingMapFlyTo = flyTo;
+    const flyToFn = (lat: number, lng: number, zoomLevel?: number) => {
+      if (mapRef.current) {
+        mapRef.current.flyTo([lat, lng], zoomLevel ?? 15, { duration: 1.5 });
+      }
+    };
+    
+    (window as any).__trackingMapFlyTo = flyToFn;
+    
     return () => {
       delete (window as any).__trackingMapFlyTo;
     };
-  }, [flyTo]);
+  }, []);
 
   useEffect(() => {
     if (mapRef.current) return;
