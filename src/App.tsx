@@ -14,6 +14,7 @@ import Reports from "./pages/Reports";
 import Tracking from "./pages/Tracking";
 import Audit from "./pages/Audit";
 import Auth from "./pages/Auth";
+import MarketArea from "./pages/MarketArea";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
 import DocumentVault from "./pages/DocumentVault";
 import LabourOHS from "./pages/LabourOHS";
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/audit" element={<Audit />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/tracking" element={<Tracking />} />
+              <Route path="/market" element={<MarketArea />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/compliance" element={<ComplianceDashboard />} />
               <Route path="/compliance/audit-pack" element={<AuditPackBuilder />} />
