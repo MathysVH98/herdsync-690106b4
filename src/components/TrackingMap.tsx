@@ -1,9 +1,7 @@
-import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, FeatureGroup, Marker, Popup, useMap } from "react-leaflet";
-import { EditControl } from "react-leaflet-draw";
+import { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polygon, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "leaflet-draw/dist/leaflet.draw.css";
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -53,21 +51,25 @@ function MapClickHandler({ isAddingOutpost, onAddOutpost }: {
 }) {
   const map = useMap();
 
+  useMapEvents({
+    click(e) {
+      if (isAddingOutpost && onAddOutpost) {
+        onAddOutpost([e.latlng.lat, e.latlng.lng]);
+      }
+    }
+  });
+
   useEffect(() => {
-    if (!isAddingOutpost || !onAddOutpost) return;
-
-    const handleClick = (e: L.LeafletMouseEvent) => {
-      onAddOutpost([e.latlng.lat, e.latlng.lng]);
-    };
-
-    map.on("click", handleClick);
-    map.getContainer().style.cursor = "crosshair";
-
+    if (isAddingOutpost) {
+      map.getContainer().style.cursor = "crosshair";
+    } else {
+      map.getContainer().style.cursor = "";
+    }
+    
     return () => {
-      map.off("click", handleClick);
       map.getContainer().style.cursor = "";
     };
-  }, [isAddingOutpost, onAddOutpost, map]);
+  }, [isAddingOutpost, map]);
 
   return null;
 }
@@ -78,25 +80,10 @@ export function TrackingMap({
   outposts,
   zones,
   onAddOutpost,
-  onAddZone,
   isAddingOutpost = false,
 }: TrackingMapProps) {
-  const featureGroupRef = useRef<L.FeatureGroup>(null);
-
-  const handleCreated = (e: any) => {
-    const { layer, layerType } = e;
-
-    if (layerType === "polygon" || layerType === "rectangle") {
-      const coordinates = layer.getLatLngs()[0].map((latlng: L.LatLng) => [
-        latlng.lat,
-        latlng.lng,
-      ]) as [number, number][];
-      onAddZone?.(coordinates);
-    }
-  };
-
   return (
-    <div className="map-container h-full w-full">
+    <div className="h-full w-full rounded-xl overflow-hidden border border-border">
       <MapContainer
         center={center}
         zoom={zoom}
@@ -110,37 +97,25 @@ export function TrackingMap({
 
         <MapClickHandler isAddingOutpost={isAddingOutpost} onAddOutpost={onAddOutpost} />
 
-        <FeatureGroup ref={featureGroupRef}>
-          <EditControl
-            position="topright"
-            onCreated={handleCreated}
-            draw={{
-              rectangle: {
-                shapeOptions: {
-                  color: "#2d5a27",
-                  fillOpacity: 0.2,
-                },
-              },
-              polygon: {
-                allowIntersection: false,
-                shapeOptions: {
-                  color: "#2d5a27",
-                  fillOpacity: 0.2,
-                },
-              },
-              circle: false,
-              circlemarker: false,
-              marker: false,
-              polyline: false,
-            }}
-          />
-        </FeatureGroup>
-
-        {/* Render existing zones */}
+        {/* Render existing zones as polygons */}
         {zones.map((zone) => (
-          <FeatureGroup key={zone.id}>
-            {/* Zone polygons would be rendered here */}
-          </FeatureGroup>
+          <Polygon
+            key={zone.id}
+            positions={zone.coordinates}
+            pathOptions={{ 
+              color: zone.color, 
+              fillColor: zone.color,
+              fillOpacity: 0.2,
+              weight: 2
+            }}
+          >
+            <Popup>
+              <div className="p-2">
+                <h4 className="font-semibold">{zone.name}</h4>
+                <p className="text-sm text-gray-600">Tracking Zone</p>
+              </div>
+            </Popup>
+          </Polygon>
         ))}
 
         {/* Render outposts */}
@@ -148,9 +123,9 @@ export function TrackingMap({
           <Marker key={outpost.id} position={outpost.position} icon={outpostIcon}>
             <Popup>
               <div className="p-2">
-                <h4 className="font-semibold text-foreground">{outpost.name}</h4>
-                <p className="text-sm text-muted-foreground capitalize">{outpost.type}</p>
-                <p className="text-xs text-muted-foreground mt-1">
+                <h4 className="font-semibold">{outpost.name}</h4>
+                <p className="text-sm text-gray-600 capitalize">{outpost.type}</p>
+                <p className="text-xs text-gray-500 mt-1">
                   {outpost.position[0].toFixed(4)}, {outpost.position[1].toFixed(4)}
                 </p>
               </div>
