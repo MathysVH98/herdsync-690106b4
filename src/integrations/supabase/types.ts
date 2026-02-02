@@ -14,16 +14,450 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      audit_packs: {
+        Row: {
+          audit_type: Database["public"]["Enums"]["audit_type"]
+          created_at: string
+          date_range_end: string | null
+          date_range_start: string | null
+          document_ids: string[] | null
+          farm_id: string
+          generated_by: string | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          audit_type: Database["public"]["Enums"]["audit_type"]
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          document_ids?: string[] | null
+          farm_id: string
+          generated_by?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          audit_type?: Database["public"]["Enums"]["audit_type"]
+          created_at?: string
+          date_range_end?: string | null
+          date_range_start?: string | null
+          document_ids?: string[] | null
+          farm_id?: string
+          generated_by?: string | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_packs_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chemical_applications: {
+        Row: {
+          animal_id: string | null
+          application_date: string
+          attachment_url: string | null
+          batch_no: string | null
+          created_at: string
+          dosage: number
+          farm_id: string
+          id: string
+          location_or_paddock: string | null
+          notes: string | null
+          operator_name: string
+          product_name: string
+          target: Database["public"]["Enums"]["chemical_target"]
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          animal_id?: string | null
+          application_date?: string
+          attachment_url?: string | null
+          batch_no?: string | null
+          created_at?: string
+          dosage: number
+          farm_id: string
+          id?: string
+          location_or_paddock?: string | null
+          notes?: string | null
+          operator_name: string
+          product_name: string
+          target?: Database["public"]["Enums"]["chemical_target"]
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          animal_id?: string | null
+          application_date?: string
+          attachment_url?: string | null
+          batch_no?: string | null
+          created_at?: string
+          dosage?: number
+          farm_id?: string
+          id?: string
+          location_or_paddock?: string | null
+          notes?: string | null
+          operator_name?: string
+          product_name?: string
+          target?: Database["public"]["Enums"]["chemical_target"]
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chemical_applications_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chemicals_inventory: {
+        Row: {
+          active_ingredient: string | null
+          batch_no: string | null
+          created_at: string
+          expiry_date: string | null
+          farm_id: string
+          id: string
+          notes: string | null
+          product_name: string
+          quantity: number
+          storage_location: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          active_ingredient?: string | null
+          batch_no?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          farm_id: string
+          id?: string
+          notes?: string | null
+          product_name: string
+          quantity?: number
+          storage_location?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          active_ingredient?: string | null
+          batch_no?: string | null
+          created_at?: string
+          expiry_date?: string | null
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          product_name?: string
+          quantity?: number
+          storage_location?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chemicals_inventory_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_documents: {
+        Row: {
+          category: Database["public"]["Enums"]["document_category"]
+          created_at: string
+          date_of_document: string | null
+          farm_id: string
+          file_name: string
+          file_url: string
+          id: string
+          notes: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["document_category"]
+          created_at?: string
+          date_of_document?: string | null
+          farm_id: string
+          file_name: string
+          file_url: string
+          id?: string
+          notes?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["document_category"]
+          created_at?: string
+          date_of_document?: string | null
+          farm_id?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_documents_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farm_members: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_members_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farms: {
+        Row: {
+          address: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          province: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          province?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          province?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      incidents: {
+        Row: {
+          action_taken: string | null
+          closed: boolean
+          created_at: string
+          description: string
+          farm_id: string
+          id: string
+          incident_date: string
+          severity: Database["public"]["Enums"]["incident_severity"]
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          closed?: boolean
+          created_at?: string
+          description: string
+          farm_id: string
+          id?: string
+          incident_date?: string
+          severity?: Database["public"]["Enums"]["incident_severity"]
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          closed?: boolean
+          created_at?: string
+          description?: string
+          farm_id?: string
+          id?: string
+          incident_date?: string
+          severity?: Database["public"]["Enums"]["incident_severity"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "incidents_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ppe_issues: {
+        Row: {
+          created_at: string
+          employee_name: string
+          farm_id: string
+          id: string
+          issue_date: string
+          next_due_date: string | null
+          notes: string | null
+          ppe_item: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_name: string
+          farm_id: string
+          id?: string
+          issue_date?: string
+          next_due_date?: string | null
+          notes?: string | null
+          ppe_item: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_name?: string
+          farm_id?: string
+          id?: string
+          issue_date?: string
+          next_due_date?: string | null
+          notes?: string | null
+          ppe_item?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ppe_issues_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_records: {
+        Row: {
+          certificate_url: string | null
+          created_at: string
+          employee_name: string
+          farm_id: string
+          id: string
+          notes: string | null
+          provider: string | null
+          training_date: string
+          training_type: string
+          updated_at: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          created_at?: string
+          employee_name: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          provider?: string | null
+          training_date: string
+          training_type: string
+          updated_at?: string
+        }
+        Update: {
+          certificate_url?: string | null
+          created_at?: string
+          employee_name?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          provider?: string | null
+          training_date?: string
+          training_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_records_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_farm_member: {
+        Args: { _farm_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      audit_type:
+        | "department_of_labour"
+        | "ohs"
+        | "livestock_traceability"
+        | "chemical_records"
+        | "custom"
+      chemical_target: "animal" | "land" | "other"
+      document_category:
+        | "uif"
+        | "coida"
+        | "payslips_payroll"
+        | "employment_contracts"
+        | "ohs_risk_assessments"
+        | "ppe_register"
+        | "incident_register"
+        | "first_aid"
+        | "animal_id_ownership"
+        | "movement_records"
+        | "vet_letters"
+        | "chemical_purchase_invoices"
+        | "chemical_stock_records"
+        | "chemical_application_records"
+        | "water_use_authorisation"
+        | "borehole_abstraction_logs"
+        | "abattoir_meat_safety"
+        | "other"
+      incident_severity: "minor" | "moderate" | "serious" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +584,36 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      audit_type: [
+        "department_of_labour",
+        "ohs",
+        "livestock_traceability",
+        "chemical_records",
+        "custom",
+      ],
+      chemical_target: ["animal", "land", "other"],
+      document_category: [
+        "uif",
+        "coida",
+        "payslips_payroll",
+        "employment_contracts",
+        "ohs_risk_assessments",
+        "ppe_register",
+        "incident_register",
+        "first_aid",
+        "animal_id_ownership",
+        "movement_records",
+        "vet_letters",
+        "chemical_purchase_invoices",
+        "chemical_stock_records",
+        "chemical_application_records",
+        "water_use_authorisation",
+        "borehole_abstraction_logs",
+        "abattoir_meat_safety",
+        "other",
+      ],
+      incident_severity: ["minor", "moderate", "serious", "critical"],
+    },
   },
 } as const

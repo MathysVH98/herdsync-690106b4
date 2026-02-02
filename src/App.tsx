@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { FarmProvider } from "@/hooks/useFarm";
 import Dashboard from "./pages/Dashboard";
 import Livestock from "./pages/Livestock";
 import Feeding from "./pages/Feeding";
@@ -11,30 +13,46 @@ import Health from "./pages/Health";
 import Reports from "./pages/Reports";
 import Tracking from "./pages/Tracking";
 import Audit from "./pages/Audit";
+import Auth from "./pages/Auth";
+import ComplianceDashboard from "./pages/ComplianceDashboard";
+import DocumentVault from "./pages/DocumentVault";
+import LabourOHS from "./pages/LabourOHS";
+import ChemicalsRemedies from "./pages/ChemicalsRemedies";
+import AuditPackBuilder from "./pages/AuditPackBuilder";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/livestock" element={<Livestock />} />
-          <Route path="/feeding" element={<Feeding />} />
-          <Route path="/inventory" element={<Inventory />} />
-          <Route path="/health" element={<Health />} />
-          <Route path="/audit" element={<Audit />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/tracking" element={<Tracking />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <FarmProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/livestock" element={<Livestock />} />
+              <Route path="/feeding" element={<Feeding />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/health" element={<Health />} />
+              <Route path="/audit" element={<Audit />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/tracking" element={<Tracking />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/compliance" element={<ComplianceDashboard />} />
+              <Route path="/compliance/audit-pack" element={<AuditPackBuilder />} />
+              <Route path="/compliance/documents" element={<DocumentVault />} />
+              <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
+              <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </FarmProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
