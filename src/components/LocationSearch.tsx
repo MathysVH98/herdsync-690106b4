@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2, MapPin } from "lucide-react";
@@ -21,6 +21,18 @@ export function LocationSearch({ onLocationSelect, className }: LocationSearchPr
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setShowResults(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const searchLocation = useCallback(async () => {
     if (!query.trim()) return;
@@ -80,7 +92,7 @@ export function LocationSearch({ onLocationSelect, className }: LocationSearchPr
   };
 
   return (
-    <div className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)}>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -102,12 +114,12 @@ export function LocationSearch({ onLocationSelect, className }: LocationSearchPr
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl z-[100] max-h-64 overflow-y-auto">
           {results.map((result) => (
             <button
               key={result.place_id}
               onClick={() => handleSelect(result)}
-              className="w-full px-4 py-3 text-left hover:bg-muted/50 transition-colors flex items-start gap-3 border-b border-border last:border-b-0"
+              className="w-full px-4 py-3 text-left bg-card hover:bg-muted transition-colors flex items-start gap-3 border-b border-border last:border-b-0"
             >
               <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
               <span className="text-sm text-foreground line-clamp-2">
@@ -119,7 +131,7 @@ export function LocationSearch({ onLocationSelect, className }: LocationSearchPr
       )}
 
       {showResults && results.length === 0 && !isLoading && query.trim() && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-lg z-50 p-4">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-xl z-[100] p-4">
           <p className="text-sm text-muted-foreground text-center">
             No locations found for "{query}"
           </p>
