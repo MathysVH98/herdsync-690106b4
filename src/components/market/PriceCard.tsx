@@ -20,15 +20,15 @@ export function PriceCard({ commodity, onClick }: PriceCardProps) {
 
   const getTrendIcon = () => {
     if (priceChange === null) return <Minus className="w-4 h-4 text-muted-foreground" />;
-    if (priceChange > 0) return <TrendingUp className="w-4 h-4 text-destructive" />;
-    if (priceChange < 0) return <TrendingDown className="w-4 h-4 text-success" />;
+    if (priceChange > 0) return <TrendingUp className="w-4 h-4 text-success" />;
+    if (priceChange < 0) return <TrendingDown className="w-4 h-4 text-destructive" />;
     return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   const getTrendColor = () => {
     if (priceChange === null) return "text-muted-foreground";
-    if (priceChange > 0) return "text-destructive";
-    if (priceChange < 0) return "text-success";
+    if (priceChange > 0) return "text-success";
+    if (priceChange < 0) return "text-destructive";
     return "text-muted-foreground";
   };
 
