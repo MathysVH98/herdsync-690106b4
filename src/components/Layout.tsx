@@ -17,11 +17,13 @@ import {
   Beaker,
   LogOut,
   TrendingUp,
+  CreditCard,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
+import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import farmBackground from "@/assets/farm-background.jpg";
 
 interface LayoutProps {
@@ -38,6 +40,7 @@ const navigation = [
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
+  { name: "Pricing & Plans", href: "/pricing", icon: CreditCard },
 ];
 
 const complianceNavigation = [
@@ -189,7 +192,10 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-8">{children}</div>
+          <div className="p-4 lg:p-8">
+            <SubscriptionBanner />
+            {children}
+          </div>
         </main>
       </div>
     </div>
