@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Plus, Search, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,9 @@ export default function Livestock() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
+  const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("active");
   const { toast } = useToast();
   const { farm } = useFarm();
 
@@ -46,6 +50,12 @@ export default function Livestock() {
     weight: "",
     status: "Healthy" as AnimalStatus,
     feedType: "",
+    purchaseCost: "",
+  });
+
+  const [saleData, setSaleData] = useState({
+    salePrice: "",
+    soldTo: "",
   });
 
   useEffect(() => {
@@ -81,6 +91,10 @@ export default function Livestock() {
           status: a.status as AnimalStatus,
           lastFed: a.last_fed ? new Date(a.last_fed).toLocaleString() : "Not yet fed",
           feedType: a.feed_type || "",
+          purchaseCost: a.purchase_cost || 0,
+          salePrice: a.sale_price,
+          soldAt: a.sold_at,
+          soldTo: a.sold_to,
         })));
       }
       setLoading(false);
@@ -89,7 +103,11 @@ export default function Livestock() {
     fetchLivestock();
   }, [farm?.id, toast]);
 
-  const filteredAnimals = animals.filter((animal) => {
+  // Separate active and sold animals
+  const activeAnimals = animals.filter(a => !a.soldAt);
+  const soldAnimals = animals.filter(a => a.soldAt);
+
+  const filteredAnimals = (activeTab === "active" ? activeAnimals : soldAnimals).filter((animal) => {
     const matchesSearch = 
       animal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       animal.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,6 +150,7 @@ export default function Livestock() {
         weight: newAnimal.weight || null,
         status: newAnimal.status,
         feed_type: newAnimal.feedType || null,
+        purchase_cost: parseFloat(newAnimal.purchaseCost) || 0,
       })
       .select()
       .single();
@@ -157,6 +176,10 @@ export default function Livestock() {
       status: data.status as AnimalStatus,
       lastFed: "Not yet fed",
       feedType: data.feed_type || "",
+      purchaseCost: data.purchase_cost || 0,
+      salePrice: null,
+      soldAt: null,
+      soldTo: null,
     };
 
     setAnimals([animal, ...animals]);
@@ -169,6 +192,7 @@ export default function Livestock() {
       weight: "",
       status: "Healthy",
       feedType: "",
+      purchaseCost: "",
     });
     setIsAddDialogOpen(false);
     
@@ -220,13 +244,71 @@ export default function Livestock() {
     });
   };
 
-  const statusCounts = {
-    all: animals.length,
-    Healthy: animals.filter((a) => a.status === "Healthy").length,
-    "Under Observation": animals.filter((a) => a.status === "Under Observation").length,
-    Sick: animals.filter((a) => a.status === "Sick").length,
-    Pregnant: animals.filter((a) => a.status === "Pregnant").length,
+  const handleOpenSellDialog = (id: string) => {
+    setSelectedAnimalId(id);
+    setSaleData({ salePrice: "", soldTo: "" });
+    setIsSellDialogOpen(true);
   };
+
+  const handleSellAnimal = async () => {
+    if (!selectedAnimalId) return;
+
+    const salePrice = parseFloat(saleData.salePrice);
+    if (isNaN(salePrice) || salePrice < 0) {
+      toast({
+        title: "Invalid Price",
+        description: "Please enter a valid sale price.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { error } = await supabase
+      .from("livestock")
+      .update({
+        sale_price: salePrice,
+        sold_at: new Date().toISOString(),
+        sold_to: saleData.soldTo || null,
+      })
+      .eq("id", selectedAnimalId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to record sale.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const animal = animals.find(a => a.id === selectedAnimalId);
+    setAnimals(animals.map(a => 
+      a.id === selectedAnimalId 
+        ? { ...a, salePrice, soldAt: new Date().toISOString(), soldTo: saleData.soldTo || null }
+        : a
+    ));
+
+    setIsSellDialogOpen(false);
+    setSelectedAnimalId(null);
+
+    toast({
+      title: "Sale Recorded",
+      description: `${animal?.name} has been marked as sold for R${salePrice.toFixed(2)}.`,
+    });
+  };
+
+  const statusCounts = {
+    all: activeAnimals.length,
+    Healthy: activeAnimals.filter((a) => a.status === "Healthy").length,
+    "Under Observation": activeAnimals.filter((a) => a.status === "Under Observation").length,
+    Sick: activeAnimals.filter((a) => a.status === "Sick").length,
+    Pregnant: activeAnimals.filter((a) => a.status === "Pregnant").length,
+  };
+
+  // Calculate financial summary for sold animals
+  const totalPurchaseCost = soldAnimals.reduce((sum, a) => sum + (a.purchaseCost || 0), 0);
+  const totalSaleRevenue = soldAnimals.reduce((sum, a) => sum + (a.salePrice || 0), 0);
+  const totalProfit = totalSaleRevenue - totalPurchaseCost;
 
   if (!farm) {
     return (
@@ -355,6 +437,18 @@ export default function Livestock() {
                     />
                   </div>
                 </div>
+                <div>
+                  <Label htmlFor="purchaseCost">Purchase Cost (R)</Label>
+                  <Input
+                    id="purchaseCost"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newAnimal.purchaseCost}
+                    onChange={(e) => setNewAnimal({ ...newAnimal, purchaseCost: e.target.value })}
+                    placeholder="e.g., 5000.00"
+                  />
+                </div>
               </div>
               <Button onClick={handleAddAnimal} className="w-full bg-gradient-primary text-primary-foreground">
                 Add Animal
@@ -363,115 +457,232 @@ export default function Livestock() {
           </Dialog>
         </div>
 
-        {/* Filters */}
-        <div className="card-elevated p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, tag, or breed..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {/* Tabs for Active vs Sold */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="active">
+              Active ({activeAnimals.length})
+            </TabsTrigger>
+            <TabsTrigger value="sold">
+              Sold History ({soldAnimals.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="active" className="space-y-4 mt-4">
+            {/* Filters */}
+            <div className="card-elevated p-4">
+              <div className="flex flex-col lg:flex-row gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by name, tag, or breed..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-[160px]">
+                      <Filter className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      {statusOptions.map((status) => (
+                        <SelectItem key={status} value={status}>{status}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      {typeOptions.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-2 mt-4">
+                <Badge 
+                  variant={filterStatus === "all" ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => setFilterStatus("all")}
+                >
+                  All ({statusCounts.all})
+                </Badge>
+                <Badge 
+                  variant={filterStatus === "Healthy" ? "default" : "outline"}
+                  className="cursor-pointer badge-healthy"
+                  onClick={() => setFilterStatus("Healthy")}
+                >
+                  Healthy ({statusCounts.Healthy})
+                </Badge>
+                <Badge 
+                  variant={filterStatus === "Under Observation" ? "default" : "outline"}
+                  className="cursor-pointer badge-observation"
+                  onClick={() => setFilterStatus("Under Observation")}
+                >
+                  Under Observation ({statusCounts["Under Observation"]})
+                </Badge>
+                <Badge 
+                  variant={filterStatus === "Sick" ? "default" : "outline"}
+                  className="cursor-pointer badge-sick"
+                  onClick={() => setFilterStatus("Sick")}
+                >
+                  Sick ({statusCounts.Sick})
+                </Badge>
+                <Badge 
+                  variant={filterStatus === "Pregnant" ? "default" : "outline"}
+                  className="cursor-pointer badge-pregnant"
+                  onClick={() => setFilterStatus("Pregnant")}
+                >
+                  Pregnant ({statusCounts.Pregnant})
+                </Badge>
+              </div>
             </div>
-            <div className="flex gap-3">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[160px]">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status}>{status}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  {typeOptions.map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            {/* Animal Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredAnimals.map((animal) => (
+                  <LivestockCard
+                    key={animal.id}
+                    animal={animal}
+                    onFeed={handleFeed}
+                    onRemove={handleRemove}
+                    onSell={handleOpenSellDialog}
+                  />
+                ))}
+              </div>
+            )}
+
+            {!loading && filteredAnimals.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {activeAnimals.length === 0 
+                    ? "No animals added yet. Click 'Add Animal' to get started."
+                    : "No animals found matching your criteria."}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="sold" className="space-y-4 mt-4">
+            {/* Financial Summary */}
+            {soldAnimals.length > 0 && (
+              <div className="card-elevated p-4">
+                <h3 className="font-semibold text-foreground mb-3">Sales Summary</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="text-center p-3 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total Purchase Cost</p>
+                    <p className="text-xl font-semibold text-foreground">R{totalPurchaseCost.toFixed(2)}</p>
+                  </div>
+                  <div className="text-center p-3 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total Revenue</p>
+                    <p className="text-xl font-semibold text-foreground">R{totalSaleRevenue.toFixed(2)}</p>
+                  </div>
+                  <div className="text-center p-3 bg-muted/30 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total Profit</p>
+                    <p className={`text-xl font-semibold ${totalProfit >= 0 ? "text-primary" : "text-destructive"}`}>
+                      R{totalProfit.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Search */}
+            <div className="card-elevated p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search sold animals..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Status Badges */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <Badge 
-              variant={filterStatus === "all" ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => setFilterStatus("all")}
-            >
-              All ({statusCounts.all})
-            </Badge>
-            <Badge 
-              variant={filterStatus === "Healthy" ? "default" : "outline"}
-              className="cursor-pointer badge-healthy"
-              onClick={() => setFilterStatus("Healthy")}
-            >
-              Healthy ({statusCounts.Healthy})
-            </Badge>
-            <Badge 
-              variant={filterStatus === "Under Observation" ? "default" : "outline"}
-              className="cursor-pointer badge-observation"
-              onClick={() => setFilterStatus("Under Observation")}
-            >
-              Under Observation ({statusCounts["Under Observation"]})
-            </Badge>
-            <Badge 
-              variant={filterStatus === "Sick" ? "default" : "outline"}
-              className="cursor-pointer badge-sick"
-              onClick={() => setFilterStatus("Sick")}
-            >
-              Sick ({statusCounts.Sick})
-            </Badge>
-            <Badge 
-              variant={filterStatus === "Pregnant" ? "default" : "outline"}
-              className="cursor-pointer badge-pregnant"
-              onClick={() => setFilterStatus("Pregnant")}
-            >
-              Pregnant ({statusCounts.Pregnant})
-            </Badge>
-          </div>
-        </div>
+            {/* Sold Animals Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredAnimals.map((animal) => (
+                  <LivestockCard
+                    key={animal.id}
+                    animal={animal}
+                    isSold
+                  />
+                ))}
+              </div>
+            )}
 
-        {/* Animal Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {filteredAnimals.map((animal) => (
-              <LivestockCard
-                key={animal.id}
-                animal={animal}
-                onFeed={handleFeed}
-                onRemove={handleRemove}
-              />
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredAnimals.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">
-              {animals.length === 0 
-                ? "No animals added yet. Click 'Add Animal' to get started."
-                : "No animals found matching your criteria."}
-            </p>
-          </div>
-        )}
+            {!loading && filteredAnimals.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {soldAnimals.length === 0 
+                    ? "No sold animals yet. Mark animals as sold to see them here."
+                    : "No sold animals found matching your search."}
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Sell Dialog */}
+      <Dialog open={isSellDialogOpen} onOpenChange={setIsSellDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="font-display">Record Sale</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="salePrice">Sale Price (R)</Label>
+              <Input
+                id="salePrice"
+                type="number"
+                min="0"
+                step="0.01"
+                value={saleData.salePrice}
+                onChange={(e) => setSaleData({ ...saleData, salePrice: e.target.value })}
+                placeholder="e.g., 8000.00"
+              />
+            </div>
+            <div>
+              <Label htmlFor="soldTo">Sold To (Optional)</Label>
+              <Input
+                id="soldTo"
+                value={saleData.soldTo}
+                onChange={(e) => setSaleData({ ...saleData, soldTo: e.target.value })}
+                placeholder="e.g., John Smith"
+              />
+            </div>
+          </div>
+          <Button onClick={handleSellAnimal} className="w-full bg-gradient-primary text-primary-foreground">
+            Confirm Sale
+          </Button>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }

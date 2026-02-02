@@ -623,6 +623,10 @@ export type Database = {
           last_fed: string | null
           name: string
           notes: string | null
+          purchase_cost: number | null
+          sale_price: number | null
+          sold_at: string | null
+          sold_to: string | null
           status: string
           tag: string
           type: string
@@ -639,6 +643,10 @@ export type Database = {
           last_fed?: string | null
           name: string
           notes?: string | null
+          purchase_cost?: number | null
+          sale_price?: number | null
+          sold_at?: string | null
+          sold_to?: string | null
           status?: string
           tag: string
           type: string
@@ -655,6 +663,10 @@ export type Database = {
           last_fed?: string | null
           name?: string
           notes?: string | null
+          purchase_cost?: number | null
+          sale_price?: number | null
+          sold_at?: string | null
+          sold_to?: string | null
           status?: string
           tag?: string
           type?: string
