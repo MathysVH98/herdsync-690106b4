@@ -57,14 +57,63 @@ export default function Tracking() {
   const [outposts, setOutposts] = useState<Outpost[]>(mockOutposts);
   const [zones, setZones] = useState<TrackingZone[]>(mockZones);
   const [isAddingOutpost, setIsAddingOutpost] = useState(false);
+  const [isDrawingZone, setIsDrawingZone] = useState(false);
+  const [zonePoints, setZonePoints] = useState<[number, number][]>([]);
   const [pendingOutpost, setPendingOutpost] = useState<[number, number] | null>(null);
+  const [pendingZone, setPendingZone] = useState<[number, number][] | null>(null);
   const [newOutpostName, setNewOutpostName] = useState("");
   const [newOutpostType, setNewOutpostType] = useState<"tracker" | "camera" | "sensor">("tracker");
+  const [newZoneName, setNewZoneName] = useState("");
   const { toast } = useToast();
 
-  const handleAddOutpostClick = (position: [number, number]) => {
-    setPendingOutpost(position);
-    setIsAddingOutpost(false);
+  const handleMapClick = (position: [number, number]) => {
+    if (isAddingOutpost) {
+      setPendingOutpost(position);
+      setIsAddingOutpost(false);
+    } else if (isDrawingZone) {
+      setZonePoints(prev => [...prev, position]);
+    }
+  };
+
+  const finishZoneDrawing = () => {
+    if (zonePoints.length >= 3) {
+      setPendingZone(zonePoints);
+      setIsDrawingZone(false);
+    } else {
+      toast({
+        title: "Not Enough Points",
+        description: "A zone needs at least 3 points to form a polygon.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmAddZone = () => {
+    if (!pendingZone || !newZoneName) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a name for the zone.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newZone: TrackingZone = {
+      id: Date.now().toString(),
+      name: newZoneName,
+      coordinates: pendingZone,
+      color: "hsl(var(--primary))",
+    };
+
+    setZones([...zones, newZone]);
+    setPendingZone(null);
+    setZonePoints([]);
+    setNewZoneName("");
+
+    toast({
+      title: "Zone Created",
+      description: `${newZone.name} has been added to the map.`,
+    });
   };
 
   const confirmAddOutpost = () => {
@@ -95,18 +144,12 @@ export default function Tracking() {
     });
   };
 
-  const handleAddZone = (coordinates: [number, number][]) => {
-    const newZone: TrackingZone = {
-      id: Date.now().toString(),
-      name: `Zone ${zones.length + 1}`,
-      coordinates,
-      color: "hsl(var(--primary))",
-    };
-    setZones([...zones, newZone]);
-    
+  const removeZone = (id: string) => {
+    const zone = zones.find(z => z.id === id);
+    setZones(zones.filter(z => z.id !== id));
     toast({
-      title: "Zone Created",
-      description: "New tracking zone has been defined.",
+      title: "Zone Removed",
+      description: `${zone?.name} has been removed.`,
     });
   };
 
@@ -136,7 +179,10 @@ export default function Tracking() {
           <div className="flex gap-3">
             <Button 
               variant={isAddingOutpost ? "destructive" : "outline"}
-              onClick={() => setIsAddingOutpost(!isAddingOutpost)}
+              onClick={() => {
+                setIsAddingOutpost(!isAddingOutpost);
+                setIsDrawingZone(false);
+              }}
             >
               {isAddingOutpost ? (
                 <>Cancel</>
@@ -144,6 +190,25 @@ export default function Tracking() {
                 <>
                   <MapPin className="w-4 h-4 mr-2" />
                   Add Outpost
+                </>
+              )}
+            </Button>
+            <Button 
+              variant={isDrawingZone ? "destructive" : "outline"}
+              onClick={() => {
+                setIsDrawingZone(!isDrawingZone);
+                setIsAddingOutpost(false);
+                if (isDrawingZone) {
+                  setZonePoints([]);
+                }
+              }}
+            >
+              {isDrawingZone ? (
+                <>Cancel</>
+              ) : (
+                <>
+                  <Layers className="w-4 h-4 mr-2" />
+                  Draw Zone
                 </>
               )}
             </Button>
@@ -181,9 +246,10 @@ export default function Tracking() {
             <TrackingMap
               outposts={outposts}
               zones={zones}
-              onAddOutpost={handleAddOutpostClick}
-              onAddZone={handleAddZone}
+              zonePoints={zonePoints}
+              onMapClick={handleMapClick}
               isAddingOutpost={isAddingOutpost}
+              isDrawingZone={isDrawingZone}
             />
           </div>
 
@@ -196,10 +262,25 @@ export default function Tracking() {
                 Drawing Tools
               </h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p>• Use the polygon or rectangle tool on the map to draw tracking boundaries</p>
                 <p>• Click "Add Outpost" then click the map to place trackers</p>
-                <p>• Use the edit tools to modify existing shapes</p>
+                <p>• Click "Draw Zone" then click points to define boundaries</p>
+                <p>• Click "Finish Zone" when done drawing (min 3 points)</p>
               </div>
+              {isDrawingZone && zonePoints.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    {zonePoints.length} point{zonePoints.length !== 1 ? 's' : ''} placed
+                  </p>
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={finishZoneDrawing}
+                    disabled={zonePoints.length < 3}
+                  >
+                    Finish Zone
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Outposts List */}
@@ -254,16 +335,23 @@ export default function Tracking() {
                 {zones.map((zone) => (
                   <div 
                     key={zone.id}
-                    className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-muted/50 rounded-lg group"
                   >
-                    <div 
-                      className="w-4 h-4 rounded"
-                      style={{ backgroundColor: zone.color }}
-                    />
-                    <span className="text-sm font-medium text-foreground">{zone.name}</span>
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      Active
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-4 h-4 rounded"
+                        style={{ backgroundColor: zone.color }}
+                      />
+                      <span className="text-sm font-medium text-foreground">{zone.name}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => removeZone(zone.id)}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
                   </div>
                 ))}
                 {zones.length === 0 && (
@@ -332,6 +420,36 @@ export default function Tracking() {
             <Button onClick={confirmAddOutpost} className="w-full bg-gradient-primary text-primary-foreground">
               <Plus className="w-4 h-4 mr-2" />
               Add Outpost
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Zone Dialog */}
+        <Dialog open={!!pendingZone} onOpenChange={() => { setPendingZone(null); setZonePoints([]); }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="font-display">Name Your Zone</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="zone-name">Zone Name</Label>
+                <Input
+                  id="zone-name"
+                  value={newZoneName}
+                  onChange={(e) => setNewZoneName(e.target.value)}
+                  placeholder="e.g., Main Grazing Area"
+                />
+              </div>
+              {pendingZone && (
+                <div className="bg-muted p-3 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Boundary Points</p>
+                  <p className="font-mono text-sm">{pendingZone.length} vertices</p>
+                </div>
+              )}
+            </div>
+            <Button onClick={confirmAddZone} className="w-full bg-gradient-primary text-primary-foreground">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Zone
             </Button>
           </DialogContent>
         </Dialog>

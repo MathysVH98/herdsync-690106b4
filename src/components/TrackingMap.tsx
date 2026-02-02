@@ -39,9 +39,10 @@ interface TrackingMapProps {
   zoom?: number;
   outposts: Outpost[];
   zones: TrackingZone[];
-  onAddOutpost?: (position: [number, number]) => void;
-  onAddZone?: (coordinates: [number, number][]) => void;
+  zonePoints?: [number, number][];
+  onMapClick?: (position: [number, number]) => void;
   isAddingOutpost?: boolean;
+  isDrawingZone?: boolean;
 }
 
 function getThemeHsl(cssVar: string, fallback: string) {
@@ -85,19 +86,22 @@ export function TrackingMap({
   zoom = 13,
   outposts,
   zones,
-  onAddOutpost,
+  zonePoints = [],
+  onMapClick,
   isAddingOutpost = false,
+  isDrawingZone = false,
 }: TrackingMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const zonesLayerRef = useRef<L.LayerGroup | null>(null);
   const outpostsLayerRef = useRef<L.LayerGroup | null>(null);
+  const drawingLayerRef = useRef<L.LayerGroup | null>(null);
   const primaryColorRef = useRef<string>("hsl(120 30% 20%)");
-  const onAddOutpostRef = useRef<typeof onAddOutpost>(onAddOutpost);
+  const onMapClickRef = useRef<typeof onMapClick>(onMapClick);
 
   useEffect(() => {
-    onAddOutpostRef.current = onAddOutpost;
-  }, [onAddOutpost]);
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
 
   // Expose flyTo for external search
   const flyTo = useCallback((lat: number, lng: number, zoomLevel?: number) => {
@@ -132,6 +136,7 @@ export function TrackingMap({
 
     zonesLayerRef.current = L.layerGroup().addTo(map);
     outpostsLayerRef.current = L.layerGroup().addTo(map);
+    drawingLayerRef.current = L.layerGroup().addTo(map);
 
     mapRef.current = map;
 
@@ -148,25 +153,69 @@ export function TrackingMap({
     mapRef.current.setView(center, zoom);
   }, [center, zoom]);
 
-  // Toggle click-to-add-outpost mode
+  // Toggle click mode
   useEffect(() => {
     const map = mapRef.current;
     const container = map?.getContainer();
     if (!map || !container) return;
 
     const handleClick = (e: L.LeafletMouseEvent) => {
-      if (!isAddingOutpost) return;
-      onAddOutpostRef.current?.([e.latlng.lat, e.latlng.lng]);
+      if (!isAddingOutpost && !isDrawingZone) return;
+      onMapClickRef.current?.([e.latlng.lat, e.latlng.lng]);
     };
 
     map.on("click", handleClick);
-    container.style.cursor = isAddingOutpost ? "crosshair" : "";
+    container.style.cursor = (isAddingOutpost || isDrawingZone) ? "crosshair" : "";
 
     return () => {
       map.off("click", handleClick);
       container.style.cursor = "";
     };
-  }, [isAddingOutpost]);
+  }, [isAddingOutpost, isDrawingZone]);
+
+  // Render drawing preview (zone points being placed)
+  useEffect(() => {
+    const layer = drawingLayerRef.current;
+    if (!layer) return;
+
+    layer.clearLayers();
+
+    if (zonePoints.length > 0) {
+      // Draw markers for each point
+      zonePoints.forEach((point, index) => {
+        const marker = L.circleMarker(point as L.LatLngExpression, {
+          radius: 6,
+          color: primaryColorRef.current,
+          fillColor: primaryColorRef.current,
+          fillOpacity: 0.8,
+        });
+        marker.bindTooltip(`Point ${index + 1}`);
+        marker.addTo(layer);
+      });
+
+      // Draw line connecting points
+      if (zonePoints.length >= 2) {
+        const polyline = L.polyline(zonePoints as L.LatLngExpression[], {
+          color: primaryColorRef.current,
+          weight: 2,
+          dashArray: "5, 5",
+        });
+        polyline.addTo(layer);
+      }
+
+      // Draw preview polygon if we have 3+ points
+      if (zonePoints.length >= 3) {
+        const previewPolygon = L.polygon(zonePoints as L.LatLngExpression[], {
+          color: primaryColorRef.current,
+          fillColor: primaryColorRef.current,
+          fillOpacity: 0.1,
+          weight: 2,
+          dashArray: "5, 5",
+        });
+        previewPolygon.addTo(layer);
+      }
+    }
+  }, [zonePoints]);
 
   // Render zones
   useEffect(() => {
