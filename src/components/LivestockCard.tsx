@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Utensils, Stethoscope, Trash2 } from "lucide-react";
+import { MoreVertical, Utensils, Stethoscope, Trash2, DollarSign } from "lucide-react";
 import { getAnimalImage } from "@/utils/animalImages";
 
 export type AnimalStatus = "Healthy" | "Under Observation" | "Sick" | "Pregnant";
@@ -24,6 +24,10 @@ export interface Animal {
   lastFed: string;
   feedType: string;
   imageUrl?: string;
+  purchaseCost?: number;
+  salePrice?: number | null;
+  soldAt?: string | null;
+  soldTo?: string | null;
 }
 
 interface LivestockCardProps {
@@ -31,6 +35,8 @@ interface LivestockCardProps {
   onFeed?: (id: string) => void;
   onHealthRecord?: (id: string) => void;
   onRemove?: (id: string) => void;
+  onSell?: (id: string) => void;
+  isSold?: boolean;
 }
 
 const statusStyles: Record<AnimalStatus, string> = {
@@ -41,9 +47,9 @@ const statusStyles: Record<AnimalStatus, string> = {
 };
 
 
-export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove }: LivestockCardProps) {
+export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell, isSold = false }: LivestockCardProps) {
   return (
-    <div className="card-elevated p-5 group">
+    <div className={cn("card-elevated p-5 group", isSold && "opacity-80")}>
       <div className="flex items-start gap-4">
         {/* Animal Avatar */}
         <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-border">
@@ -61,6 +67,11 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove }: Live
             <Badge variant="outline" className="text-xs font-mono">
               #{animal.tag}
             </Badge>
+            {isSold && (
+              <Badge variant="secondary" className="text-xs">
+                Sold
+              </Badge>
+            )}
           </div>
           
           <p className="text-sm text-muted-foreground mb-3">
@@ -71,45 +82,89 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove }: Live
             <Badge className={cn("text-xs font-medium", statusStyles[animal.status])}>
               {animal.status}
             </Badge>
-            <span className="text-xs text-muted-foreground">
-              Fed: {animal.lastFed}
-            </span>
+            {!isSold && (
+              <span className="text-xs text-muted-foreground">
+                Fed: {animal.lastFed}
+              </span>
+            )}
+            {isSold && animal.soldAt && (
+              <span className="text-xs text-muted-foreground">
+                Sold: {new Date(animal.soldAt).toLocaleDateString("en-ZA")}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Actions */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onFeed?.(animal.id)}>
-              <Utensils className="w-4 h-4 mr-2" />
-              Record Feeding
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onHealthRecord?.(animal.id)}>
-              <Stethoscope className="w-4 h-4 mr-2" />
-              Add Health Record
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => onRemove?.(animal.id)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Remove Animal
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {!isSold && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onFeed?.(animal.id)}>
+                <Utensils className="w-4 h-4 mr-2" />
+                Record Feeding
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onHealthRecord?.(animal.id)}>
+                <Stethoscope className="w-4 h-4 mr-2" />
+                Add Health Record
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onSell?.(animal.id)}>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Mark as Sold
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onRemove?.(animal.id)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove Animal
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
-      {/* Feed Info */}
-      <div className="mt-4 pt-4 border-t border-border">
+      {/* Financial Info */}
+      <div className="mt-4 pt-4 border-t border-border space-y-2">
+        {!isSold && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Feed Type:</span>
+            <span className="font-medium text-foreground">{animal.feedType || "-"}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Feed Type:</span>
-          <span className="font-medium text-foreground">{animal.feedType}</span>
+          <span className="text-muted-foreground">Purchase Cost:</span>
+          <span className="font-medium text-foreground">R{animal.purchaseCost?.toFixed(2) || "0.00"}</span>
         </div>
+        {isSold && animal.salePrice != null && (
+          <>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Sale Price:</span>
+              <span className="font-medium text-foreground">R{animal.salePrice.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Profit:</span>
+              <span className={cn(
+                "font-semibold",
+                (animal.salePrice - (animal.purchaseCost || 0)) >= 0 
+                  ? "text-green-600" 
+                  : "text-red-600"
+              )}>
+                R{(animal.salePrice - (animal.purchaseCost || 0)).toFixed(2)}
+              </span>
+            </div>
+            {animal.soldTo && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Sold To:</span>
+                <span className="font-medium text-foreground">{animal.soldTo}</span>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
