@@ -16,6 +16,7 @@ import {
   Users,
   Beaker,
   LogOut,
+  TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const navigation = [
   { name: "Feeding Schedule", href: "/feeding", icon: Clock },
   { name: "Feed Inventory", href: "/inventory", icon: Package },
   { name: "Health Records", href: "/health", icon: Stethoscope },
+  { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },

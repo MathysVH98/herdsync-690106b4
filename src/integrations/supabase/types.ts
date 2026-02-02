@@ -173,6 +173,97 @@ export type Database = {
           },
         ]
       }
+      commodities: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          name: string
+          unit: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          name: string
+          unit?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commodities_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "commodity_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commodity_categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      commodity_prices: {
+        Row: {
+          commodity_id: string
+          created_at: string
+          id: string
+          price: number
+          price_date: string
+          source: string | null
+          updated_at: string
+        }
+        Insert: {
+          commodity_id: string
+          created_at?: string
+          id?: string
+          price: number
+          price_date?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Update: {
+          commodity_id?: string
+          created_at?: string
+          id?: string
+          price?: number
+          price_date?: string
+          source?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commodity_prices_commodity_id_fkey"
+            columns: ["commodity_id"]
+            isOneToOne: false
+            referencedRelation: "commodities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       compliance_documents: {
         Row: {
           category: Database["public"]["Enums"]["document_category"]
