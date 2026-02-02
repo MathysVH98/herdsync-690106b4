@@ -464,6 +464,71 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          animal_limit: number
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          farm_id: string
+          id: string
+          payment_provider:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at: string
+          trial_started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          animal_limit?: number
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          farm_id: string
+          id?: string
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          animal_limit?: number
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          farm_id?: string
+          id?: string
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at?: string
+          trial_started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: true
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_records: {
         Row: {
           certificate_url: string | null
@@ -516,6 +581,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_subscription_status: {
+        Args: { _farm_id: string }
+        Returns: {
+          animal_limit: number
+          days_remaining: number
+          status: Database["public"]["Enums"]["subscription_status"]
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_ends_at: string
+        }[]
+      }
+      has_active_subscription: {
+        Args: { _farm_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_farm_member: {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
@@ -549,6 +628,14 @@ export type Database = {
         | "abattoir_meat_safety"
         | "other"
       incident_severity: "minor" | "moderate" | "serious" | "critical"
+      payment_provider: "paypal" | "yoco"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "cancelled"
+        | "expired"
+        | "past_due"
+      subscription_tier: "basic" | "starter" | "pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -705,6 +792,15 @@ export const Constants = {
         "other",
       ],
       incident_severity: ["minor", "moderate", "serious", "critical"],
+      payment_provider: ["paypal", "yoco"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "cancelled",
+        "expired",
+        "past_due",
+      ],
+      subscription_tier: ["basic", "starter", "pro"],
     },
   },
 } as const
