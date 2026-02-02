@@ -11,9 +11,16 @@ import {
   X,
   Wheat,
   ClipboardCheck,
+  Shield,
+  FileText,
+  Users,
+  Beaker,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useFarm } from "@/hooks/useFarm";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,9 +37,18 @@ const navigation = [
   { name: "Tracking", href: "/tracking", icon: MapPin },
 ];
 
+const complianceNavigation = [
+  { name: "Compliance Dashboard", href: "/compliance", icon: Shield },
+  { name: "Document Vault", href: "/compliance/documents", icon: FileText },
+  { name: "Labour & OHS", href: "/compliance/labour-ohs", icon: Users },
+  { name: "Chemicals & Remedies", href: "/compliance/chemicals", icon: Beaker },
+];
+
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const { farm } = useFarm();
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -62,7 +78,7 @@ export function Layout({ children }: LayoutProps) {
                 FarmTrack
               </h1>
               <p className="text-xs text-sidebar-foreground/60">
-                Farm Management
+                {farm?.name || "Farm Management"}
               </p>
             </div>
             <button
@@ -89,25 +105,62 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               );
             })}
+
+            {/* Compliance Section */}
+            <div className="pt-4 mt-4 border-t border-sidebar-border">
+              <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
+                Compliance (SA)
+              </p>
+              {complianceNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn("sidebar-nav-item", isActive && "active")}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
 
           {/* Footer */}
           <div className="px-6 py-4 border-t border-sidebar-border">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
-                <span className="text-sm font-semibold text-sidebar-foreground">
-                  JD
-                </span>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
+                  <span className="text-sm font-semibold text-sidebar-foreground">
+                    {user.email?.slice(0, 2).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                    {user.email}
+                  </p>
+                  <p className="text-xs text-sidebar-foreground/60 truncate">
+                    {farm?.name || "No farm"}
+                  </p>
+                </div>
+                <button
+                  onClick={signOut}
+                  className="p-2 text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                  title="Sign out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  John Doe
-                </p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">
-                  Farm Owner
-                </p>
-              </div>
-            </div>
+            ) : (
+              <Link
+                to="/auth"
+                className="flex items-center justify-center gap-2 w-full py-2 px-4 bg-sidebar-primary text-sidebar-primary-foreground rounded-lg text-sm font-medium"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
         </div>
       </aside>
