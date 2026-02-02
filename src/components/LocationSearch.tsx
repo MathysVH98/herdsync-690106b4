@@ -56,10 +56,16 @@ export function LocationSearch({ onLocationSelect, className }: LocationSearchPr
     const lat = parseFloat(result.lat);
     const lng = parseFloat(result.lon);
 
-    // Use the exposed flyTo function
-    if ((window as any).__trackingMapFlyTo) {
-      (window as any).__trackingMapFlyTo(lat, lng, 15);
-    }
+    // Use the exposed flyTo function with retry for timing issues
+    const attemptFlyTo = (retries = 3) => {
+      const flyToFn = (window as any).__trackingMapFlyTo;
+      if (flyToFn) {
+        flyToFn(lat, lng, 15);
+      } else if (retries > 0) {
+        setTimeout(() => attemptFlyTo(retries - 1), 100);
+      }
+    };
+    attemptFlyTo();
 
     onLocationSelect?.(lat, lng, result.display_name);
     setShowResults(false);
