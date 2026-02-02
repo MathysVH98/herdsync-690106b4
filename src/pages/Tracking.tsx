@@ -232,7 +232,7 @@ export default function Tracking() {
         </div>
 
         {isAddingOutpost && (
-          <div className="bg-accent/20 border border-accent rounded-lg p-4 flex items-center gap-3">
+          <div className="bg-accent/20 border border-accent rounded-lg p-4 flex items-center gap-3 pointer-events-none">
             <Target className="w-5 h-5 text-accent-foreground animate-pulse" />
             <p className="text-sm text-accent-foreground">
               Click anywhere on the map to place an outpost marker
