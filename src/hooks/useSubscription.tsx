@@ -70,11 +70,16 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         .eq("role", "admin")
         .maybeSingle();
 
-      if (roleData) {
+      const isAdmin = !!roleData;
+      
+      if (isAdmin) {
         setAdminInfo({
           isAdmin: true,
           assignedTier: roleData.assigned_tier as SubscriptionTier | null,
         });
+        
+        // Auto-renew admin subscription if expired
+        await supabase.rpc("auto_renew_admin_subscription", { _user_id: user.id });
       } else {
         setAdminInfo({ isAdmin: false, assignedTier: null });
       }
