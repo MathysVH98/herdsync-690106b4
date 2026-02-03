@@ -40,9 +40,9 @@ interface LayoutProps {
 }
 
 const navigation = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Animal Sale", href: "/animal-sale", icon: CreditCard },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Employees", href: "/employees", icon: UserCog },
   { name: "Farm Expenses", href: "/expenses", icon: Receipt },
   { name: "Farm Inventory", href: "/inventory", icon: Package },
