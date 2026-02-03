@@ -58,50 +58,62 @@ export default function Livestock() {
     soldTo: "",
   });
 
-  useEffect(() => {
+  const fetchLivestock = async () => {
     if (!farm?.id) {
       setLoading(false);
       return;
     }
+    
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("livestock")
+      .select("*")
+      .eq("farm_id", farm.id)
+      .order("created_at", { ascending: false });
 
-    const fetchLivestock = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("livestock")
-        .select("*")
-        .eq("farm_id", farm.id)
-        .order("created_at", { ascending: false });
+    if (error) {
+      console.error("Error fetching livestock:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load livestock data.",
+        variant: "destructive",
+      });
+    } else {
+      setAnimals(data.map(a => ({
+        id: a.id,
+        name: a.name,
+        type: a.type,
+        breed: a.breed || "",
+        tag: a.tag,
+        age: a.age || "",
+        weight: a.weight || "",
+        status: a.status as AnimalStatus,
+        lastFed: a.last_fed ? new Date(a.last_fed).toLocaleString() : "Not yet fed",
+        feedType: a.feed_type || "",
+        purchaseCost: a.purchase_cost || 0,
+        salePrice: a.sale_price,
+        soldAt: a.sold_at,
+        soldTo: a.sold_to,
+      })));
+    }
+    setLoading(false);
+  };
 
-      if (error) {
-        console.error("Error fetching livestock:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load livestock data.",
-          variant: "destructive",
-        });
-      } else {
-        setAnimals(data.map(a => ({
-          id: a.id,
-          name: a.name,
-          type: a.type,
-          breed: a.breed || "",
-          tag: a.tag,
-          age: a.age || "",
-          weight: a.weight || "",
-          status: a.status as AnimalStatus,
-          lastFed: a.last_fed ? new Date(a.last_fed).toLocaleString() : "Not yet fed",
-          feedType: a.feed_type || "",
-          purchaseCost: a.purchase_cost || 0,
-          salePrice: a.sale_price,
-          soldAt: a.sold_at,
-          soldTo: a.sold_to,
-        })));
-      }
-      setLoading(false);
-    };
-
+  useEffect(() => {
     fetchLivestock();
-  }, [farm?.id, toast]);
+  }, [farm?.id]);
+
+  // Refetch when page becomes visible (e.g., after navigating back from Animal Sale)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && farm?.id) {
+        fetchLivestock();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [farm?.id]);
 
   // Separate active and sold animals
   const activeAnimals = animals.filter(a => !a.soldAt);
