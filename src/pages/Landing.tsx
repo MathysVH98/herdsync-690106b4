@@ -594,9 +594,23 @@ export default function Landing() {
             <div>
               <h4 className="font-semibold mb-4">Product</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
+                <li>
+                  <button 
+                    onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Features
+                  </button>
+                </li>
                 <li><Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link></li>
-                <li><a href="#testimonials" className="hover:text-foreground transition-colors">Testimonials</a></li>
+                <li>
+                  <button 
+                    onClick={() => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' })}
+                    className="hover:text-foreground transition-colors"
+                  >
+                    Testimonials
+                  </button>
+                </li>
               </ul>
             </div>
             <div>

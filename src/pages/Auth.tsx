@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wheat, Mail, Lock, User, Building } from "lucide-react";
+import { Wheat, Mail, Lock, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -15,6 +16,13 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    navigate("/dashboard");
+    return null;
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,8 +91,8 @@ export default function Auth() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
+        {/* Logo - Clickable */}
+        <Link to="/" className="flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
           <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
             <Wheat className="w-7 h-7 text-primary-foreground" />
           </div>
@@ -94,7 +102,7 @@ export default function Auth() {
             </h1>
             <p className="text-xs text-muted-foreground">Farm Management Made Simple</p>
           </div>
-        </div>
+        </Link>
 
         <div className="card-elevated p-6">
           <Tabs defaultValue="login" className="space-y-6">
@@ -206,7 +214,15 @@ export default function Auth() {
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          By continuing, you agree to our Terms of Service and Privacy Policy.
+          By continuing, you agree to our{" "}
+          <Link to="/terms" className="text-primary hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/disclaimer" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </div>
