@@ -39,8 +39,10 @@ const typeConfig: Record<HealthRecordType, { icon: typeof Syringe; color: string
   "Farrier Visit": { icon: Scissors, color: "bg-muted text-muted-foreground border-border" },
 };
 
+const defaultConfig = { icon: Stethoscope, color: "bg-muted text-muted-foreground border-border" };
+
 export function HealthRecordCard({ record }: HealthRecordCardProps) {
-  const config = typeConfig[record.type];
+  const config = typeConfig[record.type as HealthRecordType] || defaultConfig;
   const Icon = config.icon;
 
   return (
