@@ -341,12 +341,14 @@ export default function Pricing() {
                 } ${tier.underDevelopment ? "overflow-hidden" : ""}`}
               >
                 {tier.underDevelopment && (
-                  <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
-                    <Construction className="w-12 h-12 text-muted-foreground mb-3" />
-                    <p className="font-semibold text-lg text-foreground">Coming Soon</p>
-                    <p className="text-sm text-muted-foreground text-center px-4 mt-1">
-                      We're still building the GPS tracking feature
-                    </p>
+                  <div className="absolute inset-0 z-10 bg-background/40 backdrop-blur-[2px] flex flex-col items-center justify-center">
+                    <div className="bg-background/90 rounded-lg px-4 py-3 text-center shadow-lg">
+                      <Construction className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="font-semibold text-foreground">Coming Soon</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        GPS tracking in development
+                      </p>
+                    </div>
                   </div>
                 )}
                 {tier.popular && (
