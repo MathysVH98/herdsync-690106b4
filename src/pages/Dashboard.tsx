@@ -3,6 +3,7 @@ import { Layout } from "@/components/Layout";
 import { StatsCard } from "@/components/StatsCard";
 import { FeedingSchedule, FeedingItem } from "@/components/FeedingSchedule";
 import { AlertList } from "@/components/AlertCard";
+import { WeatherWidget } from "@/components/WeatherWidget";
 import { Badge } from "@/components/ui/badge";
 import { getAnimalImage } from "@/utils/animalImages";
 import { useFarm } from "@/hooks/useFarm";
@@ -251,8 +252,11 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Right Column - Alerts */}
+          {/* Right Column - Weather & Alerts */}
           <div className="space-y-6">
+            {/* Weather Widget */}
+            <WeatherWidget />
+            
             {/* Alerts */}
             <div className="card-elevated p-6">
               <div className="flex items-center justify-between mb-4">
