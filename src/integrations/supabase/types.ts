@@ -82,7 +82,7 @@ export type Database = {
             foreignKeyName: "animal_sale_items_animal_id_fkey"
             columns: ["animal_id"]
             isOneToOne: false
-            referencedRelation: "animals"
+            referencedRelation: "livestock"
             referencedColumns: ["id"]
           },
           {
