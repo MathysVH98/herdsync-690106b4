@@ -55,6 +55,26 @@ const complianceNavigation = [
   { name: "Chemicals & Remedies", href: "/compliance/chemicals", icon: Beaker },
 ];
 
+// Routes that are in the sidebar navigation (main pages)
+const mainNavigationPaths = [
+  "/",
+  "/livestock",
+  "/employees", 
+  "/feeding",
+  "/inventory",
+  "/health",
+  "/market",
+  "/audit",
+  "/reports",
+  "/tracking",
+  "/pricing",
+  "/compliance",
+  "/compliance/documents",
+  "/compliance/labour-ohs",
+  "/compliance/chemicals",
+  "/auth",
+];
+
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,7 +82,8 @@ export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const { farm } = useFarm();
   
-  const isHomePage = location.pathname === "/";
+  // Only show back button on sub-pages (not main navigation pages)
+  const showBackButton = !mainNavigationPaths.includes(location.pathname);
 
   return (
     <div 
@@ -197,7 +218,7 @@ export function Layout({ children }: LayoutProps) {
         <main className="flex-1 overflow-auto">
           <div className="p-4 lg:p-8">
             <SubscriptionBanner />
-            {!isHomePage && (
+            {showBackButton && (
               <Button
                 variant="ghost"
                 size="sm"
