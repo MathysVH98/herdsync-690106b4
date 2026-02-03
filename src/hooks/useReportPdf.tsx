@@ -25,6 +25,36 @@ interface FeedConsumptionItem {
   consumption: number;
 }
 
+interface InventoryStat {
+  category: string;
+  itemCount: number;
+  totalValue: number;
+  lowStockCount: number;
+}
+
+interface InventoryItem {
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  value: number;
+  status: string;
+}
+
+interface LowStockItem {
+  name: string;
+  category: string;
+  quantity: number;
+  unit: string;
+  reorderLevel: number;
+}
+
+interface UsageStat {
+  category: string;
+  totalUsed: number;
+  usageCount: number;
+}
+
 interface ReportData {
   farmName: string;
   totalDailyCost: number;
@@ -35,6 +65,12 @@ interface ReportData {
   dailyCosts: DailyCost[];
   healthData: HealthDataItem[];
   feedConsumption: FeedConsumptionItem[];
+  // Inventory data
+  totalInventoryValue: number;
+  inventoryStats: InventoryStat[];
+  inventoryItemsList: InventoryItem[];
+  lowStockItems: LowStockItem[];
+  usageStats: UsageStat[];
 }
 
 export function useReportPdf() {
@@ -180,6 +216,149 @@ export function useReportPdf() {
         body: data.feedConsumption.map((item) => [
           item.name,
           item.consumption.toString(),
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [34, 87, 52] },
+        margin: { left: 14, right: 14 },
+      });
+
+      yPosition = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    }
+
+    // ===== INVENTORY SECTION =====
+    doc.addPage();
+    yPosition = 20;
+
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("Farm Inventory Report", pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 15;
+
+    // Inventory Summary
+    doc.setFontSize(14);
+    doc.text("Inventory Summary", 14, yPosition);
+    
+    yPosition += 8;
+    autoTable(doc, {
+      startY: yPosition,
+      head: [["Metric", "Value"]],
+      body: [
+        ["Total Inventory Value", `R${data.totalInventoryValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}`],
+        ["Total Items", data.inventoryItemsList.length.toString()],
+        ["Low Stock Alerts", data.lowStockItems.length.toString()],
+      ],
+      theme: "striped",
+      headStyles: { fillColor: [34, 87, 52] },
+      margin: { left: 14, right: 14 },
+    });
+
+    yPosition = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+
+    // Inventory by Category
+    if (data.inventoryStats.length > 0) {
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Inventory by Category", 14, yPosition);
+      
+      yPosition += 8;
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Category", "Items", "Total Value (R)", "Low Stock"]],
+        body: data.inventoryStats.map((stat) => [
+          stat.category,
+          stat.itemCount.toString(),
+          stat.totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+          stat.lowStockCount > 0 ? `⚠️ ${stat.lowStockCount}` : "✓",
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [34, 87, 52] },
+        margin: { left: 14, right: 14 },
+      });
+
+      yPosition = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    }
+
+    // Full Inventory List
+    if (data.inventoryItemsList.length > 0) {
+      if (yPosition > 200) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Complete Inventory List", 14, yPosition);
+      
+      yPosition += 8;
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Item", "Category", "Quantity", "Value (R)", "Status"]],
+        body: data.inventoryItemsList.map((item) => [
+          item.name,
+          item.category,
+          `${item.quantity} ${item.unit}`,
+          item.value.toLocaleString(undefined, { minimumFractionDigits: 2 }),
+          item.status,
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [34, 87, 52] },
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 9 },
+      });
+
+      yPosition = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    }
+
+    // Low Stock Alerts
+    if (data.lowStockItems.length > 0) {
+      if (yPosition > 220) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(180, 0, 0);
+      doc.text("⚠️ Low Stock Alerts", 14, yPosition);
+      doc.setTextColor(0, 0, 0);
+      
+      yPosition += 8;
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Item", "Category", "Current Stock", "Reorder Level"]],
+        body: data.lowStockItems.map((item) => [
+          item.name,
+          item.category,
+          `${item.quantity} ${item.unit}`,
+          `${item.reorderLevel} ${item.unit}`,
+        ]),
+        theme: "striped",
+        headStyles: { fillColor: [180, 50, 50] },
+        margin: { left: 14, right: 14 },
+      });
+
+      yPosition = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    }
+
+    // Usage Statistics (Last 30 Days)
+    if (data.usageStats.length > 0) {
+      if (yPosition > 220) {
+        doc.addPage();
+        yPosition = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("Inventory Usage (Last 30 Days)", 14, yPosition);
+      
+      yPosition += 8;
+      autoTable(doc, {
+        startY: yPosition,
+        head: [["Category", "Usage Events", "Total Quantity Used"]],
+        body: data.usageStats.map((stat) => [
+          stat.category,
+          stat.usageCount.toString(),
+          stat.totalUsed.toString(),
         ]),
         theme: "striped",
         headStyles: { fillColor: [34, 87, 52] },
