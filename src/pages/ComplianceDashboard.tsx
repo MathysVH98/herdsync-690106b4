@@ -20,8 +20,11 @@ import {
   Shield,
   Truck,
   Calendar,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useMonthlyCompliance, getMonthYearLabel } from "@/hooks/useMonthlyCompliance";
 
 interface ComplianceStatus {
   category: string;
@@ -71,6 +74,15 @@ export default function ComplianceDashboard() {
   const [trainingCount, setTrainingCount] = useState(0);
   const [chemicalCount, setChemicalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  
+  const {
+    loading: complianceLoading,
+    getOverallProgress,
+    getComplianceStatus,
+    currentMonthYear,
+  } = useMonthlyCompliance();
+  
+  const complianceStatus = getComplianceStatus();
 
   useEffect(() => {
     if (farm?.id) {
@@ -254,6 +266,65 @@ export default function ComplianceDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Monthly Compliance Status Block */}
+        <Card 
+          className={`card-elevated cursor-pointer hover:shadow-lg transition-shadow border-l-4 ${
+            complianceStatus.color === "green" 
+              ? "border-l-green-500" 
+              : complianceStatus.color === "yellow" 
+              ? "border-l-yellow-500" 
+              : "border-l-red-500"
+          }`}
+          onClick={() => navigate("/audit")}
+        >
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
+                complianceStatus.color === "green" 
+                  ? "bg-green-500/10" 
+                  : complianceStatus.color === "yellow" 
+                  ? "bg-yellow-500/10" 
+                  : "bg-red-500/10"
+              }`}>
+                {complianceStatus.color === "green" ? (
+                  <CheckCircle2 className="w-7 h-7 text-green-600" />
+                ) : complianceStatus.color === "yellow" ? (
+                  <AlertTriangle className="w-7 h-7 text-yellow-600" />
+                ) : (
+                  <XCircle className="w-7 h-7 text-red-600" />
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-lg text-foreground">
+                    Monthly Compliance Status
+                  </h3>
+                  <Badge 
+                    variant="outline" 
+                    className={
+                      complianceStatus.color === "green" 
+                        ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                        : complianceStatus.color === "yellow" 
+                        ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" 
+                        : "bg-red-500/10 text-red-600 border-red-500/20"
+                    }
+                  >
+                    {complianceStatus.label}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  {getMonthYearLabel(currentMonthYear)} • {complianceLoading ? "Loading..." : `${getOverallProgress()}% of checklist items completed`}
+                </p>
+                <Progress 
+                  value={complianceLoading ? 0 : getOverallProgress()} 
+                  className="h-2" 
+                />
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Missing Documents Alert */}
         <Card className="card-elevated border-l-4 border-l-yellow-500">

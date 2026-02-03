@@ -760,6 +760,59 @@ export type Database = {
           },
         ]
       }
+      monthly_compliance_checklists: {
+        Row: {
+          category_id: string
+          completed: boolean
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          farm_id: string
+          id: string
+          item_id: string
+          item_text: string
+          month_year: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          farm_id: string
+          id?: string
+          item_id: string
+          item_text: string
+          month_year: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          farm_id?: string
+          id?: string
+          item_id?: string
+          item_text?: string
+          month_year?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_compliance_checklists_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ppe_issues: {
         Row: {
           created_at: string
