@@ -80,6 +80,7 @@ export default function ComplianceDashboard() {
     getOverallProgress,
     getComplianceStatus,
     currentMonthYear,
+    history,
   } = useMonthlyCompliance();
   
   const complianceStatus = getComplianceStatus();
@@ -325,6 +326,81 @@ export default function ComplianceDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Compliance History */}
+        {history.length > 1 && (
+          <Card className="card-elevated">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                Compliance History
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {history.slice(0, 6).map((month) => (
+                  <div 
+                    key={month.monthYear} 
+                    className={`flex items-center gap-4 p-3 rounded-lg ${
+                      month.monthYear === currentMonthYear 
+                        ? "bg-primary/5 border border-primary/20" 
+                        : "bg-muted/30"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      month.status.color === "green" 
+                        ? "bg-green-500/10" 
+                        : month.status.color === "yellow" 
+                        ? "bg-yellow-500/10" 
+                        : "bg-red-500/10"
+                    }`}>
+                      {month.status.color === "green" ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      ) : month.status.color === "yellow" ? (
+                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-foreground">
+                          {month.label}
+                        </span>
+                        {month.monthYear === currentMonthYear && (
+                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                            Current
+                          </Badge>
+                        )}
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs ${
+                            month.status.color === "green" 
+                              ? "bg-green-500/10 text-green-600 border-green-500/20" 
+                              : month.status.color === "yellow" 
+                              ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20" 
+                              : "bg-red-500/10 text-red-600 border-red-500/20"
+                          }`}
+                        >
+                          {month.status.label}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Progress value={month.progress} className="h-2 flex-1" />
+                        <span className="text-sm text-muted-foreground w-12 text-right">
+                          {month.progress}%
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {month.completedItems} of {month.totalItems} items completed
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Missing Documents Alert */}
         <Card className="card-elevated border-l-4 border-l-yellow-500">
