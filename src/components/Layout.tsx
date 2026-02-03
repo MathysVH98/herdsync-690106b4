@@ -53,11 +53,11 @@ const navigation = [
   { name: "Livestock", href: "/livestock", icon: PawPrint },
   { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Tracking", href: "/tracking", icon: MapPin },
 ];
 
 const proNavigation = [
   { name: "Ask a Pro", href: "/ask-a-pro", icon: Sparkles },
+  { name: "Tracking", href: "/tracking", icon: MapPin },
 ];
 
 const complianceNavigation = [
