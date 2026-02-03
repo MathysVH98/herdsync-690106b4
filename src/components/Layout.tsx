@@ -21,6 +21,7 @@ import {
   UserCog,
   ArrowLeft,
   Receipt,
+  MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -49,6 +50,7 @@ const navigation = [
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
   { name: "Pricing & Plans", href: "/pricing", icon: CreditCard },
+  { name: "Contact Us", href: "/contact", icon: MessageSquare },
 ];
 
 const complianceNavigation = [
@@ -77,6 +79,7 @@ const mainNavigationPaths = [
   "/compliance/documents",
   "/compliance/labour-ohs",
   "/compliance/chemicals",
+  "/contact",
   "/auth",
 ];
 
