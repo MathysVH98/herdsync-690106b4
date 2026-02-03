@@ -285,7 +285,10 @@ export function useAnimalSales() {
   const finalizeSale = async (
     sale: AnimalSale,
     items: AnimalSaleItem[],
-    markAnimalsSold: (ids: string[], salePrice?: number, soldTo?: string) => Promise<boolean>
+    markAnimalsSoldWithPrices: (
+      items: { animal_id: string; unit_price: number | null }[],
+      soldTo?: string
+    ) => Promise<boolean>
   ): Promise<AnimalSale | null> => {
     // Validate required fields
     if (!sale.buyer_name || !sale.seller_name || items.length === 0) {
@@ -302,11 +305,13 @@ export function useAnimalSales() {
     const savedSale = await saveSale(finalizedSale, items);
 
     if (savedSale) {
-      // Mark animals as sold with proper sale info
-      const animalIds = items.map((item) => item.animal_id);
-      // Pass the total amount and buyer name to update livestock records
-      await markAnimalsSold(animalIds, sale.total_amount, sale.buyer_name);
-      toast({ title: "Sale Finalized", description: "Animals have been marked as sold." });
+      // Mark animals as sold with their individual prices from the sale items
+      const itemsWithPrices = items.map((item) => ({
+        animal_id: item.animal_id,
+        unit_price: item.unit_price,
+      }));
+      await markAnimalsSoldWithPrices(itemsWithPrices, sale.buyer_name);
+      toast({ title: "Sale Finalized", description: "Animals have been marked as sold with their sale prices." });
     }
 
     return savedSale;
