@@ -40,30 +40,33 @@ interface LayoutProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Livestock", href: "/livestock", icon: PawPrint },
-  { name: "Employees", href: "/employees", icon: UserCog },
-  { name: "Feeding Schedule", href: "/feeding", icon: Clock },
-  { name: "Farm Inventory", href: "/inventory", icon: Package },
-  { name: "Health Records", href: "/health", icon: Stethoscope },
-  { name: "Farm Expenses", href: "/expenses", icon: Receipt },
-  { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Animal Sale", href: "/animal-sale", icon: CreditCard },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Employees", href: "/employees", icon: UserCog },
+  { name: "Farm Expenses", href: "/expenses", icon: Receipt },
+  { name: "Farm Inventory", href: "/inventory", icon: Package },
+  { name: "Feeding Schedule", href: "/feeding", icon: Clock },
+  { name: "Health Records", href: "/health", icon: Stethoscope },
+  { name: "Livestock", href: "/livestock", icon: PawPrint },
+  { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
-  { name: "Pricing & Plans", href: "/pricing", icon: CreditCard },
-  { name: "About Us", href: "/about", icon: Info },
-  { name: "Contact Us", href: "/contact", icon: MessageSquare },
-  { name: "Terms of Service", href: "/terms", icon: FileTextIcon },
-  { name: "Disclaimer", href: "/disclaimer", icon: AlertCircle },
 ];
 
 const complianceNavigation = [
+  { name: "Chemicals & Remedies", href: "/compliance/chemicals", icon: Beaker },
   { name: "Compliance Dashboard", href: "/compliance", icon: Shield },
   { name: "Document Vault", href: "/compliance/documents", icon: FileText },
   { name: "Labour & OHS", href: "/compliance/labour-ohs", icon: Users },
-  { name: "Chemicals & Remedies", href: "/compliance/chemicals", icon: Beaker },
+];
+
+const informationNavigation = [
+  { name: "About Us", href: "/about", icon: Info },
+  { name: "Contact Us", href: "/contact", icon: MessageSquare },
+  { name: "Disclaimer", href: "/disclaimer", icon: AlertCircle },
+  { name: "Pricing & Plans", href: "/pricing", icon: CreditCard },
+  { name: "Terms of Service", href: "/terms", icon: FileTextIcon },
 ];
 
 // Routes that are in the sidebar navigation (main pages)
@@ -165,6 +168,27 @@ export function Layout({ children }: LayoutProps) {
                 Compliance (SA)
               </p>
               {complianceNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn("sidebar-nav-item", isActive && "active")}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Information Section */}
+            <div className="pt-4 mt-4 border-t border-sidebar-border">
+              <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
+                Information
+              </p>
+              {informationNavigation.map((item) => {
                 const isActive = location.pathname === item.href;
                 return (
                   <Link
