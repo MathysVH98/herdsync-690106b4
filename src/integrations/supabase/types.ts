@@ -1477,11 +1477,43 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          assigned_tier: Database["public"]["Enums"]["subscription_tier"] | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      get_admin_tier: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["subscription_tier"]
+      }
       get_subscription_status: {
         Args: { _farm_id: string }
         Returns: {
@@ -1496,6 +1528,13 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_farm_member: {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
@@ -1503,6 +1542,7 @@ export type Database = {
     }
     Enums: {
       animal_status: "available" | "sold" | "deceased" | "transferred"
+      app_role: "admin" | "user"
       audit_type:
         | "department_of_labour"
         | "ohs"
@@ -1673,6 +1713,7 @@ export const Constants = {
   public: {
     Enums: {
       animal_status: ["available", "sold", "deceased", "transferred"],
+      app_role: ["admin", "user"],
       audit_type: [
         "department_of_labour",
         "ohs",
