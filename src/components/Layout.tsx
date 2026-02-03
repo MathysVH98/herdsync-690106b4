@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   PawPrint,
@@ -19,7 +19,9 @@ import {
   TrendingUp,
   CreditCard,
   UserCog,
+  ArrowLeft,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -55,9 +57,12 @@ const complianceNavigation = [
 
 export function Layout({ children }: LayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { farm } = useFarm();
+  
+  const isHomePage = location.pathname === "/";
 
   return (
     <div 
@@ -192,6 +197,17 @@ export function Layout({ children }: LayoutProps) {
         <main className="flex-1 overflow-auto">
           <div className="p-4 lg:p-8">
             <SubscriptionBanner />
+            {!isHomePage && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Button>
+            )}
             {children}
           </div>
         </main>
