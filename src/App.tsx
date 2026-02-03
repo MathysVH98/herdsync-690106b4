@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { FarmProvider } from "@/hooks/useFarm";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { SupportChat } from "@/components/SupportChat";
+import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Livestock from "./pages/Livestock";
 import Feeding from "./pages/Feeding";
@@ -45,7 +46,8 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Landing />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/livestock" element={<Livestock />} />
                 <Route path="/feeding" element={<Feeding />} />
                 <Route path="/inventory" element={<Inventory />} />

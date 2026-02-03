@@ -42,7 +42,7 @@ interface LayoutProps {
 }
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Animal Sale", href: "/animal-sale", icon: CreditCard },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
   { name: "Employees", href: "/employees", icon: UserCog },
@@ -77,7 +77,7 @@ const informationNavigation = [
 
 // Routes that are in the sidebar navigation (main pages)
 const mainNavigationPaths = [
-  "/",
+  "/dashboard",
   "/livestock",
   "/employees", 
   "/feeding",
