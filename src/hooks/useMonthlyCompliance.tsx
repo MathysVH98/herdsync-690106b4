@@ -101,6 +101,15 @@ export const getMonthYearLabel = (monthYear: string) => {
   return date.toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
 };
 
+export interface MonthlyHistory {
+  monthYear: string;
+  label: string;
+  totalItems: number;
+  completedItems: number;
+  progress: number;
+  status: { status: string; label: string; color: string };
+}
+
 export function useMonthlyCompliance() {
   const { farm } = useFarm();
   const { user } = useAuth();
@@ -108,6 +117,7 @@ export function useMonthlyCompliance() {
   const [loading, setLoading] = useState(true);
   const [checklists, setChecklists] = useState<Record<string, ChecklistItem[]>>({});
   const [currentMonthYear] = useState(getCurrentMonthYear());
+  const [history, setHistory] = useState<MonthlyHistory[]>([]);
 
   const initializeMonth = useCallback(async () => {
     if (!farm?.id || !user?.id) return;
@@ -185,15 +195,70 @@ export function useMonthlyCompliance() {
     }
   }, [farm?.id]);
 
+  const fetchHistory = useCallback(async () => {
+    if (!farm?.id) return;
+
+    try {
+      // Get all historical data grouped by month_year
+      const { data, error } = await supabase
+        .from("monthly_compliance_checklists")
+        .select("month_year, completed")
+        .eq("farm_id", farm.id)
+        .order("month_year", { ascending: false });
+
+      if (error) throw error;
+
+      // Group and calculate stats for each month
+      const monthStats: Record<string, { total: number; completed: number }> = {};
+      data?.forEach((item) => {
+        if (!monthStats[item.month_year]) {
+          monthStats[item.month_year] = { total: 0, completed: 0 };
+        }
+        monthStats[item.month_year].total += 1;
+        if (item.completed) {
+          monthStats[item.month_year].completed += 1;
+        }
+      });
+
+      // Convert to array and calculate progress
+      const historyData: MonthlyHistory[] = Object.entries(monthStats)
+        .map(([monthYear, stats]) => {
+          const progress = Math.round((stats.completed / stats.total) * 100);
+          let status: { status: string; label: string; color: string };
+          if (progress >= 80) {
+            status = { status: "compliant", label: "Compliant", color: "green" };
+          } else if (progress >= 50) {
+            status = { status: "partial", label: "Partially Compliant", color: "yellow" };
+          } else {
+            status = { status: "non-compliant", label: "Non-Compliant", color: "red" };
+          }
+          return {
+            monthYear,
+            label: getMonthYearLabel(monthYear),
+            totalItems: stats.total,
+            completedItems: stats.completed,
+            progress,
+            status,
+          };
+        })
+        .sort((a, b) => b.monthYear.localeCompare(a.monthYear)); // Most recent first
+
+      setHistory(historyData);
+    } catch (error) {
+      console.error("Error fetching compliance history:", error);
+    }
+  }, [farm?.id]);
+
   useEffect(() => {
     const init = async () => {
       await initializeMonth();
       await fetchChecklists();
+      await fetchHistory();
     };
     if (farm?.id && user?.id) {
       init();
     }
-  }, [farm?.id, user?.id, initializeMonth, fetchChecklists]);
+  }, [farm?.id, user?.id, initializeMonth, fetchChecklists, fetchHistory]);
 
   const toggleItem = async (itemId: string, currentState: boolean) => {
     if (!user?.id) return;
@@ -269,6 +334,7 @@ export function useMonthlyCompliance() {
     checklists,
     categories,
     currentMonthYear,
+    history,
     toggleItem,
     getOverallProgress,
     getCategoryProgress,
