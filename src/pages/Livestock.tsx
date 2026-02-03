@@ -28,6 +28,12 @@ import { supabase } from "@/integrations/supabase/client";
 const statusOptions: AnimalStatus[] = ["Healthy", "Under Observation", "Sick", "Pregnant"];
 const typeOptions = ["Cattle", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Horse"];
 
+const normalizeAnimalType = (value: string) => {
+  const v = (value || "").trim().toLowerCase();
+  if (v === "cow" || v === "cattle") return "cattle";
+  return v;
+};
+
 export default function Livestock() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,14 +125,29 @@ export default function Livestock() {
   const activeAnimals = animals.filter(a => !a.soldAt);
   const soldAnimals = animals.filter(a => a.soldAt);
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    // Prevent hidden filters from unintentionally hiding sold animals
+    if (value === "sold") {
+      setFilterStatus("all");
+      setFilterType("all");
+      setSearchTerm("");
+    }
+  };
+
   const filteredAnimals = (activeTab === "active" ? activeAnimals : soldAnimals).filter((animal) => {
     const matchesSearch = 
       animal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       animal.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
       animal.breed.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === "all" || animal.status === filterStatus;
-    const matchesType = filterType === "all" || animal.type === filterType;
+
+    // Only apply status/type filters on the Active tab (Sold tab only supports search)
+    const matchesStatus =
+      activeTab !== "active" ? true : filterStatus === "all" || animal.status === filterStatus;
+    const matchesType =
+      activeTab !== "active"
+        ? true
+        : filterType === "all" || normalizeAnimalType(animal.type) === normalizeAnimalType(filterType);
 
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -470,7 +491,7 @@ export default function Livestock() {
         </div>
 
         {/* Tabs for Active vs Sold */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="active">
               Active ({activeAnimals.length})
