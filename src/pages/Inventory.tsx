@@ -14,12 +14,16 @@ import {
   FlaskConical,
   Cog,
   Wheat,
-  History
+  History,
+  Tractor
 } from "lucide-react";
 import { useFarm } from "@/hooks/useFarm";
 import { useInventory, InventoryItem, INVENTORY_CATEGORIES } from "@/hooks/useInventory";
+import { useFarmEquipment } from "@/hooks/useFarmEquipment";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { AddInventoryDialog } from "@/components/inventory/AddInventoryDialog";
+import { AddEquipmentDialog } from "@/components/inventory/AddEquipmentDialog";
+import { EquipmentTable } from "@/components/inventory/EquipmentTable";
 import { RestockDialog } from "@/components/inventory/RestockDialog";
 import { UsageLogDialog } from "@/components/inventory/UsageLogDialog";
 import {
@@ -54,14 +58,24 @@ export default function Inventory() {
     getLowStockItems,
     getTotalValue,
   } = useInventory();
+  
+  const {
+    equipment,
+    loading: equipmentLoading,
+    addEquipment,
+    deleteEquipment,
+    getTotalValue: getEquipmentTotalValue,
+  } = useFarmEquipment();
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddEquipmentDialogOpen, setIsAddEquipmentDialogOpen] = useState(false);
   const [restockItem_, setRestockItem] = useState<InventoryItem | null>(null);
   const [usageItem, setUsageItem] = useState<InventoryItem | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
 
   const lowStockItems = getLowStockItems();
   const totalValue = getTotalValue();
+  const equipmentValue = getEquipmentTotalValue();
   const totalItems = inventory.length;
 
   const filteredItems = activeCategory === "all" 
@@ -95,17 +109,26 @@ export default function Inventory() {
             </p>
           </div>
 
-          <Button 
-            onClick={() => setIsAddDialogOpen(true)}
-            className="bg-gradient-primary text-primary-foreground"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Item
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-gradient-primary text-primary-foreground"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Item
+            </Button>
+            <Button 
+              onClick={() => setIsAddEquipmentDialogOpen(true)}
+              variant="outline"
+            >
+              <Tractor className="w-4 h-4 mr-2" />
+              Add Equipment
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard
             title="Total Items"
             value={loading ? "-" : totalItems}
@@ -119,13 +142,18 @@ export default function Inventory() {
             variant={lowStockItems.length > 0 ? "warning" : "default"}
           />
           <StatsCard
-            title="Categories"
-            value={loading ? "-" : new Set(inventory.map(i => i.category)).size}
-            icon={Package}
+            title="Equipment"
+            value={equipmentLoading ? "-" : equipment.length}
+            icon={Tractor}
           />
           <StatsCard
-            title="Total Value"
+            title="Inventory Value"
             value={loading ? "-" : `R${totalValue.toLocaleString()}`}
+            icon={Calculator}
+          />
+          <StatsCard
+            title="Equipment Value"
+            value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString()}`}
             icon={Calculator}
           />
         </div>
@@ -167,6 +195,10 @@ export default function Inventory() {
                 {cat}
               </TabsTrigger>
             ))}
+            <TabsTrigger value="equipment" className="flex items-center gap-1">
+              <Tractor className="h-4 w-4" />
+              Equipment
+            </TabsTrigger>
             <TabsTrigger value="usage-log" className="flex items-center gap-1">
               <History className="h-4 w-4" />
               Usage Log
@@ -188,6 +220,18 @@ export default function Inventory() {
               )}
             </TabsContent>
           ))}
+
+          {/* Equipment View */}
+          <TabsContent value="equipment" className="mt-4">
+            {equipmentLoading ? (
+              <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+            ) : (
+              <EquipmentTable
+                items={equipment}
+                onDelete={deleteEquipment}
+              />
+            )}
+          </TabsContent>
 
           {/* Usage Log View */}
           <TabsContent value="usage-log" className="mt-4">
@@ -260,6 +304,12 @@ export default function Inventory() {
         onOpenChange={(open) => !open && setUsageItem(null)}
         item={usageItem}
         onSubmit={logUsage}
+      />
+
+      <AddEquipmentDialog
+        open={isAddEquipmentDialogOpen}
+        onOpenChange={setIsAddEquipmentDialogOpen}
+        onSubmit={addEquipment}
       />
     </Layout>
   );
