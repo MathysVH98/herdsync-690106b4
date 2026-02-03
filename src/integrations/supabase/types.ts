@@ -372,6 +372,7 @@ export type Database = {
           start_date: string
           status: string
           tax_number: string | null
+          uif_registered: boolean | null
           updated_at: string
         }
         Insert: {
@@ -393,6 +394,7 @@ export type Database = {
           start_date?: string
           status?: string
           tax_number?: string | null
+          uif_registered?: boolean | null
           updated_at?: string
         }
         Update: {
@@ -414,6 +416,7 @@ export type Database = {
           start_date?: string
           status?: string
           tax_number?: string | null
+          uif_registered?: boolean | null
           updated_at?: string
         }
         Relationships: [
