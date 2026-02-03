@@ -119,12 +119,13 @@ const pricingTiers = [
   },
   {
     name: "Pro",
-    price: "R599",
-    period: "/month",
+    price: "Contact Us",
+    period: "",
     description: "Unlimited power for large operations",
     animalLimit: "Unlimited animals",
     tier: "pro" as const,
     underDevelopment: true,
+    hidePrice: true,
     features: [
       "Everything in Starter",
       "GPS tracking & mapping",
@@ -132,6 +133,10 @@ const pricingTiers = [
       "Multi-user access",
       "API access",
       "Dedicated support",
+    ],
+    proOptions: [
+      { label: "Web-Based Subscription", price: "R599", period: "/month" },
+      { label: "GPS Tracking Package", price: "R599", period: "/month", note: "+ installation & hardware fees" },
     ],
   },
 ];
@@ -146,6 +151,7 @@ export default function Pricing() {
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMethod, setProcessingMethod] = useState<"yoco" | null>(null);
+  const [showProOptions, setShowProOptions] = useState(false);
 
   // Check if user is an admin locked to a specific tier
   const isAdminLocked = adminInfo.isAdmin && adminInfo.assignedTier !== null;
@@ -404,10 +410,16 @@ export default function Pricing() {
                 <CardHeader className="text-center pb-2">
                   <CardTitle className="text-2xl font-display">{tier.name}</CardTitle>
                   <CardDescription>{tier.description}</CardDescription>
-                  <div className="pt-4">
-                    <span className="text-4xl font-bold">{tier.price}</span>
-                    <span className="text-muted-foreground">{tier.period}</span>
-                  </div>
+                  {!tier.hidePrice ? (
+                    <div className="pt-4">
+                      <span className="text-4xl font-bold">{tier.price}</span>
+                      <span className="text-muted-foreground">{tier.period}</span>
+                    </div>
+                  ) : (
+                    <div className="pt-4">
+                      <span className="text-2xl font-semibold text-primary">See Options Below</span>
+                    </div>
+                  )}
                   <Badge variant="outline" className="mt-2">
                     {tier.animalLimit}
                   </Badge>
@@ -442,6 +454,49 @@ export default function Pricing() {
                       <Lock className="w-4 h-4 mr-2" />
                       Not Available
                     </Button>
+                  ) : tier.underDevelopment && tier.proOptions ? (
+                    <div className="w-full space-y-3">
+                      {!showProOptions ? (
+                        <Button 
+                          className="w-full" 
+                          variant="outline" 
+                          onClick={() => setShowProOptions(true)}
+                        >
+                          View Pricing Options
+                        </Button>
+                      ) : (
+                        <>
+                          {tier.proOptions.map((option, idx) => (
+                            <div key={idx} className="p-3 border border-border rounded-lg bg-muted/50">
+                              <p className="font-semibold text-sm">{option.label}</p>
+                              <div className="flex items-baseline gap-1 mt-1">
+                                <span className="text-xl font-bold">{option.price}</span>
+                                <span className="text-muted-foreground text-sm">{option.period}</span>
+                              </div>
+                              {option.note && (
+                                <p className="text-xs text-muted-foreground mt-1">{option.note}</p>
+                              )}
+                              <Button 
+                                className="w-full mt-2" 
+                                variant="outline" 
+                                size="sm"
+                                disabled
+                              >
+                                Coming Soon
+                              </Button>
+                            </div>
+                          ))}
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full" 
+                            onClick={() => setShowProOptions(false)}
+                          >
+                            Hide Options
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   ) : tier.underDevelopment ? (
                     <Button className="w-full" variant="outline" disabled>
                       Coming Soon
