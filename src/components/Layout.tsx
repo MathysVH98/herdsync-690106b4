@@ -40,7 +40,7 @@ const navigation = [
   { name: "Livestock", href: "/livestock", icon: PawPrint },
   { name: "Employees", href: "/employees", icon: UserCog },
   { name: "Feeding Schedule", href: "/feeding", icon: Clock },
-  { name: "Feed Inventory", href: "/inventory", icon: Package },
+  { name: "Farm Inventory", href: "/inventory", icon: Package },
   { name: "Health Records", href: "/health", icon: Stethoscope },
   { name: "Farm Expenses", href: "/expenses", icon: Receipt },
   { name: "Market Area", href: "/market", icon: TrendingUp },

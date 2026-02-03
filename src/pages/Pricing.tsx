@@ -51,7 +51,7 @@ const features = [
   },
   {
     icon: Wheat,
-    title: "Feed Inventory",
+    title: "Farm Inventory",
     description: "Monitor stock levels with low-stock alerts",
   },
 ];
