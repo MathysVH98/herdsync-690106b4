@@ -50,7 +50,7 @@ export function AnimalSaleForm({ existingSale, onBack, onSaved }: AnimalSaleForm
   const { user } = useAuth();
   const { farm } = useFarm();
   const { toast } = useToast();
-  const { animals, getAvailableAnimals, markAnimalsSold } = useAnimals();
+  const { animals, getAvailableAnimals, markAnimalsSoldWithPrices } = useAnimals();
   const { saveSale, finalizeSale } = useAnimalSales();
 
   const [sale, setSale] = useState<AnimalSale>(existingSale || getDefaultSale());
@@ -139,7 +139,7 @@ export function AnimalSaleForm({ existingSale, onBack, onSaved }: AnimalSaleForm
 
   const handleFinalize = async () => {
     setSaving(true);
-    const savedSale = await finalizeSale(sale, items, markAnimalsSold);
+    const savedSale = await finalizeSale(sale, items, markAnimalsSoldWithPrices);
     if (savedSale) {
       setSale((prev) => ({ ...prev, id: savedSale.id, sale_number: savedSale.sale_number, sale_status: "finalized" }));
       onSaved?.();

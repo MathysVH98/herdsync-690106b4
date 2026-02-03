@@ -71,6 +71,39 @@ export function useAnimals() {
     return animals.filter((a) => a.status === "available");
   };
 
+  // Mark animals as sold with individual prices from sale items
+  const markAnimalsSoldWithPrices = async (
+    items: { animal_id: string; unit_price: number | null }[],
+    soldTo?: string
+  ) => {
+    const now = new Date().toISOString();
+    
+    // Update each animal with its individual sale price
+    const updatePromises = items.map((item) =>
+      supabase
+        .from("livestock")
+        .update({
+          sold_at: now,
+          sale_price: item.unit_price || null,
+          sold_to: soldTo || null,
+        })
+        .eq("id", item.animal_id)
+    );
+
+    const results = await Promise.all(updatePromises);
+    const errors = results.filter((r) => r.error);
+
+    if (errors.length > 0) {
+      console.error("Error marking animals as sold:", errors);
+      toast({ title: "Error", description: "Failed to update some animals", variant: "destructive" });
+      return false;
+    }
+
+    await fetchAnimals();
+    return true;
+  };
+
+  // Legacy function for backward compatibility (single price for all)
   const markAnimalsSold = async (animalIds: string[], salePrice?: number, soldTo?: string) => {
     const { error } = await supabase
       .from("livestock")
@@ -103,5 +136,6 @@ export function useAnimals() {
     fetchAnimals,
     getAvailableAnimals,
     markAnimalsSold,
+    markAnimalsSoldWithPrices,
   };
 }
