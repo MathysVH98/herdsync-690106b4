@@ -140,7 +140,7 @@ export default function Pricing() {
   const { toast } = useToast();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingMethod, setProcessingMethod] = useState<"paypal" | "yoco" | null>(null);
+  const [processingMethod, setProcessingMethod] = useState<"yoco" | null>(null);
 
   // Handle payment callbacks
   useEffect(() => {
@@ -186,44 +186,6 @@ export default function Pricing() {
       return;
     }
     setSelectedTier(tier);
-  };
-
-  const handlePayPalPayment = async (tier: string) => {
-    if (!user || !farm) return;
-    
-    setIsProcessing(true);
-    setProcessingMethod("paypal");
-    
-    try {
-      const { data, error } = await supabase.functions.invoke("create-paypal-order", {
-        body: {
-          tier,
-          farmId: farm.id,
-          userId: user.id,
-          returnUrl: `${window.location.origin}/pricing?payment=success&provider=paypal`,
-          cancelUrl: `${window.location.origin}/pricing?payment=cancelled`,
-        },
-      });
-
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error);
-
-      // Redirect to PayPal approval page
-      if (data.approvalUrl) {
-        window.location.href = data.approvalUrl;
-      } else {
-        throw new Error("No approval URL returned from PayPal");
-      }
-    } catch (error) {
-      console.error("PayPal payment error:", error);
-      toast({
-        title: "Payment Error",
-        description: error instanceof Error ? error.message : "Failed to initiate PayPal payment",
-        variant: "destructive",
-      });
-      setIsProcessing(false);
-      setProcessingMethod(null);
-    }
   };
 
   const handleYocoPayment = async (tier: string) => {
@@ -405,23 +367,8 @@ export default function Pricing() {
                 <CardFooter className="flex flex-col gap-2">
                   {selectedTier === tier.tier ? (
                     <div className="w-full space-y-2">
-                      <p className="text-sm text-center text-muted-foreground mb-2">
-                        Choose payment method:
-                      </p>
                       <Button
-                        className="w-full bg-[#0070ba] hover:bg-[#005a94]"
-                        onClick={() => handlePayPalPayment(tier.tier)}
-                        disabled={isProcessing}
-                      >
-                        {isProcessing && processingMethod === "paypal" ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <CreditCard className="w-4 h-4 mr-2" />
-                        )}
-                        Pay with PayPal
-                      </Button>
-                      <Button
-                        className="w-full bg-[#00b67a] hover:bg-[#009966]"
+                        className="w-full bg-success hover:bg-success/90 text-success-foreground"
                         onClick={() => handleYocoPayment(tier.tier)}
                         disabled={isProcessing}
                       >
