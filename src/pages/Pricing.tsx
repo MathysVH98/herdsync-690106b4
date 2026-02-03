@@ -392,7 +392,7 @@ export default function Pricing() {
                     : "bg-background/80"
                 } ${tier.underDevelopment ? "overflow-hidden" : ""}`}
               >
-                {tier.underDevelopment && (
+                {tier.underDevelopment && !tier.proOptions && (
                   <div className="absolute inset-0 z-10 bg-background/20 flex items-start justify-center pt-4">
                     <div className="bg-background/95 rounded-lg px-3 py-2 text-center shadow-lg border border-border">
                       <div className="flex items-center gap-2">
