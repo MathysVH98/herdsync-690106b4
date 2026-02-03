@@ -1510,6 +1510,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_renew_admin_subscription: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       get_admin_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["subscription_tier"]
