@@ -22,6 +22,7 @@ import LabourOHS from "./pages/LabourOHS";
 import ChemicalsRemedies from "./pages/ChemicalsRemedies";
 import AuditPackBuilder from "./pages/AuditPackBuilder";
 import Pricing from "./pages/Pricing";
+import Employees from "./pages/Employees";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/compliance/documents" element={<DocumentVault />} />
                 <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
                 <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
+                <Route path="/employees" element={<Employees />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

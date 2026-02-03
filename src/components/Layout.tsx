@@ -18,6 +18,7 @@ import {
   LogOut,
   TrendingUp,
   CreditCard,
+  UserCog,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ interface LayoutProps {
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Livestock", href: "/livestock", icon: PawPrint },
+  { name: "Employees", href: "/employees", icon: UserCog },
   { name: "Feeding Schedule", href: "/feeding", icon: Clock },
   { name: "Feed Inventory", href: "/inventory", icon: Package },
   { name: "Health Records", href: "/health", icon: Stethoscope },
