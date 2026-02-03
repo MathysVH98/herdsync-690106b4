@@ -164,7 +164,40 @@ export default function Tracking() {
 
   return (
     <Layout>
-      <div className="space-y-6 h-full">
+      <div className="relative space-y-6 h-full">
+        {/* Under Development Overlay */}
+        <div className="absolute inset-0 z-50 pointer-events-none overflow-hidden">
+          {/* Blur overlay */}
+          <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
+          
+          {/* Cross tape - top-left to bottom-right */}
+          <div 
+            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+            style={{
+              width: '150%',
+              left: '-25%',
+              top: '35%',
+              transform: 'rotate(-35deg)',
+              transformOrigin: 'center',
+            }}
+          >
+            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
+          </div>
+          
+          {/* Cross tape - top-right to bottom-left */}
+          <div 
+            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+            style={{
+              width: '150%',
+              left: '-25%',
+              top: '55%',
+              transform: 'rotate(35deg)',
+              transformOrigin: 'center',
+            }}
+          >
+            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
+          </div>
+        </div>
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
