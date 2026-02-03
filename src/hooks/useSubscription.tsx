@@ -11,8 +11,14 @@ interface Subscription {
   tier: SubscriptionTier;
   status: SubscriptionStatus;
   trial_ends_at: string;
+  current_period_end: string | null;
   animal_limit: number;
   days_remaining: number;
+}
+
+interface AdminInfo {
+  isAdmin: boolean;
+  assignedTier: SubscriptionTier | null;
 }
 
 interface SubscriptionContextType {
@@ -21,6 +27,7 @@ interface SubscriptionContextType {
   isActive: boolean;
   isTrialing: boolean;
   daysRemaining: number;
+  adminInfo: AdminInfo;
   refetch: () => Promise<void>;
 }
 
@@ -30,6 +37,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   isActive: false,
   isTrialing: false,
   daysRemaining: 0,
+  adminInfo: { isAdmin: false, assignedTier: null },
   refetch: async () => {},
 });
 
@@ -44,6 +52,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const { farm } = useFarm();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [adminInfo, setAdminInfo] = useState<AdminInfo>({ isAdmin: false, assignedTier: null });
 
   const fetchSubscription = async () => {
     if (!user || !farm) {
@@ -53,6 +62,23 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      // Check if user is an admin with assigned tier
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role, assigned_tier")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (roleData) {
+        setAdminInfo({
+          isAdmin: true,
+          assignedTier: roleData.assigned_tier as SubscriptionTier | null,
+        });
+      } else {
+        setAdminInfo({ isAdmin: false, assignedTier: null });
+      }
+
       // First check if subscription exists
       const { data: existingData, error: existingError } = await supabase
         .from("subscriptions")
@@ -99,17 +125,33 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           tier: newSub.tier as SubscriptionTier,
           status: newSub.status as SubscriptionStatus,
           trial_ends_at: newSub.trial_ends_at,
+          current_period_end: newSub.current_period_end,
           animal_limit: newSub.animal_limit,
           days_remaining: daysRemaining,
         });
       } else {
-        const daysRemaining = Math.max(
-          0,
-          Math.ceil(
-            (new Date(existingData.trial_ends_at).getTime() - Date.now()) /
-              (1000 * 60 * 60 * 24)
-          )
-        );
+        // Calculate days remaining based on status
+        let daysRemaining: number;
+        
+        if (existingData.status === "active" && existingData.current_period_end) {
+          // For active subscriptions, count down to next billing date
+          daysRemaining = Math.max(
+            0,
+            Math.ceil(
+              (new Date(existingData.current_period_end).getTime() - Date.now()) /
+                (1000 * 60 * 60 * 24)
+            )
+          );
+        } else {
+          // For trials, count down to trial end
+          daysRemaining = Math.max(
+            0,
+            Math.ceil(
+              (new Date(existingData.trial_ends_at).getTime() - Date.now()) /
+                (1000 * 60 * 60 * 24)
+            )
+          );
+        }
 
         // Check if trial has expired and update status
         if (
@@ -129,6 +171,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           tier: existingData.tier as SubscriptionTier,
           status: existingData.status as SubscriptionStatus,
           trial_ends_at: existingData.trial_ends_at,
+          current_period_end: existingData.current_period_end,
           animal_limit: existingData.animal_limit,
           days_remaining: daysRemaining,
         });
@@ -158,6 +201,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         isActive,
         isTrialing,
         daysRemaining: subscription?.days_remaining || 0,
+        adminInfo,
         refetch: fetchSubscription,
       }}
     >

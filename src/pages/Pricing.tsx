@@ -16,6 +16,8 @@ import {
   CreditCard,
   Loader2,
   Construction,
+  CalendarClock,
+  Lock,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -23,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import farmBackground from "@/assets/farm-background.jpg";
+import { format } from "date-fns";
 
 const features = [
   {
@@ -138,11 +141,14 @@ export default function Pricing() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { farm } = useFarm();
-  const { subscription, isActive, isTrialing, daysRemaining, refetch: refetchSubscription } = useSubscription();
+  const { subscription, isActive, isTrialing, daysRemaining, adminInfo, refetch: refetchSubscription } = useSubscription();
   const { toast } = useToast();
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingMethod, setProcessingMethod] = useState<"yoco" | null>(null);
+
+  // Check if user is an admin locked to a specific tier
+  const isAdminLocked = adminInfo.isAdmin && adminInfo.assignedTier !== null;
 
   // Handle payment callbacks
   useEffect(() => {
@@ -264,14 +270,54 @@ export default function Pricing() {
         </div>
       </header>
 
+      {/* Admin Status Banner */}
+      {user && isAdminLocked && (
+        <div className="bg-accent/20 border-b border-accent/30 py-3">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-sm flex items-center justify-center gap-2">
+              <Lock className="w-4 h-4" />
+              <span className="font-semibold">Admin Test Account</span> - Locked to{" "}
+              <span className="font-bold text-primary capitalize">{adminInfo.assignedTier}</span> tier
+              {subscription?.current_period_end && (
+                <span className="ml-2">
+                  • Renews on{" "}
+                  <span className="font-medium">
+                    {format(new Date(subscription.current_period_end), "dd MMM yyyy")}
+                  </span>
+                  {" "}({daysRemaining} days)
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Trial Banner */}
-      {user && isTrialing && (
+      {user && isTrialing && !isAdminLocked && (
         <div className="bg-primary/10 border-b border-primary/20 py-3">
           <div className="container mx-auto px-4 text-center">
             <p className="text-sm">
               <span className="font-semibold">🎉 Free Trial Active!</span> You have{" "}
               <span className="font-bold text-primary">{daysRemaining} days</span> remaining.
               Choose a plan below to continue after your trial.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Active Subscription Banner */}
+      {user && isActive && !isTrialing && !isAdminLocked && subscription?.current_period_end && (
+        <div className="bg-success/10 border-b border-success/20 py-3">
+          <div className="container mx-auto px-4 text-center">
+            <p className="text-sm flex items-center justify-center gap-2">
+              <CalendarClock className="w-4 h-4" />
+              <span className="font-semibold capitalize">{subscription.tier} Plan Active</span>
+              <span>• Next payment on{" "}
+                <span className="font-bold text-success">
+                  {format(new Date(subscription.current_period_end), "dd MMM yyyy")}
+                </span>
+                {" "}({daysRemaining} days)
+              </span>
             </p>
           </div>
         </div>
@@ -377,7 +423,26 @@ export default function Pricing() {
                   </ul>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                  {tier.underDevelopment ? (
+                  {/* Admin locked to this tier */}
+                  {isAdminLocked && adminInfo.assignedTier === tier.tier ? (
+                    <div className="w-full space-y-2">
+                      <Button className="w-full" variant="default" disabled>
+                        <Lock className="w-4 h-4 mr-2" />
+                        Your Assigned Plan
+                      </Button>
+                      {subscription?.current_period_end && (
+                        <p className="text-xs text-center text-muted-foreground">
+                          Renews in {daysRemaining} days
+                        </p>
+                      )}
+                    </div>
+                  ) : isAdminLocked ? (
+                    // Admin but not their assigned tier - locked out
+                    <Button className="w-full" variant="outline" disabled>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Not Available
+                    </Button>
+                  ) : tier.underDevelopment ? (
                     <Button className="w-full" variant="outline" disabled>
                       Coming Soon
                     </Button>

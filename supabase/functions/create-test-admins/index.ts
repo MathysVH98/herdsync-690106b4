@@ -7,9 +7,9 @@ const corsHeaders = {
 };
 
 const TEST_ADMINS = [
-  { email: "admin-basic@herdsync.test", password: "TestAdmin123!", tier: "basic" },
-  { email: "admin-starter@herdsync.test", password: "TestAdmin123!", tier: "starter" },
-  { email: "admin-pro@herdsync.test", password: "TestAdmin123!", tier: "pro" },
+  { email: "admin-basic@herdsync.test", password: "TestAdmin123!", tier: "basic", animalLimit: 80 },
+  { email: "admin-starter@herdsync.test", password: "TestAdmin123!", tier: "starter", animalLimit: 250 },
+  { email: "admin-pro@herdsync.test", password: "TestAdmin123!", tier: "pro", animalLimit: 999999 },
 ];
 
 serve(async (req) => {
@@ -39,13 +39,12 @@ serve(async (req) => {
       
       if (existingUser) {
         userId = existingUser.id;
-        results.push({ email: admin.email, status: "already exists", tier: admin.tier });
       } else {
         // Create the user
         const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
           email: admin.email,
           password: admin.password,
-          email_confirm: true, // Auto-confirm for testing
+          email_confirm: true,
         });
 
         if (createError) {
@@ -54,7 +53,6 @@ serve(async (req) => {
         }
 
         userId = newUser.user.id;
-        results.push({ email: admin.email, status: "created", tier: admin.tier });
       }
 
       // Check if role already assigned
@@ -66,25 +64,98 @@ serve(async (req) => {
         .single();
 
       if (!existingRole) {
-        // Assign admin role with tier
-        const { error: roleError } = await supabaseAdmin
+        await supabaseAdmin
           .from("user_roles")
           .insert({
             user_id: userId,
             role: "admin",
             assigned_tier: admin.tier,
           });
-
-        if (roleError) {
-          console.error(`Error assigning role for ${admin.email}:`, roleError);
-        }
       }
+
+      // Check if farm exists for this user
+      const { data: existingFarm } = await supabaseAdmin
+        .from("farms")
+        .select("*")
+        .eq("owner_id", userId)
+        .single();
+
+      let farmId: string;
+
+      if (!existingFarm) {
+        // Create a test farm for the admin
+        const { data: newFarm, error: farmError } = await supabaseAdmin
+          .from("farms")
+          .insert({
+            name: `Test Farm (${admin.tier.charAt(0).toUpperCase() + admin.tier.slice(1)})`,
+            owner_id: userId,
+            province: "Test Province",
+            address: "Test Address",
+          })
+          .select()
+          .single();
+
+        if (farmError) {
+          results.push({ email: admin.email, status: "farm error", error: farmError.message });
+          continue;
+        }
+        farmId = newFarm.id;
+      } else {
+        farmId = existingFarm.id;
+      }
+
+      // Check if subscription exists
+      const { data: existingSub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("*")
+        .eq("farm_id", farmId)
+        .single();
+
+      // Set subscription period: 1 year from now
+      const periodStart = new Date();
+      const periodEnd = new Date();
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+      if (!existingSub) {
+        // Create active subscription
+        const { error: subError } = await supabaseAdmin
+          .from("subscriptions")
+          .insert({
+            user_id: userId,
+            farm_id: farmId,
+            tier: admin.tier,
+            status: "active",
+            animal_limit: admin.animalLimit,
+            current_period_start: periodStart.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+            trial_ends_at: new Date().toISOString(), // Trial already ended
+          });
+
+        if (subError) {
+          results.push({ email: admin.email, status: "subscription error", error: subError.message });
+          continue;
+        }
+      } else {
+        // Update existing subscription to active with correct tier
+        await supabaseAdmin
+          .from("subscriptions")
+          .update({
+            tier: admin.tier,
+            status: "active",
+            animal_limit: admin.animalLimit,
+            current_period_start: periodStart.toISOString(),
+            current_period_end: periodEnd.toISOString(),
+          })
+          .eq("id", existingSub.id);
+      }
+
+      results.push({ email: admin.email, status: "ready", tier: admin.tier, farmId });
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Test admin accounts processed",
+        message: "Test admin accounts with active subscriptions ready",
         results,
         credentials: TEST_ADMINS.map(a => ({ email: a.email, password: a.password, tier: a.tier })),
       }),
