@@ -44,22 +44,13 @@ import {
   Users,
   Leaf,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface ChecklistItem {
-  id: string;
-  text: string;
-  completed: boolean;
-  notes?: string;
-}
-
-interface ChecklistCategory {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-  items: ChecklistItem[];
-}
+import { useAuth } from "@/hooks/useAuth";
+import { useFarm } from "@/hooks/useFarm";
+import { useNavigate } from "react-router-dom";
+import { useMonthlyCompliance, getMonthYearLabel } from "@/hooks/useMonthlyCompliance";
 
 interface ComplianceRecord {
   id: string;
@@ -78,80 +69,14 @@ interface ScheduledAudit {
   status: "upcoming" | "overdue" | "completed";
 }
 
-const initialChecklists: ChecklistCategory[] = [
-  {
-    id: "animal-welfare",
-    name: "Animal Welfare",
-    icon: Shield,
-    items: [
-      { id: "aw1", text: "Adequate food and water available", completed: true },
-      { id: "aw2", text: "Appropriate shelter and living conditions", completed: true },
-      { id: "aw3", text: "Regular health monitoring documented", completed: false },
-      { id: "aw4", text: "Humane handling procedures in place", completed: true },
-      { id: "aw5", text: "Pain management protocols documented", completed: false },
-    ],
-  },
-  {
-    id: "biosecurity",
-    name: "Biosecurity",
-    icon: Bug,
-    items: [
-      { id: "bs1", text: "Biosecurity plan documented and current", completed: true },
-      { id: "bs2", text: "Visitor log maintained", completed: false },
-      { id: "bs3", text: "Quarantine procedures documented", completed: true },
-      { id: "bs4", text: "Vehicle and equipment cleaning protocols", completed: false },
-      { id: "bs5", text: "Disease outbreak response plan", completed: true },
-    ],
-  },
-  {
-    id: "chemical-use",
-    name: "Chemical Use",
-    icon: Pill,
-    items: [
-      { id: "ch1", text: "Chemical storage meets regulations", completed: true },
-      { id: "ch2", text: "All treatments recorded with WHP/ESI", completed: true },
-      { id: "ch3", text: "Chemical inventory current", completed: false },
-      { id: "ch4", text: "Staff trained in chemical handling", completed: true },
-      { id: "ch5", text: "Disposal procedures documented", completed: false },
-    ],
-  },
-  {
-    id: "traceability",
-    name: "Traceability",
-    icon: Truck,
-    items: [
-      { id: "tr1", text: "All animals identified with NLIS tags", completed: true },
-      { id: "tr2", text: "Movement records up to date", completed: true },
-      { id: "tr3", text: "NVDs/eNVDs properly completed", completed: true },
-      { id: "tr4", text: "Deceased animal records maintained", completed: false },
-      { id: "tr5", text: "Birth and purchase records complete", completed: true },
-    ],
-  },
-  {
-    id: "staff-safety",
-    name: "Staff Safety",
-    icon: Users,
-    items: [
-      { id: "ss1", text: "Safety induction completed for all staff", completed: true },
-      { id: "ss2", text: "PPE available and properly maintained", completed: false },
-      { id: "ss3", text: "First aid kits stocked and accessible", completed: true },
-      { id: "ss4", text: "Emergency procedures documented", completed: true },
-      { id: "ss5", text: "Incident reporting system in place", completed: true },
-    ],
-  },
-  {
-    id: "sustainability",
-    name: "Sustainability",
-    icon: Leaf,
-    items: [
-      { id: "su1", text: "Grazing rotation plan documented", completed: true },
-      { id: "su2", text: "Water usage monitoring in place", completed: false },
-      { id: "su3", text: "Pasture condition assessments recorded", completed: false },
-      { id: "su4", text: "Environmental impact measures documented", completed: false },
-      { id: "su5", text: "Carbon footprint tracking initiated", completed: false },
-    ],
-  },
-];
+const categoryIcons: Record<string, React.ElementType> = {
+  "animal-welfare": Shield,
+  "biosecurity": Bug,
+  "chemical-use": Pill,
+  "traceability": Truck,
+  "staff-safety": Users,
+  "sustainability": Leaf,
+};
 
 const initialRecords: ComplianceRecord[] = [
   { id: "1", type: "treatment", title: "Vaccination - Clostridial", date: "2026-01-28", details: "100 cattle vaccinated with 7-in-1. Batch #VX2026-001. WHP: 0 days, ESI: 0 days.", status: "compliant" },
@@ -185,7 +110,9 @@ const statusColors = {
 };
 
 export default function Audit() {
-  const [checklists, setChecklists] = useState<ChecklistCategory[]>(initialChecklists);
+  const { user } = useAuth();
+  const { farm } = useFarm();
+  const navigate = useNavigate();
   const [records, setRecords] = useState<ComplianceRecord[]>(initialRecords);
   const [audits, setAudits] = useState<ScheduledAudit[]>(initialAudits);
   const [isAddRecordOpen, setIsAddRecordOpen] = useState(false);
@@ -194,30 +121,17 @@ export default function Audit() {
   const [newAudit, setNewAudit] = useState({ name: "", date: "", type: "" });
   const { toast } = useToast();
 
-  const toggleChecklistItem = (categoryId: string, itemId: string) => {
-    setChecklists(prev => prev.map(cat => {
-      if (cat.id === categoryId) {
-        return {
-          ...cat,
-          items: cat.items.map(item => 
-            item.id === itemId ? { ...item, completed: !item.completed } : item
-          ),
-        };
-      }
-      return cat;
-    }));
-  };
+  const {
+    loading,
+    categories,
+    currentMonthYear,
+    toggleItem,
+    getOverallProgress,
+    getCategoryProgress,
+    getComplianceStatus,
+  } = useMonthlyCompliance();
 
-  const getCategoryProgress = (category: ChecklistCategory) => {
-    const completed = category.items.filter(i => i.completed).length;
-    return Math.round((completed / category.items.length) * 100);
-  };
-
-  const getOverallProgress = () => {
-    const allItems = checklists.flatMap(c => c.items);
-    const completed = allItems.filter(i => i.completed).length;
-    return Math.round((completed / allItems.length) * 100);
-  };
+  const complianceStatus = getComplianceStatus();
 
   const addRecord = () => {
     if (!newRecord.title || !newRecord.details) {
@@ -273,6 +187,31 @@ export default function Audit() {
     });
   };
 
+  if (!user) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+          <ClipboardCheck className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">Sign in Required</h2>
+          <p className="text-muted-foreground mb-4">Please sign in to access Audit & Compliance.</p>
+          <Button onClick={() => navigate("/auth")}>Sign In</Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!farm) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center h-[60vh] text-center">
+          <ClipboardCheck className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">No Farm Found</h2>
+          <p className="text-muted-foreground mb-4">Create a farm to start using Audit & Compliance.</p>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -292,7 +231,7 @@ export default function Audit() {
           </Button>
         </div>
 
-        {/* Overall Progress */}
+        {/* Overall Progress with Month Info */}
         <div className="card-elevated p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
@@ -301,21 +240,33 @@ export default function Audit() {
               </div>
               <div>
                 <h2 className="font-display font-semibold text-lg text-foreground">
-                  Overall Compliance
+                  Monthly Compliance - {getMonthYearLabel(currentMonthYear)}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {getOverallProgress()}% of checklist items complete
+                  {loading ? "Loading..." : `${getOverallProgress()}% of checklist items complete`}
                 </p>
               </div>
             </div>
-            <Badge 
-              variant="outline" 
-              className={getOverallProgress() >= 80 ? statusColors.compliant : getOverallProgress() >= 50 ? statusColors.pending : statusColors.review}
-            >
-              {getOverallProgress() >= 80 ? "Audit Ready" : getOverallProgress() >= 50 ? "Needs Attention" : "Action Required"}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <div className="text-right text-xs text-muted-foreground hidden sm:block">
+                <RefreshCw className="w-3 h-3 inline mr-1" />
+                Resets monthly
+              </div>
+              <Badge 
+                variant="outline" 
+                className={
+                  complianceStatus.color === "green" 
+                    ? statusColors.compliant 
+                    : complianceStatus.color === "yellow" 
+                    ? statusColors.pending 
+                    : statusColors.review
+                }
+              >
+                {complianceStatus.label}
+              </Badge>
+            </div>
           </div>
-          <Progress value={getOverallProgress()} className="h-3" />
+          <Progress value={loading ? 0 : getOverallProgress()} className="h-3" />
         </div>
 
         {/* Tabs */}
@@ -337,58 +288,77 @@ export default function Audit() {
 
           {/* Checklists Tab */}
           <TabsContent value="checklists" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {checklists.map((category) => {
-                const CategoryIcon = category.icon;
-                const progress = getCategoryProgress(category);
-                return (
-                  <div key={category.id} className="card-elevated p-4">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <CategoryIcon className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-display font-semibold text-foreground">{category.name}</h3>
-                        <p className="text-xs text-muted-foreground">{progress}% complete</p>
-                      </div>
-                      <Badge 
-                        variant="outline" 
-                        className={progress === 100 ? statusColors.compliant : progress >= 60 ? statusColors.pending : statusColors.review}
-                      >
-                        {category.items.filter(i => i.completed).length}/{category.items.length}
-                      </Badge>
-                    </div>
-                    <Progress value={progress} className="h-2 mb-4" />
-                    <Accordion type="single" collapsible>
-                      <AccordionItem value="items" className="border-none">
-                        <AccordionTrigger className="text-sm text-muted-foreground py-2 hover:no-underline">
-                          View checklist items
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-2 pt-2">
-                            {category.items.map((item) => (
-                              <div 
-                                key={item.id}
-                                className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
-                              >
-                                <Checkbox 
-                                  checked={item.completed}
-                                  onCheckedChange={() => toggleChecklistItem(category.id, item.id)}
-                                  className="mt-0.5"
-                                />
-                                <span className={`text-sm ${item.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
-                                  {item.text}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="card-elevated p-4 animate-pulse">
+                    <div className="h-10 bg-muted rounded mb-4" />
+                    <div className="h-2 bg-muted rounded mb-4" />
+                    <div className="h-8 bg-muted rounded" />
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {categories.map((category) => {
+                  const CategoryIcon = categoryIcons[category.id] || Shield;
+                  const progress = getCategoryProgress(category.id);
+                  return (
+                    <div key={category.id} className="card-elevated p-4">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <CategoryIcon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-display font-semibold text-foreground">{category.name}</h3>
+                          <p className="text-xs text-muted-foreground">{progress}% complete</p>
+                        </div>
+                        <Badge 
+                          variant="outline" 
+                          className={progress === 100 ? statusColors.compliant : progress >= 60 ? statusColors.pending : statusColors.review}
+                        >
+                          {category.items.filter(i => i.completed).length}/{category.items.length}
+                        </Badge>
+                      </div>
+                      <Progress value={progress} className="h-2 mb-4" />
+                      <Accordion type="single" collapsible>
+                        <AccordionItem value="items" className="border-none">
+                          <AccordionTrigger className="text-sm text-muted-foreground py-2 hover:no-underline">
+                            View checklist items
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2 pt-2">
+                              {category.items.map((item) => (
+                                <div 
+                                  key={item.id}
+                                  className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                                >
+                                  <Checkbox 
+                                    checked={item.completed}
+                                    onCheckedChange={() => toggleItem(item.id, item.completed)}
+                                    className="mt-0.5"
+                                  />
+                                  <div className="flex-1">
+                                    <span className={`text-sm ${item.completed ? "text-muted-foreground line-through" : "text-foreground"}`}>
+                                      {item.item_text}
+                                    </span>
+                                    {item.completed && item.completed_at && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">
+                                        Completed {new Date(item.completed_at).toLocaleDateString("en-ZA")}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </TabsContent>
 
           {/* Records Tab */}
