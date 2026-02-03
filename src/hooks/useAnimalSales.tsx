@@ -143,7 +143,15 @@ export function useAnimalSales() {
     setLoading(true);
     const { data, error } = await supabase
       .from("animal_sales")
-      .select("*")
+      .select(`
+        *,
+        animal_sale_items (
+          id,
+          animal_id,
+          unit_price,
+          notes
+        )
+      `)
       .eq("farm_id", farm.id)
       .order("created_at", { ascending: false });
 
@@ -151,7 +159,12 @@ export function useAnimalSales() {
       console.error("Error fetching sales:", error);
       toast({ title: "Error", description: "Failed to load sales", variant: "destructive" });
     } else {
-      setSales((data || []) as AnimalSale[]);
+      // Map the nested items to the expected format
+      const salesWithItems = (data || []).map((sale: any) => ({
+        ...sale,
+        items: sale.animal_sale_items || [],
+      }));
+      setSales(salesWithItems as AnimalSale[]);
     }
     setLoading(false);
   };
