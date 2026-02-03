@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
-import { AlertTriangle, Bell, Info } from "lucide-react";
+import { AlertTriangle, Bell, Info, CheckCircle } from "lucide-react";
 
-export type AlertType = "warning" | "info" | "danger";
+export type AlertType = "warning" | "info" | "danger" | "success";
 
 export interface AlertItem {
   id: string;
@@ -35,10 +35,15 @@ const alertConfig: Record<AlertType, {
     bgClass: "bg-destructive/10 border-destructive/30",
     iconClass: "text-destructive"
   },
+  success: { 
+    icon: CheckCircle, 
+    bgClass: "bg-success/10 border-success/30",
+    iconClass: "text-success"
+  },
 };
 
 export function AlertCard({ alert }: AlertCardProps) {
-  const config = alertConfig[alert.type];
+  const config = alertConfig[alert.type] || alertConfig.info;
   const Icon = config.icon;
 
   return (
