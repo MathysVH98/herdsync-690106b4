@@ -165,9 +165,12 @@ export default function Landing() {
             >
               Pricing
             </button>
-            <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <button 
+              onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
               About
-            </Link>
+            </button>
           </nav>
           <div className="flex items-center gap-3">
             <Button variant="ghost" onClick={() => navigate("/auth")}>
@@ -450,8 +453,82 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* About Section */}
+      <section id="about" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4">About Us</Badge>
+            <h2 className="text-3xl lg:text-5xl font-bold font-display mb-4">
+              Who We Are
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              HerdSync was born from a deep understanding of South African farming challenges
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
+            <div>
+              <h3 className="text-2xl font-bold font-display mb-4">Our Mission</h3>
+              <p className="text-muted-foreground mb-6">
+                We're on a mission to empower South African farmers with technology that 
+                simplifies farm management, ensures compliance, and drives profitability. 
+                Our team combines agricultural expertise with cutting-edge technology to 
+                create solutions that truly understand the unique needs of local farmers.
+              </p>
+              <h3 className="text-2xl font-bold font-display mb-4">Our Story</h3>
+              <p className="text-muted-foreground">
+                Founded by farmers and technologists, HerdSync addresses the real challenges 
+                faced by South African agricultural operations. From navigating complex 
+                compliance requirements to managing diverse livestock, we've built a platform 
+                that grows with your farm.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <Card className="bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Farmer-First Approach</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Every feature is designed with input from real South African farmers
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Local Compliance Expertise</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Built-in knowledge of SA regulations including UIF, COIDA, and OHS
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-card/80 backdrop-blur-sm">
+                <CardContent className="p-6 flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Continuous Innovation</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Regular updates based on farmer feedback and market needs
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section className="py-20">
+      <section className="py-20 bg-card/60 backdrop-blur-sm">
         <div className="container mx-auto px-4">
           <Card className="bg-gradient-hero text-primary-foreground overflow-hidden">
             <CardContent className="py-16 px-8 text-center relative">
