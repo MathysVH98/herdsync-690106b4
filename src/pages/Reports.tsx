@@ -16,7 +16,7 @@ import {
   Cell,
   Legend
 } from "recharts";
-import { TrendingUp, DollarSign, Scale, Calendar, FileDown } from "lucide-react";
+import { TrendingUp, DollarSign, Scale, Calendar, FileDown, Package, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useReportPdf } from "@/hooks/useReportPdf";
 
@@ -33,14 +33,29 @@ interface LivestockItem {
 interface InventoryItem {
   id: string;
   name: string;
+  category: string;
   quantity: number;
+  unit: string;
+  reorder_level: number;
   cost_per_unit: number;
+  supplier: string | null;
+  storage_location: string | null;
+}
+
+interface UsageLogItem {
+  id: string;
+  inventory_id: string;
+  quantity_used: number;
+  reason: string;
+  used_by: string | null;
+  usage_date: string;
 }
 
 export default function Reports() {
   const { farm } = useFarm();
   const [livestock, setLivestock] = useState<LivestockItem[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [usageLog, setUsageLog] = useState<UsageLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { generatePdf } = useReportPdf();
 
@@ -53,23 +68,85 @@ export default function Reports() {
     const fetchData = async () => {
       setLoading(true);
       
-      const [livestockRes, inventoryRes] = await Promise.all([
+      const [livestockRes, inventoryRes, usageRes] = await Promise.all([
         supabase.from("livestock").select("id, type, status, weight, age").eq("farm_id", farm.id),
-        supabase.from("feed_inventory").select("id, name, quantity, cost_per_unit").eq("farm_id", farm.id),
+        supabase.from("inventory").select("id, name, category, quantity, unit, reorder_level, cost_per_unit, supplier, storage_location").eq("farm_id", farm.id),
+        supabase.from("inventory_usage_log").select("id, inventory_id, quantity_used, reason, used_by, usage_date").eq("farm_id", farm.id).order("usage_date", { ascending: false }).limit(100),
       ]);
 
       if (livestockRes.data) setLivestock(livestockRes.data);
       if (inventoryRes.data) setInventory(inventoryRes.data);
+      if (usageRes.data) setUsageLog(usageRes.data);
       setLoading(false);
     };
 
     fetchData();
   }, [farm?.id]);
 
-  // Feed cost analysis
-  const dailyCosts = inventory.map(item => ({
+  // Inventory by category
+  const inventoryByCategory = inventory.reduce((acc, item) => {
+    if (!acc[item.category]) {
+      acc[item.category] = { items: [], totalValue: 0, lowStockCount: 0 };
+    }
+    const value = item.quantity * item.cost_per_unit;
+    acc[item.category].items.push(item);
+    acc[item.category].totalValue += value;
+    if (item.reorder_level > 0 && item.quantity <= item.reorder_level) {
+      acc[item.category].lowStockCount++;
+    }
+    return acc;
+  }, {} as Record<string, { items: InventoryItem[]; totalValue: number; lowStockCount: number }>);
+
+  const inventoryStats = Object.entries(inventoryByCategory).map(([category, data]) => ({
+    category,
+    itemCount: data.items.length,
+    totalValue: data.totalValue,
+    lowStockCount: data.lowStockCount,
+  }));
+
+  const totalInventoryValue = inventory.reduce((sum, item) => sum + (item.quantity * item.cost_per_unit), 0);
+  const lowStockItems = inventory.filter(item => item.reorder_level > 0 && item.quantity <= item.reorder_level);
+
+  // Inventory items for PDF
+  const inventoryItemsList = inventory.map(item => ({
+    name: item.name,
+    category: item.category,
+    quantity: item.quantity,
+    unit: item.unit,
+    value: item.quantity * item.cost_per_unit,
+    status: item.reorder_level === 0 ? "No Limit" : 
+            item.quantity <= item.reorder_level * 0.5 ? "Critical" :
+            item.quantity <= item.reorder_level ? "Low Stock" : "In Stock",
+  }));
+
+  // Usage summary (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const recentUsage = usageLog.filter(log => new Date(log.usage_date) >= thirtyDaysAgo);
+  
+  const usageSummary = recentUsage.reduce((acc, log) => {
+    const item = inventory.find(i => i.id === log.inventory_id);
+    if (item) {
+      if (!acc[item.category]) {
+        acc[item.category] = { totalUsed: 0, usageCount: 0 };
+      }
+      acc[item.category].totalUsed += log.quantity_used;
+      acc[item.category].usageCount++;
+    }
+    return acc;
+  }, {} as Record<string, { totalUsed: number; usageCount: number }>);
+
+  const usageStats = Object.entries(usageSummary).map(([category, data]) => ({
+    category,
+    totalUsed: data.totalUsed,
+    usageCount: data.usageCount,
+  }));
+
+  // Feed cost analysis (for Feed category items only)
+  const feedItems = inventory.filter(item => item.category === "Feed");
+  const dailyCosts = feedItems.map(item => ({
     name: item.name.replace(' Mix', '').replace(' Feed', '').replace(' Pellets', ''),
-    daily: Math.round(Number(item.cost_per_unit) * 2), // Simplified daily consumption
+    daily: Math.round(Number(item.cost_per_unit) * 2),
     weekly: Math.round(Number(item.cost_per_unit) * 14),
     monthly: Math.round(Number(item.cost_per_unit) * 60),
   }));
@@ -139,6 +216,18 @@ export default function Reports() {
       dailyCosts,
       healthData,
       feedConsumption,
+      // Inventory data
+      totalInventoryValue,
+      inventoryStats,
+      inventoryItemsList,
+      lowStockItems: lowStockItems.map(item => ({
+        name: item.name,
+        category: item.category,
+        quantity: item.quantity,
+        unit: item.unit,
+        reorderLevel: item.reorder_level,
+      })),
+      usageStats,
     });
   };
 
@@ -165,8 +254,8 @@ export default function Reports() {
           </Button>
         </div>
 
-        {/* Cost Summary */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Cost & Inventory Summary */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           <StatsCard
             title="Daily Feed Cost"
             value={loading ? "-" : `R${totalDailyCost}`}
@@ -189,6 +278,17 @@ export default function Reports() {
             value={loading ? "-" : livestock.length}
             icon={Scale}
             variant="success"
+          />
+          <StatsCard
+            title="Inventory Value"
+            value={loading ? "-" : `R${totalInventoryValue.toLocaleString()}`}
+            icon={Package}
+          />
+          <StatsCard
+            title="Low Stock Items"
+            value={loading ? "-" : lowStockItems.length}
+            icon={AlertTriangle}
+            variant={lowStockItems.length > 0 ? "warning" : "default"}
           />
         </div>
 
@@ -344,6 +444,85 @@ export default function Reports() {
                       <Bar dataKey="consumption" fill="hsl(38, 85%, 55%)" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Inventory Value by Category */}
+            {inventoryStats.length > 0 && (
+              <div className="card-elevated p-6">
+                <h3 className="font-display font-semibold text-lg text-foreground mb-4">
+                  Inventory Value by Category (Rands)
+                </h3>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={inventoryStats} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis 
+                        dataKey="category" 
+                        stroke="hsl(var(--muted-foreground))"
+                        tick={{ fontSize: 12 }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                      />
+                      <YAxis stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value) => [`R${Number(value).toLocaleString()}`, 'Value']}
+                      />
+                      <Bar dataKey="totalValue" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {/* Low Stock Alerts Table */}
+            {lowStockItems.length > 0 && (
+              <div className="card-elevated p-6 lg:col-span-2">
+                <h3 className="font-display font-semibold text-lg text-foreground mb-4 flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  Low Stock Alerts
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Item</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Category</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground">Current Stock</th>
+                        <th className="text-right py-3 px-4 font-semibold text-foreground">Reorder Level</th>
+                        <th className="text-left py-3 px-4 font-semibold text-foreground">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {lowStockItems.map((item) => {
+                        const isCritical = item.quantity <= item.reorder_level * 0.5;
+                        return (
+                          <tr key={item.id} className="border-b border-border/50 hover:bg-muted/30">
+                            <td className="py-3 px-4 font-medium">{item.name}</td>
+                            <td className="py-3 px-4 text-muted-foreground">{item.category}</td>
+                            <td className="text-right py-3 px-4 font-mono">{item.quantity} {item.unit}</td>
+                            <td className="text-right py-3 px-4 font-mono text-muted-foreground">{item.reorder_level} {item.unit}</td>
+                            <td className="py-3 px-4">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                isCritical 
+                                  ? "bg-destructive/10 text-destructive" 
+                                  : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-500"
+                              }`}>
+                                {isCritical ? "Critical" : "Low Stock"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
