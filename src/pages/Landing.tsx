@@ -147,15 +147,24 @@ export default function Landing() {
             </div>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            <button 
+              onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
               Features
-            </a>
-            <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
               Testimonials
-            </a>
-            <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            </button>
+            <button 
+              onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
               Pricing
-            </a>
+            </button>
             <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
