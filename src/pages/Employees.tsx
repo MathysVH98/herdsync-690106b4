@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +46,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail } from "lucide-react";
+import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 
 interface Employee {
@@ -54,6 +55,7 @@ interface Employee {
   last_name: string;
   id_number: string | null;
   tax_number: string | null;
+  uif_registered: boolean | null;
   phone: string | null;
   email: string | null;
   role: string;
@@ -93,6 +95,7 @@ export default function Employees() {
     last_name: "",
     id_number: "",
     tax_number: "",
+    uif_registered: false,
     phone: "",
     email: "",
     role: "Farm Worker",
@@ -128,6 +131,7 @@ export default function Employees() {
         last_name: data.last_name,
         id_number: data.id_number || null,
         tax_number: data.tax_number || null,
+        uif_registered: data.uif_registered,
         phone: data.phone || null,
         email: data.email || null,
         role: data.role,
@@ -161,6 +165,7 @@ export default function Employees() {
           last_name: data.last_name,
           id_number: data.id_number || null,
           tax_number: data.tax_number || null,
+          uif_registered: data.uif_registered,
           phone: data.phone || null,
           email: data.email || null,
           role: data.role,
@@ -214,6 +219,7 @@ export default function Employees() {
       last_name: "",
       id_number: "",
       tax_number: "",
+      uif_registered: false,
       phone: "",
       email: "",
       role: "Farm Worker",
@@ -233,6 +239,7 @@ export default function Employees() {
       last_name: employee.last_name,
       id_number: employee.id_number || "",
       tax_number: employee.tax_number || "",
+      uif_registered: employee.uif_registered ?? false,
       phone: employee.phone || "",
       email: employee.email || "",
       role: employee.role,
@@ -264,6 +271,8 @@ export default function Employees() {
   );
 
   const totalSalaries = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
+  const uifRegisteredCount = activeEmployees.filter((e) => e.uif_registered).length;
+  const uifNotRegisteredCount = activeEmployees.length - uifRegisteredCount;
 
   const formContent = (
     <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
@@ -393,6 +402,16 @@ export default function Employees() {
           />
         </div>
       </div>
+      <div className="flex items-center space-x-2">
+        <Checkbox
+          id="uif_registered"
+          checked={formData.uif_registered}
+          onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, uif_registered: checked === true }))}
+        />
+        <Label htmlFor="uif_registered" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          Registered with UIF
+        </Label>
+      </div>
       <div className="space-y-2">
         <Label htmlFor="notes">Notes</Label>
         <Textarea
@@ -436,7 +455,8 @@ export default function Employees() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
@@ -455,6 +475,22 @@ export default function Employees() {
             <CardContent>
               <div className="text-2xl font-bold">R {totalSalaries.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">Total salaries</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">UIF Registered</CardTitle>
+              <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-success">{uifRegisteredCount}</div>
+              <p className="text-xs text-muted-foreground">
+                {uifNotRegisteredCount > 0 ? (
+                  <span className="text-destructive">{uifNotRegisteredCount} not registered</span>
+                ) : (
+                  "All registered"
+                )}
+              </p>
             </CardContent>
           </Card>
           <Card>
