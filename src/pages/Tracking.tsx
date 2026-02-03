@@ -167,35 +167,35 @@ export default function Tracking() {
       <div className="relative space-y-6 h-full">
         {/* Under Development Overlay - z-[9999] to sit above Leaflet map */}
         <div className="absolute inset-0 z-[9999] pointer-events-none overflow-hidden">
-          {/* Heavy blur overlay with solid background */}
-          <div className="absolute inset-0 backdrop-blur-md bg-background/70" />
+          {/* Subtle blur overlay */}
+          <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
           
           {/* Cross tape - top-left to bottom-right */}
           <div 
-            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg border-y-2 border-warning-foreground/20"
+            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
             style={{
-              width: '200%',
-              left: '-50%',
-              top: '40%',
-              transform: 'rotate(-25deg)',
+              width: '150%',
+              left: '-25%',
+              top: '35%',
+              transform: 'rotate(-35deg)',
               transformOrigin: 'center',
             }}
           >
-            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON 🚧
+            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
           </div>
           
           {/* Cross tape - top-right to bottom-left */}
           <div 
-            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg border-y-2 border-warning-foreground/20"
+            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
             style={{
-              width: '200%',
-              left: '-50%',
-              top: '50%',
-              transform: 'rotate(25deg)',
+              width: '150%',
+              left: '-25%',
+              top: '55%',
+              transform: 'rotate(35deg)',
               transformOrigin: 'center',
             }}
           >
-            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON 🚧
+            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
           </div>
         </div>
         {/* Header */}
