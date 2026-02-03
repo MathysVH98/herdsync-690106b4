@@ -95,6 +95,7 @@ const mainNavigationPaths = [
   "/compliance/documents",
   "/compliance/labour-ohs",
   "/compliance/chemicals",
+  "/compliance/audit-pack",
   "/about",
   "/contact",
   "/terms",
@@ -136,8 +137,11 @@ export function Layout({ children }: LayoutProps) {
         )}
       >
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border flex-shrink-0">
+          {/* Logo - Links to home/dashboard */}
+          <Link 
+            to={user ? "/dashboard" : "/"} 
+            className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border flex-shrink-0 hover:bg-sidebar-accent/50 transition-colors"
+          >
             <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
               <Wheat className="w-6 h-6 text-sidebar-primary-foreground" />
             </div>
@@ -148,12 +152,16 @@ export function Layout({ children }: LayoutProps) {
               <FarmSwitcher />
             </div>
             <button
-              onClick={() => setSidebarOpen(false)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setSidebarOpen(false);
+              }}
               className="lg:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
+          </Link>
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -282,10 +290,10 @@ export function Layout({ children }: LayoutProps) {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <div className="flex items-center gap-2">
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
             <Wheat className="w-6 h-6 text-primary" />
             <span className="font-bold text-lg font-display">HerdSync</span>
-          </div>
+          </Link>
         </header>
 
         {/* Page content */}
