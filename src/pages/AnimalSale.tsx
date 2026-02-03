@@ -15,14 +15,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
@@ -54,26 +46,13 @@ export default function AnimalSale() {
   const { user } = useAuth();
   const { farm } = useFarm();
   const { toast } = useToast();
-  const { animals, getAvailableAnimals, addAnimal, markAnimalsSold, fetchAnimals } = useAnimals();
+  const { animals, getAvailableAnimals, markAnimalsSold, fetchAnimals } = useAnimals();
   const { sales, saveSale, finalizeSale } = useAnimalSales();
 
   const [sale, setSale] = useState<AnimalSaleType>(getDefaultSale());
   const [items, setItems] = useState<AnimalSaleItem[]>([]);
   const [selectedAnimalIds, setSelectedAnimalIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [isAddAnimalOpen, setIsAddAnimalOpen] = useState(false);
-  const [newAnimal, setNewAnimal] = useState({
-    animal_tag_id: "",
-    species: "",
-    breed: "",
-    sex: "",
-    dob_or_age: "",
-    color_markings: "",
-    brand_mark: "",
-    microchip_number: "",
-    health_notes: "",
-    status: "available" as const,
-  });
 
   const availableAnimals = getAvailableAnimals();
   const selectedAnimals = animals.filter((a) => selectedAnimalIds.includes(a.id));
@@ -417,30 +396,6 @@ export default function AnimalSale() {
     }
   };
 
-  const handleAddAnimal = async () => {
-    if (!newAnimal.animal_tag_id || !newAnimal.species) {
-      toast({ title: "Required Fields", description: "Please enter tag ID and species.", variant: "destructive" });
-      return;
-    }
-
-    const added = await addAnimal(newAnimal);
-    if (added) {
-      setIsAddAnimalOpen(false);
-      setNewAnimal({
-        animal_tag_id: "",
-        species: "",
-        breed: "",
-        sex: "",
-        dob_or_age: "",
-        color_markings: "",
-        brand_mark: "",
-        microchip_number: "",
-        health_notes: "",
-        status: "available",
-      });
-      toast({ title: "Animal Added", description: `${added.animal_tag_id} has been added.` });
-    }
-  };
 
   const resetForm = () => {
     setSale(getDefaultSale());
@@ -481,10 +436,6 @@ export default function AnimalSale() {
             <Button variant="outline" onClick={resetForm}>
               <Plus className="w-4 h-4 mr-2" />
               New Sale
-            </Button>
-            <Button variant="outline" onClick={() => setIsAddAnimalOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Animal
             </Button>
           </div>
         </div>
@@ -1130,101 +1081,6 @@ export default function AnimalSale() {
         </Card>
       </div>
 
-      {/* Add Animal Dialog */}
-      <Dialog open={isAddAnimalOpen} onOpenChange={setIsAddAnimalOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add New Animal</DialogTitle>
-            <DialogDescription>
-              Add an animal to make it available for sale.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div>
-              <Label>Tag/ID *</Label>
-              <Input
-                value={newAnimal.animal_tag_id}
-                onChange={(e) => setNewAnimal({ ...newAnimal, animal_tag_id: e.target.value })}
-                placeholder="e.g., EAR-001"
-              />
-            </div>
-            <div>
-              <Label>Species *</Label>
-              <Input
-                value={newAnimal.species}
-                onChange={(e) => setNewAnimal({ ...newAnimal, species: e.target.value })}
-                placeholder="e.g., Cattle, Sheep"
-              />
-            </div>
-            <div>
-              <Label>Breed</Label>
-              <Input
-                value={newAnimal.breed}
-                onChange={(e) => setNewAnimal({ ...newAnimal, breed: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Sex</Label>
-              <Select
-                value={newAnimal.sex}
-                onValueChange={(v) => setNewAnimal({ ...newAnimal, sex: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Unknown">Unknown</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Age / DOB</Label>
-              <Input
-                value={newAnimal.dob_or_age}
-                onChange={(e) => setNewAnimal({ ...newAnimal, dob_or_age: e.target.value })}
-                placeholder="e.g., 2 years, 2022-01-15"
-              />
-            </div>
-            <div>
-              <Label>Color / Markings</Label>
-              <Input
-                value={newAnimal.color_markings}
-                onChange={(e) => setNewAnimal({ ...newAnimal, color_markings: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Brand Mark</Label>
-              <Input
-                value={newAnimal.brand_mark}
-                onChange={(e) => setNewAnimal({ ...newAnimal, brand_mark: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Microchip Number</Label>
-              <Input
-                value={newAnimal.microchip_number}
-                onChange={(e) => setNewAnimal({ ...newAnimal, microchip_number: e.target.value })}
-              />
-            </div>
-            <div className="col-span-2">
-              <Label>Health Notes</Label>
-              <Textarea
-                value={newAnimal.health_notes}
-                onChange={(e) => setNewAnimal({ ...newAnimal, health_notes: e.target.value })}
-                rows={2}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddAnimalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddAnimal}>Add Animal</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 }

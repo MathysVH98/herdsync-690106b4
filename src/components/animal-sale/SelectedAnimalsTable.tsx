@@ -47,13 +47,12 @@ export function SelectedAnimalsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Tag/ID</TableHead>
+            <TableHead>Tag</TableHead>
+            <TableHead>Name</TableHead>
             <TableHead>Species</TableHead>
             <TableHead>Breed</TableHead>
-            <TableHead>Sex</TableHead>
-            <TableHead>Age/DOB</TableHead>
-            <TableHead>Brand</TableHead>
-            <TableHead>Microchip</TableHead>
+            <TableHead>Age</TableHead>
+            <TableHead>Weight</TableHead>
             {priceType === "per_animal" && (
               <TableHead className="w-[120px]">Unit Price (R)</TableHead>
             )}
@@ -67,12 +66,11 @@ export function SelectedAnimalsTable({
             return (
               <TableRow key={animal.id}>
                 <TableCell className="font-medium">{animal.animal_tag_id}</TableCell>
+                <TableCell>{animal.name || "-"}</TableCell>
                 <TableCell>{animal.species}</TableCell>
                 <TableCell>{animal.breed || "-"}</TableCell>
-                <TableCell>{animal.sex || "-"}</TableCell>
                 <TableCell>{animal.dob_or_age || "-"}</TableCell>
-                <TableCell>{animal.brand_mark || "-"}</TableCell>
-                <TableCell>{animal.microchip_number || "-"}</TableCell>
+                <TableCell>{animal.weight || "-"}</TableCell>
                 {priceType === "per_animal" && (
                   <TableCell>
                     <Input

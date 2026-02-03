@@ -3,19 +3,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useFarm } from "@/hooks/useFarm";
 import { useToast } from "@/hooks/use-toast";
 
+// Re-export Animal type that maps to livestock table
 export interface Animal {
   id: string;
   farm_id: string;
-  animal_tag_id: string;
-  species: string;
+  animal_tag_id: string; // maps to livestock.tag
+  species: string; // maps to livestock.type
   breed: string | null;
-  sex: string | null;
-  dob_or_age: string | null;
+  sex: string | null; // maps from livestock.status or null
+  dob_or_age: string | null; // maps to livestock.age
   color_markings: string | null;
   brand_mark: string | null;
   microchip_number: string | null;
-  health_notes: string | null;
+  health_notes: string | null; // maps to livestock.notes
   status: "available" | "sold" | "deceased" | "transferred";
+  name: string; // livestock name
+  weight: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -31,16 +34,35 @@ export function useAnimals() {
     
     setLoading(true);
     const { data, error } = await supabase
-      .from("animals")
+      .from("livestock")
       .select("*")
       .eq("farm_id", farm.id)
-      .order("animal_tag_id", { ascending: true });
+      .order("tag", { ascending: true });
 
     if (error) {
       console.error("Error fetching animals:", error);
       toast({ title: "Error", description: "Failed to load animals", variant: "destructive" });
     } else {
-      setAnimals((data || []) as Animal[]);
+      // Map livestock data to Animal interface
+      const mappedAnimals: Animal[] = (data || []).map((livestock) => ({
+        id: livestock.id,
+        farm_id: livestock.farm_id,
+        animal_tag_id: livestock.tag,
+        species: livestock.type,
+        breed: livestock.breed,
+        sex: null, // livestock doesn't have sex field
+        dob_or_age: livestock.age,
+        color_markings: null,
+        brand_mark: null,
+        microchip_number: null,
+        health_notes: livestock.notes,
+        status: livestock.sold_at ? "sold" : "available",
+        name: livestock.name,
+        weight: livestock.weight,
+        created_at: livestock.created_at,
+        updated_at: livestock.updated_at,
+      }));
+      setAnimals(mappedAnimals);
     }
     setLoading(false);
   };
@@ -49,45 +71,14 @@ export function useAnimals() {
     return animals.filter((a) => a.status === "available");
   };
 
-  const addAnimal = async (animal: Omit<Animal, "id" | "farm_id" | "created_at" | "updated_at">) => {
-    if (!farm?.id) return null;
-
-    const { data, error } = await supabase
-      .from("animals")
-      .insert({ ...animal, farm_id: farm.id })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error adding animal:", error);
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return null;
-    }
-
-    await fetchAnimals();
-    return data as Animal;
-  };
-
-  const updateAnimalStatus = async (animalId: string, status: Animal["status"]) => {
+  const markAnimalsSold = async (animalIds: string[], salePrice?: number, soldTo?: string) => {
     const { error } = await supabase
-      .from("animals")
-      .update({ status })
-      .eq("id", animalId);
-
-    if (error) {
-      console.error("Error updating animal:", error);
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      return false;
-    }
-
-    await fetchAnimals();
-    return true;
-  };
-
-  const markAnimalsSold = async (animalIds: string[]) => {
-    const { error } = await supabase
-      .from("animals")
-      .update({ status: "sold" as const })
+      .from("livestock")
+      .update({ 
+        sold_at: new Date().toISOString(),
+        sale_price: salePrice || null,
+        sold_to: soldTo || null,
+      })
       .in("id", animalIds);
 
     if (error) {
@@ -111,8 +102,6 @@ export function useAnimals() {
     loading,
     fetchAnimals,
     getAvailableAnimals,
-    addAnimal,
-    updateAnimalStatus,
     markAnimalsSold,
   };
 }
