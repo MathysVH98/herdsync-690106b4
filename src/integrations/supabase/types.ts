@@ -1022,6 +1022,116 @@ export type Database = {
           },
         ]
       }
+      inventory: {
+        Row: {
+          category: string
+          cost_per_unit: number
+          created_at: string
+          farm_id: string
+          id: string
+          last_restocked: string | null
+          name: string
+          notes: string | null
+          quantity: number
+          reorder_level: number
+          storage_location: string | null
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          cost_per_unit?: number
+          created_at?: string
+          farm_id: string
+          id?: string
+          last_restocked?: string | null
+          name: string
+          notes?: string | null
+          quantity?: number
+          reorder_level?: number
+          storage_location?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost_per_unit?: number
+          created_at?: string
+          farm_id?: string
+          id?: string
+          last_restocked?: string | null
+          name?: string
+          notes?: string | null
+          quantity?: number
+          reorder_level?: number
+          storage_location?: string | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_usage_log: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          inventory_id: string
+          notes: string | null
+          quantity_used: number
+          reason: string
+          usage_date: string
+          used_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          inventory_id: string
+          notes?: string | null
+          quantity_used: number
+          reason: string
+          usage_date?: string
+          used_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          inventory_id?: string
+          notes?: string | null
+          quantity_used?: number
+          reason?: string
+          usage_date?: string
+          used_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_usage_log_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_usage_log_inventory_id_fkey"
+            columns: ["inventory_id"]
+            isOneToOne: false
+            referencedRelation: "inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       livestock: {
         Row: {
           age: string | null

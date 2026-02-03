@@ -1,167 +1,72 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
-import { InventoryTable, InventoryItem } from "@/components/InventoryTable";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Package, AlertTriangle, TrendingDown, Calculator, Plus } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Package, 
+  AlertTriangle, 
+  Calculator, 
+  Plus,
+  Fuel,
+  Pill,
+  Wrench,
+  FlaskConical,
+  Cog,
+  Wheat,
+  History
+} from "lucide-react";
 import { useFarm } from "@/hooks/useFarm";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useInventory, InventoryItem, INVENTORY_CATEGORIES } from "@/hooks/useInventory";
+import { InventoryTable } from "@/components/inventory/InventoryTable";
+import { AddInventoryDialog } from "@/components/inventory/AddInventoryDialog";
+import { RestockDialog } from "@/components/inventory/RestockDialog";
+import { UsageLogDialog } from "@/components/inventory/UsageLogDialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { format } from "date-fns";
 
-const feedTypes = [
-  "Cattle Feed",
-  "Poultry Feed",
-  "Sheep Feed",
-  "Goat Feed",
-  "Pig Feed",
-  "Horse Feed",
-  "Roughage",
-  "Supplements",
-  "Other",
-];
+const categoryIcons: Record<string, React.ReactNode> = {
+  "Feed": <Wheat className="h-4 w-4" />,
+  "Fuel": <Fuel className="h-4 w-4" />,
+  "Medicine": <Pill className="h-4 w-4" />,
+  "Tools": <Wrench className="h-4 w-4" />,
+  "Chemicals": <FlaskConical className="h-4 w-4" />,
+  "Spare Parts": <Cog className="h-4 w-4" />,
+};
 
 export default function Inventory() {
-  const [inventory, setInventory] = useState<InventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { farm } = useFarm();
-  const { toast } = useToast();
+  const { 
+    inventory, 
+    usageLog,
+    loading, 
+    addItem, 
+    deleteItem,
+    restockItem,
+    logUsage,
+    getLowStockItems,
+    getTotalValue,
+  } = useInventory();
 
-  const [newItem, setNewItem] = useState({
-    name: "",
-    type: "",
-    quantity: "",
-    unit: "kg",
-    reorderLevel: "",
-    costPerUnit: "",
-  });
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [restockItem_, setRestockItem] = useState<InventoryItem | null>(null);
+  const [usageItem, setUsageItem] = useState<InventoryItem | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
 
-  useEffect(() => {
-    if (!farm?.id) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchInventory = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("feed_inventory")
-        .select("*")
-        .eq("farm_id", farm.id)
-        .order("name");
-
-      if (error) {
-        console.error("Error fetching inventory:", error);
-      } else {
-        setInventory(data.map(item => ({
-          id: item.id,
-          name: item.name,
-          type: item.type,
-          quantity: Number(item.quantity),
-          unit: item.unit,
-          reorderLevel: Number(item.reorder_level),
-          costPerUnit: Number(item.cost_per_unit),
-          lastRestocked: item.last_restocked || undefined,
-        })));
-      }
-      setLoading(false);
-    };
-
-    fetchInventory();
-  }, [farm?.id]);
-
-  const handleAddItem = async () => {
-    if (!farm?.id) {
-      toast({
-        title: "No Farm Selected",
-        description: "Please select a farm first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!newItem.name || !newItem.type || !newItem.quantity) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in name, type, and quantity.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("feed_inventory")
-      .insert({
-        farm_id: farm.id,
-        name: newItem.name,
-        type: newItem.type,
-        quantity: Number(newItem.quantity),
-        unit: newItem.unit,
-        reorder_level: Number(newItem.reorderLevel) || 0,
-        cost_per_unit: Number(newItem.costPerUnit) || 0,
-        last_restocked: new Date().toISOString().split('T')[0],
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error adding inventory item:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add inventory item.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const item: InventoryItem = {
-      id: data.id,
-      name: data.name,
-      type: data.type,
-      quantity: Number(data.quantity),
-      unit: data.unit,
-      reorderLevel: Number(data.reorder_level),
-      costPerUnit: Number(data.cost_per_unit),
-      lastRestocked: data.last_restocked || undefined,
-    };
-
-    setInventory([...inventory, item]);
-    setNewItem({
-      name: "",
-      type: "",
-      quantity: "",
-      unit: "kg",
-      reorderLevel: "",
-      costPerUnit: "",
-    });
-    setIsAddDialogOpen(false);
-
-    toast({
-      title: "Item Added",
-      description: `${item.name} has been added to your inventory.`,
-    });
-  };
-
+  const lowStockItems = getLowStockItems();
+  const totalValue = getTotalValue();
   const totalItems = inventory.length;
-  const lowStockItems = inventory.filter(item => item.quantity <= item.reorderLevel).length;
-  const criticalItems = inventory.filter(item => item.quantity < item.reorderLevel * 0.5).length;
-  const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.costPerUnit), 0);
+
+  const filteredItems = activeCategory === "all" 
+    ? inventory 
+    : inventory.filter(item => item.category === activeCategory);
 
   if (!farm) {
     return (
@@ -183,149 +88,179 @@ export default function Inventory() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold font-display text-foreground">
-              Feed Inventory
+              Farm Inventory
             </h1>
             <p className="text-muted-foreground mt-1">
-              Track your feed stock levels and reorder requirements
+              Track all farm stock, supplies, and equipment
             </p>
           </div>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Item
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[500px]">
-              <DialogHeader>
-                <DialogTitle className="font-display">Add Inventory Item</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="name">Item Name</Label>
-                    <Input
-                      id="name"
-                      value={newItem.name}
-                      onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                      placeholder="e.g., Dairy Cattle Mix"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="type">Feed Type</Label>
-                    <Select value={newItem.type} onValueChange={(v) => setNewItem({ ...newItem, type: v })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {feedTypes.map((type) => (
-                          <SelectItem key={type} value={type}>{type}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="quantity">Quantity</Label>
-                    <Input
-                      id="quantity"
-                      type="number"
-                      value={newItem.quantity}
-                      onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="unit">Unit</Label>
-                    <Select value={newItem.unit} onValueChange={(v) => setNewItem({ ...newItem, unit: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="kg">kg</SelectItem>
-                        <SelectItem value="bales">bales</SelectItem>
-                        <SelectItem value="blocks">blocks</SelectItem>
-                        <SelectItem value="bags">bags</SelectItem>
-                        <SelectItem value="L">L</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="reorderLevel">Reorder Level</Label>
-                    <Input
-                      id="reorderLevel"
-                      type="number"
-                      value={newItem.reorderLevel}
-                      onChange={(e) => setNewItem({ ...newItem, reorderLevel: e.target.value })}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="costPerUnit">Cost per Unit (R)</Label>
-                  <Input
-                    id="costPerUnit"
-                    type="number"
-                    step="0.01"
-                    value={newItem.costPerUnit}
-                    onChange={(e) => setNewItem({ ...newItem, costPerUnit: e.target.value })}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-              <Button onClick={handleAddItem} className="w-full bg-gradient-primary text-primary-foreground">
-                Add Item
-              </Button>
-            </DialogContent>
-          </Dialog>
+          <Button 
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-gradient-primary text-primary-foreground"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Item
+          </Button>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            title="Total Feed Types"
+            title="Total Items"
             value={loading ? "-" : totalItems}
             icon={Package}
             variant="primary"
           />
           <StatsCard
-            title="Running Low"
-            value={loading ? "-" : lowStockItems}
-            icon={TrendingDown}
-            variant="warning"
-          />
-          <StatsCard
-            title="Critical Stock"
-            value={loading ? "-" : criticalItems}
+            title="Low Stock Items"
+            value={loading ? "-" : lowStockItems.length}
             icon={AlertTriangle}
-            variant={criticalItems > 0 ? "danger" : "default"}
+            variant={lowStockItems.length > 0 ? "warning" : "default"}
           />
           <StatsCard
-            title="Inventory Value"
+            title="Categories"
+            value={loading ? "-" : new Set(inventory.map(i => i.category)).size}
+            icon={Package}
+          />
+          <StatsCard
+            title="Total Value"
             value={loading ? "-" : `R${totalValue.toLocaleString()}`}
             icon={Calculator}
           />
         </div>
 
-        {/* Inventory Table */}
-        <div>
-          <h2 className="text-xl font-display font-semibold text-foreground mb-4">
-            Current Stock Levels
-          </h2>
-          {loading ? (
-            <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
-          ) : inventory.length > 0 ? (
-            <InventoryTable items={inventory} />
-          ) : (
-            <div className="card-elevated p-12 text-center">
-              <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No inventory items yet. Click 'Add Item' to get started.</p>
+        {/* Low Stock Alert */}
+        {lowStockItems.length > 0 && (
+          <div className="bg-accent/50 border border-border rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <h3 className="font-semibold text-foreground">
+                Low Stock Alert
+              </h3>
             </div>
-          )}
-        </div>
+            <div className="flex flex-wrap gap-2">
+              {lowStockItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRestockItem(item)}
+                >
+                  {item.name} ({item.quantity} {item.unit})
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Category Tabs and Inventory Table */}
+        <Tabs value={activeCategory} onValueChange={setActiveCategory}>
+          <TabsList className="flex flex-wrap h-auto gap-1 bg-muted/50 p-1">
+            <TabsTrigger value="all" className="flex items-center gap-1">
+              <Package className="h-4 w-4" />
+              All
+            </TabsTrigger>
+            {INVENTORY_CATEGORIES.map((cat) => (
+              <TabsTrigger key={cat} value={cat} className="flex items-center gap-1">
+                {categoryIcons[cat]}
+                {cat}
+              </TabsTrigger>
+            ))}
+            <TabsTrigger value="usage-log" className="flex items-center gap-1">
+              <History className="h-4 w-4" />
+              Usage Log
+            </TabsTrigger>
+          </TabsList>
+
+          {/* All and Category Views */}
+          {["all", ...INVENTORY_CATEGORIES].map((cat) => (
+            <TabsContent key={cat} value={cat} className="mt-4">
+              {loading ? (
+                <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+              ) : (
+                <InventoryTable
+                  items={filteredItems}
+                  onRestock={setRestockItem}
+                  onLogUsage={setUsageItem}
+                  onDelete={deleteItem}
+                />
+              )}
+            </TabsContent>
+          ))}
+
+          {/* Usage Log View */}
+          <TabsContent value="usage-log" className="mt-4">
+            <div className="card-elevated overflow-hidden">
+              {usageLog.length === 0 ? (
+                <div className="p-12 text-center">
+                  <History className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No usage records yet.</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>Date</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead className="text-right">Quantity Used</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Used By</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {usageLog.map((log) => {
+                      const item = inventory.find(i => i.id === log.inventory_id);
+                      return (
+                        <TableRow key={log.id}>
+                          <TableCell className="font-mono text-sm">
+                            {format(new Date(log.usage_date), "dd MMM yyyy")}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {item?.name || "Unknown Item"}
+                          </TableCell>
+                          <TableCell className="text-right font-mono">
+                            {log.quantity_used} {item?.unit || ""}
+                          </TableCell>
+                          <TableCell>{log.reason}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {log.used_by || "-"}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">
+                            {log.notes || "-"}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
+
+      {/* Dialogs */}
+      <AddInventoryDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSubmit={addItem}
+      />
+
+      <RestockDialog
+        open={!!restockItem_}
+        onOpenChange={(open) => !open && setRestockItem(null)}
+        item={restockItem_}
+        onSubmit={restockItem}
+      />
+
+      <UsageLogDialog
+        open={!!usageItem}
+        onOpenChange={(open) => !open && setUsageItem(null)}
+        item={usageItem}
+        onSubmit={logUsage}
+      />
     </Layout>
   );
 }
