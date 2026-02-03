@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { FarmProvider } from "@/hooks/useFarm";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { SupportChat } from "@/components/SupportChat";
 import Dashboard from "./pages/Dashboard";
 import Livestock from "./pages/Livestock";
 import Feeding from "./pages/Feeding";
@@ -69,6 +70,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <SupportChat />
             </BrowserRouter>
           </TooltipProvider>
         </SubscriptionProvider>
