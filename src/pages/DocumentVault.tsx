@@ -39,7 +39,8 @@ type DocumentCategory =
   | "ohs_risk_assessments" | "ppe_register" | "incident_register" | "first_aid"
   | "animal_id_ownership" | "movement_records" | "vet_letters"
   | "chemical_purchase_invoices" | "chemical_stock_records" | "chemical_application_records"
-  | "water_use_authorisation" | "borehole_abstraction_logs" | "abattoir_meat_safety" | "other";
+  | "water_use_authorisation" | "borehole_abstraction_logs" | "abattoir_meat_safety" 
+  | "sales" | "other";
 
 interface ComplianceDocument {
   id: string;
@@ -72,6 +73,7 @@ const categoryLabels: Record<DocumentCategory, string> = {
   water_use_authorisation: "Water Use Licence",
   borehole_abstraction_logs: "Borehole Logs",
   abattoir_meat_safety: "Meat Safety Docs",
+  sales: "Sales Documents",
   other: "Other",
 };
 
@@ -81,6 +83,7 @@ const categoryGroups = {
   "Livestock": ["animal_id_ownership", "movement_records", "vet_letters"],
   "Chemicals": ["chemical_purchase_invoices", "chemical_stock_records", "chemical_application_records"],
   "Water & Environment": ["water_use_authorisation", "borehole_abstraction_logs"],
+  "Sales": ["sales"],
   "Other": ["abattoir_meat_safety", "other"],
 };
 
