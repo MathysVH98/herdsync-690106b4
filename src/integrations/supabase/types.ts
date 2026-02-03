@@ -52,6 +52,289 @@ export type Database = {
           },
         ]
       }
+      animal_sale_items: {
+        Row: {
+          animal_id: string
+          animal_sale_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          unit_price: number | null
+        }
+        Insert: {
+          animal_id: string
+          animal_sale_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          unit_price?: number | null
+        }
+        Update: {
+          animal_id?: string
+          animal_sale_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_sale_items_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "animals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "animal_sale_items_animal_sale_id_fkey"
+            columns: ["animal_sale_id"]
+            isOneToOne: false
+            referencedRelation: "animal_sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      animal_sales: {
+        Row: {
+          balance_due_date: string | null
+          buyer_address: string | null
+          buyer_email: string | null
+          buyer_id_or_reg: string | null
+          buyer_name: string
+          buyer_phone: string | null
+          buyer_signature_date: string | null
+          buyer_signature_name: string | null
+          buyer_vat_number: string | null
+          created_at: string
+          delivery_details: string | null
+          deposit_amount: number | null
+          farm_id: string
+          health_declaration: string | null
+          id: string
+          lot_price_total: number | null
+          ownership_passes:
+            | Database["public"]["Enums"]["ownership_passes"]
+            | null
+          ownership_passes_custom: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference: string | null
+          pdf_document_id: string | null
+          price_per_animal: number | null
+          price_type: Database["public"]["Enums"]["price_type"]
+          risk_passes: Database["public"]["Enums"]["risk_passes"] | null
+          risk_passes_custom: string | null
+          sale_date: string
+          sale_location: string | null
+          sale_number: string
+          sale_status: Database["public"]["Enums"]["sale_status"]
+          seller_address: string | null
+          seller_email: string | null
+          seller_id_or_reg: string | null
+          seller_name: string
+          seller_phone: string | null
+          seller_signature_date: string | null
+          seller_signature_name: string | null
+          seller_vat_number: string | null
+          special_conditions: string | null
+          subtotal: number | null
+          total_amount: number | null
+          transport_responsibility:
+            | Database["public"]["Enums"]["transport_responsibility"]
+            | null
+          transport_responsibility_custom: string | null
+          updated_at: string
+          vat_amount: number | null
+          vat_applicable: boolean
+          vat_rate: number
+          warranty_clause: string | null
+          witness1_name: string | null
+          witness1_signature: string | null
+          witness2_name: string | null
+          witness2_signature: string | null
+        }
+        Insert: {
+          balance_due_date?: string | null
+          buyer_address?: string | null
+          buyer_email?: string | null
+          buyer_id_or_reg?: string | null
+          buyer_name: string
+          buyer_phone?: string | null
+          buyer_signature_date?: string | null
+          buyer_signature_name?: string | null
+          buyer_vat_number?: string | null
+          created_at?: string
+          delivery_details?: string | null
+          deposit_amount?: number | null
+          farm_id: string
+          health_declaration?: string | null
+          id?: string
+          lot_price_total?: number | null
+          ownership_passes?:
+            | Database["public"]["Enums"]["ownership_passes"]
+            | null
+          ownership_passes_custom?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference?: string | null
+          pdf_document_id?: string | null
+          price_per_animal?: number | null
+          price_type?: Database["public"]["Enums"]["price_type"]
+          risk_passes?: Database["public"]["Enums"]["risk_passes"] | null
+          risk_passes_custom?: string | null
+          sale_date?: string
+          sale_location?: string | null
+          sale_number: string
+          sale_status?: Database["public"]["Enums"]["sale_status"]
+          seller_address?: string | null
+          seller_email?: string | null
+          seller_id_or_reg?: string | null
+          seller_name: string
+          seller_phone?: string | null
+          seller_signature_date?: string | null
+          seller_signature_name?: string | null
+          seller_vat_number?: string | null
+          special_conditions?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          transport_responsibility?:
+            | Database["public"]["Enums"]["transport_responsibility"]
+            | null
+          transport_responsibility_custom?: string | null
+          updated_at?: string
+          vat_amount?: number | null
+          vat_applicable?: boolean
+          vat_rate?: number
+          warranty_clause?: string | null
+          witness1_name?: string | null
+          witness1_signature?: string | null
+          witness2_name?: string | null
+          witness2_signature?: string | null
+        }
+        Update: {
+          balance_due_date?: string | null
+          buyer_address?: string | null
+          buyer_email?: string | null
+          buyer_id_or_reg?: string | null
+          buyer_name?: string
+          buyer_phone?: string | null
+          buyer_signature_date?: string | null
+          buyer_signature_name?: string | null
+          buyer_vat_number?: string | null
+          created_at?: string
+          delivery_details?: string | null
+          deposit_amount?: number | null
+          farm_id?: string
+          health_declaration?: string | null
+          id?: string
+          lot_price_total?: number | null
+          ownership_passes?:
+            | Database["public"]["Enums"]["ownership_passes"]
+            | null
+          ownership_passes_custom?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_reference?: string | null
+          pdf_document_id?: string | null
+          price_per_animal?: number | null
+          price_type?: Database["public"]["Enums"]["price_type"]
+          risk_passes?: Database["public"]["Enums"]["risk_passes"] | null
+          risk_passes_custom?: string | null
+          sale_date?: string
+          sale_location?: string | null
+          sale_number?: string
+          sale_status?: Database["public"]["Enums"]["sale_status"]
+          seller_address?: string | null
+          seller_email?: string | null
+          seller_id_or_reg?: string | null
+          seller_name?: string
+          seller_phone?: string | null
+          seller_signature_date?: string | null
+          seller_signature_name?: string | null
+          seller_vat_number?: string | null
+          special_conditions?: string | null
+          subtotal?: number | null
+          total_amount?: number | null
+          transport_responsibility?:
+            | Database["public"]["Enums"]["transport_responsibility"]
+            | null
+          transport_responsibility_custom?: string | null
+          updated_at?: string
+          vat_amount?: number | null
+          vat_applicable?: boolean
+          vat_rate?: number
+          warranty_clause?: string | null
+          witness1_name?: string | null
+          witness1_signature?: string | null
+          witness2_name?: string | null
+          witness2_signature?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animal_sales_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      animals: {
+        Row: {
+          animal_tag_id: string
+          brand_mark: string | null
+          breed: string | null
+          color_markings: string | null
+          created_at: string
+          dob_or_age: string | null
+          farm_id: string
+          health_notes: string | null
+          id: string
+          microchip_number: string | null
+          sex: string | null
+          species: string
+          status: Database["public"]["Enums"]["animal_status"]
+          updated_at: string
+        }
+        Insert: {
+          animal_tag_id: string
+          brand_mark?: string | null
+          breed?: string | null
+          color_markings?: string | null
+          created_at?: string
+          dob_or_age?: string | null
+          farm_id: string
+          health_notes?: string | null
+          id?: string
+          microchip_number?: string | null
+          sex?: string | null
+          species: string
+          status?: Database["public"]["Enums"]["animal_status"]
+          updated_at?: string
+        }
+        Update: {
+          animal_tag_id?: string
+          brand_mark?: string | null
+          breed?: string | null
+          color_markings?: string | null
+          created_at?: string
+          dob_or_age?: string | null
+          farm_id?: string
+          health_notes?: string | null
+          id?: string
+          microchip_number?: string | null
+          sex?: string | null
+          species?: string
+          status?: Database["public"]["Enums"]["animal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "animals_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_packs: {
         Row: {
           audit_type: Database["public"]["Enums"]["audit_type"]
@@ -994,6 +1277,7 @@ export type Database = {
       }
     }
     Enums: {
+      animal_status: "available" | "sold" | "deceased" | "transferred"
       audit_type:
         | "department_of_labour"
         | "ohs"
@@ -1020,8 +1304,14 @@ export type Database = {
         | "borehole_abstraction_logs"
         | "abattoir_meat_safety"
         | "other"
+        | "sales"
       incident_severity: "minor" | "moderate" | "serious" | "critical"
+      ownership_passes: "on_full_payment" | "on_signature" | "custom"
+      payment_method: "eft" | "cash" | "other"
       payment_provider: "paypal" | "yoco"
+      price_type: "per_animal" | "per_lot"
+      risk_passes: "on_loading" | "on_handover" | "on_delivery" | "custom"
+      sale_status: "draft" | "finalized"
       subscription_status:
         | "trialing"
         | "active"
@@ -1029,6 +1319,7 @@ export type Database = {
         | "expired"
         | "past_due"
       subscription_tier: "basic" | "starter" | "pro"
+      transport_responsibility: "buyer" | "seller" | "split" | "custom"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1156,6 +1447,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      animal_status: ["available", "sold", "deceased", "transferred"],
       audit_type: [
         "department_of_labour",
         "ohs",
@@ -1183,9 +1475,15 @@ export const Constants = {
         "borehole_abstraction_logs",
         "abattoir_meat_safety",
         "other",
+        "sales",
       ],
       incident_severity: ["minor", "moderate", "serious", "critical"],
+      ownership_passes: ["on_full_payment", "on_signature", "custom"],
+      payment_method: ["eft", "cash", "other"],
       payment_provider: ["paypal", "yoco"],
+      price_type: ["per_animal", "per_lot"],
+      risk_passes: ["on_loading", "on_handover", "on_delivery", "custom"],
+      sale_status: ["draft", "finalized"],
       subscription_status: [
         "trialing",
         "active",
@@ -1194,6 +1492,7 @@ export const Constants = {
         "past_due",
       ],
       subscription_tier: ["basic", "starter", "pro"],
+      transport_responsibility: ["buyer", "seller", "split", "custom"],
     },
   },
 } as const

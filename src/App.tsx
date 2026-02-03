@@ -23,6 +23,7 @@ import ChemicalsRemedies from "./pages/ChemicalsRemedies";
 import AuditPackBuilder from "./pages/AuditPackBuilder";
 import Pricing from "./pages/Pricing";
 import Employees from "./pages/Employees";
+import AnimalSale from "./pages/AnimalSale";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
                 <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
                 <Route path="/employees" element={<Employees />} />
+                <Route path="/animal-sale" element={<AnimalSale />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

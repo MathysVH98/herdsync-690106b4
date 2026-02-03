@@ -20,6 +20,7 @@ import {
   CreditCard,
   UserCog,
   ArrowLeft,
+  Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -42,6 +43,7 @@ const navigation = [
   { name: "Feed Inventory", href: "/inventory", icon: Package },
   { name: "Health Records", href: "/health", icon: Stethoscope },
   { name: "Market Area", href: "/market", icon: TrendingUp },
+  { name: "Animal Sale", href: "/animal-sale", icon: Receipt },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
@@ -64,6 +66,7 @@ const mainNavigationPaths = [
   "/inventory",
   "/health",
   "/market",
+  "/animal-sale",
   "/audit",
   "/reports",
   "/tracking",
