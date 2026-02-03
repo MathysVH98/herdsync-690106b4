@@ -111,10 +111,10 @@ serve(async (req) => {
         .eq("farm_id", farmId)
         .single();
 
-      // Set subscription period: 1 year from now
+      // Set subscription period: 1 month from now (monthly billing)
       const periodStart = new Date();
       const periodEnd = new Date();
-      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
 
       if (!existingSub) {
         // Create active subscription
