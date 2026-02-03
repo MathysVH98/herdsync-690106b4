@@ -420,8 +420,8 @@ export default function Employees() {
           </Dialog>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Staff</CardTitle>
@@ -444,18 +444,6 @@ export default function Employees() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Farm Workers</CardTitle>
-              <UserCheck className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {activeEmployees.filter((e) => e.role === "Farm Worker").length}
-              </div>
-              <p className="text-xs text-muted-foreground">General workers</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Former Staff</CardTitle>
               <UserX className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
@@ -464,6 +452,24 @@ export default function Employees() {
               <p className="text-xs text-muted-foreground">Past employees</p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Role Breakdown */}
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-foreground">Employees by Role</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {roleOptions.map((role) => {
+              const count = activeEmployees.filter((e) => e.role === role).length;
+              return (
+                <Card key={role} className={count > 0 ? "border-primary/20 bg-primary/5" : ""}>
+                  <CardContent className="p-4">
+                    <div className="text-2xl font-bold">{count}</div>
+                    <p className="text-xs text-muted-foreground truncate" title={role}>{role}</p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         </div>
 
         {/* Search */}
