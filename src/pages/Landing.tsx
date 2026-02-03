@@ -305,17 +305,6 @@ export default function Landing() {
                     </p>
                   </div>
                 </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Check className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Offline Capable</p>
-                    <p className="text-sm text-muted-foreground">
-                      Works even in areas with limited connectivity
-                    </p>
-                  </div>
-                </li>
               </ul>
             </div>
             <div className="relative">
