@@ -352,6 +352,77 @@ export type Database = {
           },
         ]
       }
+      employees: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          end_date: string | null
+          farm_id: string
+          first_name: string
+          id: string
+          id_number: string | null
+          last_name: string
+          notes: string | null
+          phone: string | null
+          role: string
+          salary: number | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          end_date?: string | null
+          farm_id: string
+          first_name: string
+          id?: string
+          id_number?: string | null
+          last_name: string
+          notes?: string | null
+          phone?: string | null
+          role?: string
+          salary?: number | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          end_date?: string | null
+          farm_id?: string
+          first_name?: string
+          id?: string
+          id_number?: string | null
+          last_name?: string
+          notes?: string | null
+          phone?: string | null
+          role?: string
+          salary?: number | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
