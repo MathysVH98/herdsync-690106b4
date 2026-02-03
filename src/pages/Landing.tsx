@@ -113,9 +113,13 @@ const pricingHighlights = [
   },
   {
     tier: "Pro",
-    price: "R599",
+    price: null,
     description: "Unlimited animals",
     features: ["Everything in Starter", "GPS tracking", "AI assistant"],
+    proOptions: [
+      { label: "Web-Based", price: "R599/mo" },
+      { label: "GPS Package", price: "R599/mo + hardware" },
+    ],
   },
 ];
 
@@ -421,10 +425,21 @@ export default function Landing() {
                 )}
                 <CardHeader className="pb-2">
                   <CardTitle className="text-xl font-display">{plan.tier}</CardTitle>
-                  <div className="pt-2">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-muted-foreground">/month</span>
-                  </div>
+                  {plan.price ? (
+                    <div className="pt-2">
+                      <span className="text-4xl font-bold">{plan.price}</span>
+                      <span className="text-muted-foreground">/month</span>
+                    </div>
+                  ) : plan.proOptions ? (
+                    <div className="pt-2 space-y-1">
+                      {plan.proOptions.map((opt, idx) => (
+                        <div key={idx} className="text-sm">
+                          <span className="font-semibold">{opt.label}:</span>{" "}
+                          <span className="text-primary">{opt.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   <CardDescription>{plan.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
