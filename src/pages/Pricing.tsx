@@ -15,6 +15,7 @@ import {
   Quote,
   CreditCard,
   Loader2,
+  Construction,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -61,7 +62,7 @@ const testimonials = [
     name: "Johan van der Merwe",
     farm: "Karoo Lamb Farm",
     location: "Northern Cape",
-    quote: "FarmTrack has transformed how we manage our 500+ sheep. The compliance features saved us hours during our last audit.",
+    quote: "HerdSync has transformed how we manage our 500+ sheep. The compliance features saved us hours during our last audit.",
     rating: 5,
   },
   {
@@ -120,6 +121,7 @@ const pricingTiers = [
     description: "Unlimited power for large operations",
     animalLimit: "Unlimited animals",
     tier: "pro" as const,
+    underDevelopment: true,
     features: [
       "Everything in Starter",
       "GPS tracking & mapping",
@@ -150,7 +152,7 @@ export default function Pricing() {
     if (paymentStatus === "success") {
       toast({
         title: "Payment Successful!",
-        description: `Your subscription is now active. Welcome to FarmTrack!`,
+        description: `Your subscription is now active. Welcome to HerdSync!`,
       });
       refetchSubscription();
       // Clear URL params
@@ -239,7 +241,7 @@ export default function Pricing() {
               <Wheat className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-xl font-bold font-display">FarmTrack</h1>
+              <h1 className="text-xl font-bold font-display">HerdSync</h1>
               <p className="text-xs text-muted-foreground">Farm Management</p>
             </div>
           </div>
@@ -336,8 +338,17 @@ export default function Pricing() {
                   tier.popular
                     ? "border-primary shadow-lg scale-105"
                     : "bg-background/80"
-                }`}
+                } ${tier.underDevelopment ? "overflow-hidden" : ""}`}
               >
+                {tier.underDevelopment && (
+                  <div className="absolute inset-0 z-10 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                    <Construction className="w-12 h-12 text-muted-foreground mb-3" />
+                    <p className="font-semibold text-lg text-foreground">Coming Soon</p>
+                    <p className="text-sm text-muted-foreground text-center px-4 mt-1">
+                      We're still building the GPS tracking feature
+                    </p>
+                  </div>
+                )}
                 {tier.popular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary">
                     Most Popular
@@ -365,7 +376,11 @@ export default function Pricing() {
                   </ul>
                 </CardContent>
                 <CardFooter className="flex flex-col gap-2">
-                  {selectedTier === tier.tier ? (
+                  {tier.underDevelopment ? (
+                    <Button className="w-full" variant="outline" disabled>
+                      Coming Soon
+                    </Button>
+                  ) : selectedTier === tier.tier ? (
                     <div className="w-full space-y-2">
                       <Button
                         className="w-full bg-success hover:bg-success/90 text-success-foreground"
@@ -450,7 +465,7 @@ export default function Pricing() {
             Ready to Transform Your Farm?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Join hundreds of South African farmers already using FarmTrack. Start your
+            Join hundreds of South African farmers already using HerdSync. Start your
             free 14-day trial today—no credit card required.
           </p>
           {!user ? (
@@ -468,7 +483,7 @@ export default function Pricing() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-8 bg-card/80">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>© 2024 FarmTrack. Built for South African farmers.</p>
+          <p>© 2024 HerdSync. Built for South African farmers.</p>
           <p className="mt-2">
             Payments secured by PayPal and Yoco. All prices in South African Rand (ZAR).
           </p>
