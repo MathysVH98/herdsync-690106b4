@@ -712,6 +712,56 @@ export type Database = {
           },
         ]
       }
+      farm_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          expense_date: string
+          farm_id: string
+          id: string
+          notes: string | null
+          receipt_reference: string | null
+          supplier_vendor: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description: string
+          expense_date?: string
+          farm_id: string
+          id?: string
+          notes?: string | null
+          receipt_reference?: string | null
+          supplier_vendor?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          expense_date?: string
+          farm_id?: string
+          id?: string
+          notes?: string | null
+          receipt_reference?: string | null
+          supplier_vendor?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_expenses_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
