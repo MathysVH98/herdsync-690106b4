@@ -22,6 +22,9 @@ import {
   ArrowLeft,
   Receipt,
   MessageSquare,
+  Info,
+  FileText as FileTextIcon,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -50,7 +53,10 @@ const navigation = [
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
   { name: "Pricing & Plans", href: "/pricing", icon: CreditCard },
+  { name: "About Us", href: "/about", icon: Info },
   { name: "Contact Us", href: "/contact", icon: MessageSquare },
+  { name: "Terms of Service", href: "/terms", icon: FileTextIcon },
+  { name: "Disclaimer", href: "/disclaimer", icon: AlertCircle },
 ];
 
 const complianceNavigation = [
@@ -79,7 +85,10 @@ const mainNavigationPaths = [
   "/compliance/documents",
   "/compliance/labour-ohs",
   "/compliance/chemicals",
+  "/about",
   "/contact",
+  "/terms",
+  "/disclaimer",
   "/auth",
 ];
 
