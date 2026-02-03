@@ -53,6 +53,7 @@ interface Employee {
   first_name: string;
   last_name: string;
   id_number: string | null;
+  tax_number: string | null;
   phone: string | null;
   email: string | null;
   role: string;
@@ -91,6 +92,7 @@ export default function Employees() {
     first_name: "",
     last_name: "",
     id_number: "",
+    tax_number: "",
     phone: "",
     email: "",
     role: "Farm Worker",
@@ -125,6 +127,7 @@ export default function Employees() {
         first_name: data.first_name,
         last_name: data.last_name,
         id_number: data.id_number || null,
+        tax_number: data.tax_number || null,
         phone: data.phone || null,
         email: data.email || null,
         role: data.role,
@@ -157,6 +160,7 @@ export default function Employees() {
           first_name: data.first_name,
           last_name: data.last_name,
           id_number: data.id_number || null,
+          tax_number: data.tax_number || null,
           phone: data.phone || null,
           email: data.email || null,
           role: data.role,
@@ -209,6 +213,7 @@ export default function Employees() {
       first_name: "",
       last_name: "",
       id_number: "",
+      tax_number: "",
       phone: "",
       email: "",
       role: "Farm Worker",
@@ -227,6 +232,7 @@ export default function Employees() {
       first_name: employee.first_name,
       last_name: employee.last_name,
       id_number: employee.id_number || "",
+      tax_number: employee.tax_number || "",
       phone: employee.phone || "",
       email: employee.email || "",
       role: employee.role,
@@ -292,20 +298,29 @@ export default function Employees() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="role">Role *</Label>
-          <Select value={formData.role} onValueChange={(v) => setFormData((prev) => ({ ...prev, role: v }))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {roleOptions.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="tax_number">Tax Number</Label>
+          <Input
+            id="tax_number"
+            value={formData.tax_number}
+            onChange={(e) => setFormData((prev) => ({ ...prev, tax_number: e.target.value }))}
+            placeholder="SARS Tax Number"
+          />
         </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="role">Role *</Label>
+        <Select value={formData.role} onValueChange={(v) => setFormData((prev) => ({ ...prev, role: v }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {roleOptions.map((role) => (
+              <SelectItem key={role} value={role}>
+                {role}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
