@@ -39,9 +39,10 @@ export function AnimalMultiSelect({
   });
 
   const getAnimalLabel = (animal: Animal) => {
-    const parts = [animal.animal_tag_id, animal.species];
+    const parts = [animal.animal_tag_id];
+    if (animal.name) parts.push(animal.name);
+    parts.push(animal.species);
     if (animal.breed) parts.push(animal.breed);
-    if (animal.sex) parts.push(animal.sex);
     if (animal.dob_or_age) parts.push(animal.dob_or_age);
     return parts.join(" – ");
   };
@@ -127,11 +128,13 @@ export function AnimalMultiSelect({
                         {isSelected && <Check className="h-3 w-3" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{animal.animal_tag_id}</div>
+                        <div className="font-medium truncate">
+                          {animal.animal_tag_id} {animal.name && `- ${animal.name}`}
+                        </div>
                         <div className="text-xs text-muted-foreground truncate">
                           {animal.species}
                           {animal.breed && ` • ${animal.breed}`}
-                          {animal.sex && ` • ${animal.sex}`}
+                          {animal.weight && ` • ${animal.weight}`}
                         </div>
                       </div>
                     </button>
