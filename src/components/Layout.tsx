@@ -25,12 +25,14 @@ import {
   Info,
   FileText as FileTextIcon,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
+import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { FarmSwitcher } from "@/components/FarmSwitcher";
 import farmBackground from "@/assets/farm-background.jpg";
@@ -52,6 +54,10 @@ const navigation = [
   { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Tracking", href: "/tracking", icon: MapPin },
+];
+
+const proNavigation = [
+  { name: "Ask a Pro", href: "/ask-a-pro", icon: Sparkles },
 ];
 
 const complianceNavigation = [
@@ -84,6 +90,7 @@ const mainNavigationPaths = [
   "/reports",
   "/tracking",
   "/pricing",
+  "/ask-a-pro",
   "/compliance",
   "/compliance/documents",
   "/compliance/labour-ohs",
@@ -101,6 +108,9 @@ export function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { farm } = useFarm();
+  const { subscription, isActive } = useSubscription();
+  
+  const isPro = subscription?.tier === "pro" && isActive;
   
   // Only show back button on sub-pages (not main navigation pages)
   const showBackButton = !mainNavigationPaths.includes(location.pathname);
@@ -161,6 +171,29 @@ export function Layout({ children }: LayoutProps) {
                 </Link>
               );
             })}
+
+            {/* Pro Features Section */}
+            {isPro && (
+              <div className="pt-4 mt-4 border-t border-sidebar-border">
+                <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
+                  Pro Features
+                </p>
+                {proNavigation.map((item) => {
+                  const isActive = location.pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn("sidebar-nav-item", isActive && "active")}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="font-medium">{item.name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Compliance Section */}
             <div className="pt-4 mt-4 border-t border-sidebar-border">
