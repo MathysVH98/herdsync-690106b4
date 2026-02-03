@@ -117,7 +117,7 @@ export function Layout({ children }: LayoutProps) {
 
   return (
     <div 
-      className="min-h-screen flex farm-background"
+      className="h-screen flex overflow-hidden farm-background"
       style={{ '--farm-bg-image': `url(${farmBackground})` } as React.CSSProperties}
     >
       {/* Mobile overlay */}
@@ -131,13 +131,13 @@ export function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none",
+          "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none overflow-hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full overflow-hidden">
           {/* Logo */}
-          <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border">
+          <div className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border flex-shrink-0">
             <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
               <Wheat className="w-6 h-6 text-sidebar-primary-foreground" />
             </div>
@@ -239,7 +239,7 @@ export function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-sidebar-border">
+          <div className="px-6 py-4 border-t border-sidebar-border flex-shrink-0">
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
