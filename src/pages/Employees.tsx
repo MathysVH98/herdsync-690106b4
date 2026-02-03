@@ -259,7 +259,7 @@ export default function Employees() {
 
   const totalSalaries = activeEmployees.reduce((sum, e) => sum + (e.salary || 0), 0);
 
-  const EmployeeForm = ({ onSubmit, isEdit = false }: { onSubmit: () => void; isEdit?: boolean }) => (
+  const formContent = (
     <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -267,7 +267,7 @@ export default function Employees() {
           <Input
             id="first_name"
             value={formData.first_name}
-            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, first_name: e.target.value }))}
             placeholder="John"
           />
         </div>
@@ -276,7 +276,7 @@ export default function Employees() {
           <Input
             id="last_name"
             value={formData.last_name}
-            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, last_name: e.target.value }))}
             placeholder="Doe"
           />
         </div>
@@ -287,13 +287,13 @@ export default function Employees() {
           <Input
             id="id_number"
             value={formData.id_number}
-            onChange={(e) => setFormData({ ...formData, id_number: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, id_number: e.target.value }))}
             placeholder="SA ID Number"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="role">Role *</Label>
-          <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
+          <Select value={formData.role} onValueChange={(v) => setFormData((prev) => ({ ...prev, role: v }))}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -313,7 +313,7 @@ export default function Employees() {
           <Input
             id="phone"
             value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
             placeholder="+27 XX XXX XXXX"
           />
         </div>
@@ -323,7 +323,7 @@ export default function Employees() {
             id="email"
             type="email"
             value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
             placeholder="john@example.com"
           />
         </div>
@@ -335,7 +335,7 @@ export default function Employees() {
             id="start_date"
             type="date"
             value={formData.start_date}
-            onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
           />
         </div>
         <div className="space-y-2">
@@ -344,7 +344,7 @@ export default function Employees() {
             id="salary"
             type="number"
             value={formData.salary}
-            onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, salary: e.target.value }))}
             placeholder="0.00"
           />
         </div>
@@ -354,7 +354,7 @@ export default function Employees() {
         <Input
           id="address"
           value={formData.address}
-          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, address: e.target.value }))}
           placeholder="Full address"
         />
       </div>
@@ -364,7 +364,7 @@ export default function Employees() {
           <Input
             id="emergency_contact_name"
             value={formData.emergency_contact_name}
-            onChange={(e) => setFormData({ ...formData, emergency_contact_name: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, emergency_contact_name: e.target.value }))}
             placeholder="Contact name"
           />
         </div>
@@ -373,7 +373,7 @@ export default function Employees() {
           <Input
             id="emergency_contact_phone"
             value={formData.emergency_contact_phone}
-            onChange={(e) => setFormData({ ...formData, emergency_contact_phone: e.target.value })}
+            onChange={(e) => setFormData((prev) => ({ ...prev, emergency_contact_phone: e.target.value }))}
             placeholder="+27 XX XXX XXXX"
           />
         </div>
@@ -383,15 +383,10 @@ export default function Employees() {
         <Textarea
           id="notes"
           value={formData.notes}
-          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
           placeholder="Additional notes..."
         />
       </div>
-      <DialogFooter>
-        <Button onClick={onSubmit} disabled={!formData.first_name || !formData.last_name}>
-          {isEdit ? "Save Changes" : "Add Employee"}
-        </Button>
-      </DialogFooter>
     </div>
   );
 
@@ -415,7 +410,12 @@ export default function Employees() {
                 <DialogTitle>Add New Employee</DialogTitle>
                 <DialogDescription>Enter the employee's details below.</DialogDescription>
               </DialogHeader>
-              <EmployeeForm onSubmit={() => addMutation.mutate(formData)} />
+              {formContent}
+              <DialogFooter>
+                <Button onClick={() => addMutation.mutate(formData)} disabled={!formData.first_name || !formData.last_name}>
+                  Add Employee
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -612,10 +612,15 @@ export default function Employees() {
               <DialogTitle>Edit Employee</DialogTitle>
               <DialogDescription>Update the employee's details.</DialogDescription>
             </DialogHeader>
-            <EmployeeForm
-              onSubmit={() => selectedEmployee && updateMutation.mutate({ id: selectedEmployee.id, data: formData })}
-              isEdit
-            />
+            {formContent}
+            <DialogFooter>
+              <Button
+                onClick={() => selectedEmployee && updateMutation.mutate({ id: selectedEmployee.id, data: formData })}
+                disabled={!formData.first_name || !formData.last_name}
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
