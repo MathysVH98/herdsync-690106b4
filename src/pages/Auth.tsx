@@ -36,7 +36,7 @@ export default function Auth() {
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
-      navigate("/");
+      navigate("/dashboard");
     }
     setLoading(false);
   };
