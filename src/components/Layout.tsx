@@ -118,7 +118,7 @@ export function Layout({ children }: LayoutProps) {
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-sidebar-foreground font-display">
-                FarmTrack
+                HerdSync
               </h1>
               <FarmSwitcher />
             </div>
@@ -215,7 +215,7 @@ export function Layout({ children }: LayoutProps) {
           </button>
           <div className="flex items-center gap-2">
             <Wheat className="w-6 h-6 text-primary" />
-            <span className="font-bold text-lg font-display">FarmTrack</span>
+            <span className="font-bold text-lg font-display">HerdSync</span>
           </div>
         </header>
 

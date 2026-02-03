@@ -90,9 +90,9 @@ export default function Auth() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground font-display">
-              FarmTrack
+              HerdSync
             </h1>
-            <p className="text-xs text-muted-foreground">Farm Management</p>
+            <p className="text-xs text-muted-foreground">Farm Management Made Simple</p>
           </div>
         </div>
 
