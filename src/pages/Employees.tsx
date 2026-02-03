@@ -89,6 +89,8 @@ export default function Employees() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
     first_name: "",
@@ -511,11 +513,29 @@ export default function Employees() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
             {roleOptions.map((role) => {
               const count = activeEmployees.filter((e) => e.role === role).length;
+              const hasEmployees = count > 0;
               return (
-                <Card key={role} className={count > 0 ? "border-primary/20 bg-primary/5" : ""}>
+                <Card
+                  key={role}
+                  className={`transition-all ${
+                    hasEmployees
+                      ? "bg-card border-primary/20 cursor-pointer hover:shadow-md hover:border-primary/40"
+                      : "bg-transparent border-dashed border-border/50"
+                  }`}
+                  onClick={() => {
+                    if (hasEmployees) {
+                      setSelectedRole(role);
+                      setIsRoleDialogOpen(true);
+                    }
+                  }}
+                >
                   <CardContent className="p-4">
-                    <div className="text-2xl font-bold">{count}</div>
-                    <p className="text-xs text-muted-foreground truncate" title={role}>{role}</p>
+                    <div className={`text-2xl font-bold ${hasEmployees ? "text-foreground" : "text-muted-foreground/50"}`}>
+                      {count}
+                    </div>
+                    <p className={`text-xs truncate ${hasEmployees ? "text-muted-foreground" : "text-muted-foreground/50"}`} title={role}>
+                      {role}
+                    </p>
                   </CardContent>
                 </Card>
               );
@@ -702,6 +722,62 @@ export default function Employees() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Role Overview Dialog */}
+        <Dialog open={isRoleDialogOpen} onOpenChange={setIsRoleDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{selectedRole}</DialogTitle>
+              <DialogDescription>
+                {activeEmployees.filter((e) => e.role === selectedRole).length} employee(s) in this role
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              {activeEmployees
+                .filter((e) => e.role === selectedRole)
+                .map((employee) => (
+                  <div
+                    key={employee.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                  >
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        {employee.first_name} {employee.last_name}
+                      </p>
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        {employee.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {employee.phone}
+                          </span>
+                        )}
+                        {employee.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3 h-3" />
+                            {employee.email}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Started: {format(new Date(employee.start_date), "dd MMM yyyy")}
+                        {employee.salary ? ` • R ${employee.salary.toLocaleString()}/month` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        setIsRoleDialogOpen(false);
+                        handleEdit(employee);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
