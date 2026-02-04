@@ -50,7 +50,7 @@ const SA_PROVINCES = [
 ];
 
 export function FarmSwitcher() {
-  const { farm, farms, setActiveFarm, loading, refetchFarms } = useFarm();
+  const { farm, farms, setActiveFarm, loading, refetchFarms, isEmployee } = useFarm();
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [farmName, setFarmName] = useState("");
@@ -63,6 +63,16 @@ export function FarmSwitcher() {
   const handleCreateFarm = async (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Employees cannot create farms
+    if (isEmployee) {
+      toast({
+        title: "Not Allowed",
+        description: "Employees cannot create farms.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (!user) {
       toast({
@@ -168,6 +178,16 @@ export function FarmSwitcher() {
   if (loading) {
     return (
       <div className="h-9 w-full bg-sidebar-accent/50 animate-pulse rounded-lg" />
+    );
+  }
+
+  // Employees see their farm name without ability to switch or create
+  if (isEmployee) {
+    return (
+      <div className="flex items-center gap-2 px-3 h-9 text-sm bg-sidebar-accent/30 rounded-lg">
+        <Building className="w-4 h-4 text-muted-foreground" />
+        <span className="truncate font-medium">{farm?.name || "Your Farm"}</span>
+      </div>
     );
   }
 
