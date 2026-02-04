@@ -443,14 +443,14 @@ export function AnimalDetailDialog({
               <div>
                 <Label>Sire (Father)</Label>
                 <Select 
-                  value={formData.sireId || ""} 
-                  onValueChange={(v) => setFormData({ ...formData, sireId: v })}
+                  value={formData.sireId || "none"} 
+                  onValueChange={(v) => setFormData({ ...formData, sireId: v === "none" ? undefined : v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select sire" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {maleAnimals.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
                         {a.tag} - {a.name || "Unnamed"}
@@ -462,14 +462,14 @@ export function AnimalDetailDialog({
               <div>
                 <Label>Dam (Mother)</Label>
                 <Select 
-                  value={formData.damId || ""} 
-                  onValueChange={(v) => setFormData({ ...formData, damId: v })}
+                  value={formData.damId || "none"} 
+                  onValueChange={(v) => setFormData({ ...formData, damId: v === "none" ? undefined : v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select dam" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
                     {femaleAnimals.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
                         {a.tag} - {a.name || "Unnamed"}
