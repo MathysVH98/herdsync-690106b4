@@ -262,50 +262,60 @@ export function InviteEmployeeDialog({
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="username">Username</Label>
-                  <div className="flex gap-2 mt-1">
-                    <div className="relative flex-1">
-                      <Input
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""))}
-                        placeholder="e.g., john.doe"
-                        className={isUsernameTaken && username ? "border-destructive pr-8" : ""}
-                      />
-                      {isUsernameTaken && username && (
-                        <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
-                      )}
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="icon" className="shrink-0">
-                          <ChevronDown className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
-                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                          Suggested usernames
-                        </div>
-                        {suggestionsWithAvailability.length > 0 ? (
-                          suggestionsWithAvailability.map(({ username: suggestion, available }) => (
-                            <DropdownMenuItem
-                              key={suggestion}
-                              onClick={() => available && setUsername(suggestion)}
-                              className={!available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                              disabled={!available}
-                            >
-                              <span className="font-mono text-sm">{suggestion}</span>
-                              <span className={`ml-auto text-xs ${available ? "text-primary" : "text-destructive"}`}>
-                                {available ? "Available" : "Taken"}
-                              </span>
-                            </DropdownMenuItem>
-                          ))
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Based on: <span className="font-medium">{employeeName}</span>
+                  </p>
+                  
+                  {/* Suggestions Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between mb-2">
+                        {username ? (
+                          <span className="font-mono">{username}</span>
                         ) : (
-                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                            No suggestions available
-                          </div>
+                          <span className="text-muted-foreground">Select a suggested username...</span>
                         )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                        <ChevronDown className="w-4 h-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] bg-popover z-50">
+                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b mb-1">
+                        Suggested usernames for {employeeName}
+                      </div>
+                      {suggestionsWithAvailability.length > 0 ? (
+                        suggestionsWithAvailability.map(({ username: suggestion, available }) => (
+                          <DropdownMenuItem
+                            key={suggestion}
+                            onClick={() => available && setUsername(suggestion)}
+                            className={!available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                            disabled={!available}
+                          >
+                            <span className="font-mono text-sm">{suggestion}</span>
+                            <span className={`ml-auto text-xs ${available ? "text-primary" : "text-destructive"}`}>
+                              {available ? "✓ Available" : "✗ Taken"}
+                            </span>
+                          </DropdownMenuItem>
+                        ))
+                      ) : (
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                          No suggestions available
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Manual input option */}
+                  <div className="relative">
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""))}
+                      placeholder="Or type a custom username..."
+                      className={isUsernameTaken && username ? "border-destructive pr-8" : ""}
+                    />
+                    {isUsernameTaken && username && (
+                      <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
+                    )}
                   </div>
                   {isUsernameTaken && username ? (
                     <p className="text-xs text-destructive mt-1">
