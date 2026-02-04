@@ -285,7 +285,7 @@ export function InviteEmployeeDialog({
                     </PopoverTrigger>
                     <PopoverContent
                       align="start"
-                      className="w-[var(--radix-popover-trigger-width)] p-0 z-[100] bg-popover pointer-events-auto"
+                      className="w-[var(--radix-popover-trigger-width)] p-0 z-[10000] bg-popover pointer-events-auto"
                     >
                       <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b">
                         Suggested usernames for {employeeName}
