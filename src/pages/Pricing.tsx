@@ -258,7 +258,7 @@ export default function Pricing() {
           </div>
           <div className="flex items-center gap-4">
             {user ? (
-              <Button onClick={() => navigate("/")} variant="outline">
+              <Button onClick={() => navigate("/dashboard")} variant="outline">
                 Go to Dashboard
               </Button>
             ) : (
@@ -593,7 +593,7 @@ export default function Pricing() {
               Start Free Trial
             </Button>
           ) : (
-            <Button size="lg" onClick={() => navigate("/")} className="bg-gradient-primary">
+            <Button size="lg" onClick={() => navigate("/dashboard")} className="bg-gradient-primary">
               Go to Dashboard
             </Button>
           )}
