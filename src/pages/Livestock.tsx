@@ -22,11 +22,12 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Filter, Download } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/utils/exportCSV";
+import { ImportCSVDialog } from "@/components/ImportCSVDialog";
 
 const statusOptions: AnimalStatus[] = ["Healthy", "Under Observation", "Sick", "Pregnant"];
 const typeOptions = ["Cattle", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Horse"];
@@ -46,6 +47,7 @@ export default function Livestock() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("active");
@@ -361,6 +363,10 @@ export default function Livestock() {
           </div>
 
           <div className="flex gap-3">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Import CSV
+            </Button>
             <Button variant="outline" onClick={handleExportCSV} disabled={filteredAnimals.length === 0}>
               <Download className="w-4 h-4 mr-2" />
               Export CSV
@@ -573,6 +579,14 @@ export default function Livestock() {
           <Button onClick={handleSellAnimal} className="w-full bg-gradient-primary text-primary-foreground">Confirm Sale</Button>
         </DialogContent>
       </Dialog>
+
+      {/* Import CSV Dialog */}
+      <ImportCSVDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        farmId={farm.id}
+        onImportComplete={fetchLivestock}
+      />
 
       {/* Animal Detail Dialog */}
       <AnimalDetailDialog
