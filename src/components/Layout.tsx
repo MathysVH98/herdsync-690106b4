@@ -132,7 +132,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-72 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none overflow-hidden",
+          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none overflow-hidden",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -140,13 +140,13 @@ export function Layout({ children }: LayoutProps) {
           {/* Logo - Links to home/dashboard */}
           <Link 
             to={user ? "/dashboard" : "/"} 
-            className="flex items-center gap-3 px-6 py-6 border-b border-sidebar-border flex-shrink-0 hover:bg-sidebar-accent/50 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-4 border-b border-sidebar-border flex-shrink-0 hover:bg-sidebar-accent/50 transition-colors"
           >
-            <div className="w-10 h-10 rounded-xl bg-sidebar-primary flex items-center justify-center">
-              <Wheat className="w-6 h-6 text-sidebar-primary-foreground" />
+            <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
+              <Wheat className="w-5 h-5 text-sidebar-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-sidebar-foreground font-display">
+              <h1 className="text-lg font-bold text-sidebar-foreground font-display">
                 HerdSync
               </h1>
               <FarmSwitcher />
@@ -164,7 +164,7 @@ export function Layout({ children }: LayoutProps) {
           </Link>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
@@ -247,16 +247,16 @@ export function Layout({ children }: LayoutProps) {
           </nav>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-sidebar-border flex-shrink-0">
+          <div className="px-4 py-3 border-t border-sidebar-border flex-shrink-0">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-sidebar-accent flex items-center justify-center">
-                  <span className="text-sm font-semibold text-sidebar-foreground">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-sidebar-accent flex items-center justify-center">
+                  <span className="text-xs font-semibold text-sidebar-foreground">
                     {user.email?.slice(0, 2).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  <p className="text-xs font-medium text-sidebar-foreground truncate">
                     {user.email}
                   </p>
                 </div>
@@ -298,7 +298,7 @@ export function Layout({ children }: LayoutProps) {
 
         {/* Page content */}
         <main className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-8">
+          <div className="p-3 sm:p-4 lg:p-6 xl:p-8">
             <SubscriptionBanner />
             {showBackButton && (
               <Button
