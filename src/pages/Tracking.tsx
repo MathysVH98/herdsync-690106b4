@@ -200,12 +200,12 @@ export default function Tracking() {
         </div>
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
+        <div>
             <h1 className="text-3xl font-bold font-display text-foreground">
-              Land Tracking
+              RFID Tracking
             </h1>
             <p className="text-muted-foreground mt-1">
-              Define tracking zones and place outpost markers on your land
+              Define tracking zones and place RFID scanner checkpoints on your land
             </p>
           </div>
 
