@@ -104,6 +104,10 @@ export function InviteEmployeeDialog({
   const [step, setStep] = useState<"setup" | "success">("setup");
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState("");
+  // Keep the dropdown trigger independent from manual typing.
+  // Only a click on a suggestion should set this.
+  const [selectedSuggestedUsername, setSelectedSuggestedUsername] = useState<string>("");
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [password, setPassword] = useState(generatePassword());
   const [showPassword, setShowPassword] = useState(true);
   const [permissions, setPermissions] = useState<Permissions>(defaultPermissions);
@@ -143,6 +147,8 @@ export function InviteEmployeeDialog({
   const handleClose = () => {
     setStep("setup");
     setUsername("");
+    setSelectedSuggestedUsername("");
+    setSuggestionsOpen(false);
     setPassword(generatePassword());
     setPermissions(defaultPermissions);
     setCopied(false);
@@ -266,18 +272,21 @@ export function InviteEmployeeDialog({
                   </p>
                   
                   {/* Suggestions Popover */}
-                  <Popover>
+                  <Popover open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full justify-between mb-2" type="button">
-                        {username ? (
-                          <span className="font-mono">{username}</span>
+                        {selectedSuggestedUsername ? (
+                          <span className="font-mono">{selectedSuggestedUsername}</span>
                         ) : (
                           <span className="text-muted-foreground">Select a suggested username...</span>
                         )}
                         <ChevronDown className="w-4 h-4 ml-2" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0 z-[100]">
+                    <PopoverContent
+                      align="start"
+                      className="w-[var(--radix-popover-trigger-width)] p-0 z-[100] bg-popover pointer-events-auto"
+                    >
                       <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b">
                         Suggested usernames for {employeeName}
                       </div>
@@ -289,7 +298,9 @@ export function InviteEmployeeDialog({
                               type="button"
                               onClick={() => {
                                 if (available) {
+                                  setSelectedSuggestedUsername(suggestion);
                                   setUsername(suggestion);
+                                  setSuggestionsOpen(false);
                                 }
                               }}
                               disabled={!available}
@@ -317,7 +328,11 @@ export function InviteEmployeeDialog({
                     <Input
                       id="username"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""))}
+                      onChange={(e) => {
+                        // Typing is treated as a custom username; do not affect the suggestion dropdown trigger.
+                        setSelectedSuggestedUsername("");
+                        setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""));
+                      }}
                       placeholder="Or type a custom username..."
                       className={isUsernameTaken && username ? "border-destructive pr-8" : ""}
                     />
