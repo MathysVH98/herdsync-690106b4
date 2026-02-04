@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Wheat, Mail, Lock, Building } from "lucide-react";
+import { Wheat, Mail, Lock, Building, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Auth() {
+  const [loginIdentifier, setLoginIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [farmName, setFarmName] = useState("");
@@ -24,27 +25,60 @@ export default function Auth() {
     return null;
   }
 
+  const isEmail = (value: string): boolean => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const identifier = loginIdentifier.trim();
 
-    if (error) {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
+    if (isEmail(identifier)) {
+      // Standard email login
+      const { error } = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
       });
+
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully logged in.",
+        });
+        navigate("/dashboard");
+      }
     } else {
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
+      // Username login via edge function
+      const { data, error } = await supabase.functions.invoke("login-with-username", {
+        body: { username: identifier.toLowerCase(), password },
       });
-      navigate("/dashboard");
+
+      if (error || data?.error) {
+        toast({
+          title: "Login Failed",
+          description: data?.error || error?.message || "Invalid username or password",
+          variant: "destructive",
+        });
+      } else if (data?.session) {
+        // Set the session manually
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+        toast({
+          title: "Welcome back!",
+          description: "You have successfully logged in.",
+        });
+        navigate("/dashboard");
+      }
     }
     setLoading(false);
   };
@@ -114,19 +148,22 @@ export default function Auth() {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-identifier">Email or Username</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      id="login-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      id="login-identifier"
+                      type="text"
+                      value={loginIdentifier}
+                      onChange={(e) => setLoginIdentifier(e.target.value)}
+                      placeholder="you@example.com or username"
                       className="pl-10"
                       required
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Farm owners use email, employees use their username
+                  </p>
                 </div>
                 <div>
                   <Label htmlFor="login-password">Password</Label>

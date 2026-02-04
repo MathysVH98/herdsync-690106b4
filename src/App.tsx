@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { FarmProvider } from "@/hooks/useFarm";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { EmployeePermissionsProvider } from "@/hooks/useEmployeePermissions";
 import { SupportChat } from "@/components/SupportChat";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
@@ -41,42 +42,44 @@ const App = () => (
     <AuthProvider>
       <FarmProvider>
         <SubscriptionProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/livestock" element={<Livestock />} />
-                <Route path="/feeding" element={<Feeding />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/health" element={<Health />} />
-                <Route path="/audit" element={<Audit />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/tracking" element={<Tracking />} />
-                <Route path="/market" element={<MarketArea />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/compliance" element={<ComplianceDashboard />} />
-                <Route path="/compliance/audit-pack" element={<AuditPackBuilder />} />
-                <Route path="/compliance/documents" element={<DocumentVault />} />
-                <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
-                <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
-                <Route path="/employees" element={<Employees />} />
-                <Route path="/animal-sale" element={<AnimalSale />} />
-                <Route path="/expenses" element={<FarmExpenses />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/ask-a-pro" element={<AskAPro />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <SupportChat />
-            </BrowserRouter>
-          </TooltipProvider>
+          <EmployeePermissionsProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/livestock" element={<Livestock />} />
+                  <Route path="/feeding" element={<Feeding />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/health" element={<Health />} />
+                  <Route path="/audit" element={<Audit />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/tracking" element={<Tracking />} />
+                  <Route path="/market" element={<MarketArea />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/compliance" element={<ComplianceDashboard />} />
+                  <Route path="/compliance/audit-pack" element={<AuditPackBuilder />} />
+                  <Route path="/compliance/documents" element={<DocumentVault />} />
+                  <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
+                  <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
+                  <Route path="/employees" element={<Employees />} />
+                  <Route path="/animal-sale" element={<AnimalSale />} />
+                  <Route path="/expenses" element={<FarmExpenses />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/disclaimer" element={<Disclaimer />} />
+                  <Route path="/ask-a-pro" element={<AskAPro />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <SupportChat />
+              </BrowserRouter>
+            </TooltipProvider>
+          </EmployeePermissionsProvider>
         </SubscriptionProvider>
       </FarmProvider>
     </AuthProvider>

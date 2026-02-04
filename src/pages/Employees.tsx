@@ -46,8 +46,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck } from "lucide-react";
+import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck, KeyRound } from "lucide-react";
 import { format } from "date-fns";
+import { InviteEmployeeDialog } from "@/components/InviteEmployeeDialog";
 
 interface Employee {
   id: string;
@@ -90,6 +91,7 @@ export default function Employees() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState({
@@ -617,7 +619,18 @@ export default function Employees() {
                           <TableCell>{format(new Date(employee.start_date), "dd MMM yyyy")}</TableCell>
                           <TableCell>R {(employee.salary || 0).toLocaleString()}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Grant System Access"
+                                onClick={() => {
+                                  setSelectedEmployee(employee);
+                                  setIsInviteDialogOpen(true);
+                                }}
+                              >
+                                <KeyRound className="w-4 h-4 text-primary" />
+                              </Button>
                               <Button variant="ghost" size="icon" onClick={() => handleEdit(employee)}>
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -778,6 +791,20 @@ export default function Employees() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Invite Employee Dialog */}
+        {selectedEmployee && farm && (
+          <InviteEmployeeDialog
+            open={isInviteDialogOpen}
+            onOpenChange={setIsInviteDialogOpen}
+            employeeId={selectedEmployee.id}
+            employeeName={`${selectedEmployee.first_name} ${selectedEmployee.last_name}`}
+            farmId={farm.id}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["employees", farm.id] });
+            }}
+          />
+        )}
       </div>
     </Layout>
   );
