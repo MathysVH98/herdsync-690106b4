@@ -141,6 +141,21 @@ export function InviteEmployeeDialog({
     }));
   }, [usernameSuggestions, existingUsernames]);
 
+  // Auto-select the first available username when dialog opens
+  useEffect(() => {
+    if (open && existingUsernames.length >= 0 && usernameSuggestions.length > 0 && !username) {
+      const firstAvailable = usernameSuggestions.find(
+        (suggestion) => !existingUsernames.includes(suggestion.toLowerCase())
+      );
+      if (firstAvailable) {
+        setUsername(firstAvailable);
+      } else if (usernameSuggestions[0]) {
+        // If all suggestions are taken, still show the first one (user will see it's taken)
+        setUsername(usernameSuggestions[0]);
+      }
+    }
+  }, [open, existingUsernames, usernameSuggestions]);
+
   const handleClose = () => {
     setStep("setup");
     setUsername("");
