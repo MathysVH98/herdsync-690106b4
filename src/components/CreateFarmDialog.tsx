@@ -128,6 +128,7 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     
     if (!user) {
       toast({
@@ -159,6 +160,12 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
     setLoading(true);
 
     try {
+      // Verify we have a valid session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+
       const { data, error } = await supabase
         .from("farms")
         .insert({
@@ -170,22 +177,33 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Farm creation error:", error);
+        throw error;
+      }
 
       // Also add the user as a farm member with 'owner' role
-      await supabase.from("farm_members").insert({
+      const { error: memberError } = await supabase.from("farm_members").insert({
         farm_id: data.id,
         user_id: user.id,
         role: "owner",
       });
 
+      if (memberError) {
+        console.error("Farm member creation error:", memberError);
+      }
+
       // Create a subscription for the new farm (14-day trial)
-      await supabase.from("subscriptions").insert({
+      const { error: subError } = await supabase.from("subscriptions").insert({
         farm_id: data.id,
         user_id: user.id,
         tier: "basic",
         status: "trialing",
       });
+
+      if (subError) {
+        console.error("Subscription creation error:", subError);
+      }
 
       toast({
         title: "Farm Created!",
@@ -205,7 +223,7 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
       console.error("Error creating farm:", error);
       toast({
         title: "Failed to Create Farm",
-        description: error.message || "An error occurred.",
+        description: error.message || error.details || "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -379,6 +397,11 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
                   type="submit"
                   disabled={loading}
                   className="flex-1 bg-gradient-primary text-primary-foreground"
+                  onClick={(e) => {
+                    if (!loading) {
+                      handleSubmit(e as any);
+                    }
+                  }}
                 >
                   {loading ? "Creating..." : "Create Farm"}
                 </Button>
