@@ -750,6 +750,126 @@ export type Database = {
           },
         ]
       }
+      employee_permissions: {
+        Row: {
+          can_add_chemical_usage: boolean
+          can_add_feeding: boolean
+          can_add_health: boolean
+          can_add_inventory_usage: boolean
+          can_upload_documents: boolean
+          can_view_chemicals: boolean
+          can_view_documents: boolean
+          can_view_feeding: boolean
+          can_view_health: boolean
+          can_view_inventory: boolean
+          can_view_livestock: boolean
+          can_view_tracking: boolean
+          created_at: string
+          employee_user_id: string
+          farm_id: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          can_add_chemical_usage?: boolean
+          can_add_feeding?: boolean
+          can_add_health?: boolean
+          can_add_inventory_usage?: boolean
+          can_upload_documents?: boolean
+          can_view_chemicals?: boolean
+          can_view_documents?: boolean
+          can_view_feeding?: boolean
+          can_view_health?: boolean
+          can_view_inventory?: boolean
+          can_view_livestock?: boolean
+          can_view_tracking?: boolean
+          created_at?: string
+          employee_user_id: string
+          farm_id: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          can_add_chemical_usage?: boolean
+          can_add_feeding?: boolean
+          can_add_health?: boolean
+          can_add_inventory_usage?: boolean
+          can_upload_documents?: boolean
+          can_view_chemicals?: boolean
+          can_view_documents?: boolean
+          can_view_feeding?: boolean
+          can_view_health?: boolean
+          can_view_inventory?: boolean
+          can_view_livestock?: boolean
+          can_view_tracking?: boolean
+          created_at?: string
+          employee_user_id?: string
+          farm_id?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_permissions_employee_user_id_fkey"
+            columns: ["employee_user_id"]
+            isOneToOne: true
+            referencedRelation: "employee_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_permissions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_users: {
+        Row: {
+          created_at: string
+          employee_id: string
+          farm_id: string
+          id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          farm_id: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          farm_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_users_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_users_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address: string | null
@@ -1746,9 +1866,30 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      can_access_farm: {
+        Args: { _farm_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_admin_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["subscription_tier"]
+      }
+      get_employee_permissions: {
+        Args: { _farm_id: string; _user_id: string }
+        Returns: {
+          can_add_chemical_usage: boolean
+          can_add_feeding: boolean
+          can_add_health: boolean
+          can_add_inventory_usage: boolean
+          can_upload_documents: boolean
+          can_view_chemicals: boolean
+          can_view_documents: boolean
+          can_view_feeding: boolean
+          can_view_health: boolean
+          can_view_inventory: boolean
+          can_view_livestock: boolean
+          can_view_tracking: boolean
+        }[]
       }
       get_subscription_status: {
         Args: { _farm_id: string }
@@ -1769,6 +1910,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_employee_of_farm: {
+        Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
       is_farm_member: {
