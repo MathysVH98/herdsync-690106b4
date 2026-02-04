@@ -203,8 +203,10 @@ export function AnimalDetailDialog({
     }
   };
 
+  // Filter for potential parents - prefer animals with sex set, but show all as fallback
   const maleAnimals = allAnimals.filter(a => a.sex === "male" && a.id !== animal?.id);
   const femaleAnimals = allAnimals.filter(a => a.sex === "female" && a.id !== animal?.id);
+  const otherAnimals = allAnimals.filter(a => a.id !== animal?.id && a.sex !== "male" && a.sex !== "female");
 
   if (!animal) return null;
 
@@ -451,9 +453,14 @@ export function AnimalDetailDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {maleAnimals.map((a) => (
+                    {maleAnimals.length > 0 && maleAnimals.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.tag} - {a.name || "Unnamed"}
+                        {a.tag} - {a.name || "Unnamed"} (Male)
+                      </SelectItem>
+                    ))}
+                    {otherAnimals.length > 0 && otherAnimals.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.tag} - {a.name || "Unnamed"} {a.sex ? `(${a.sex})` : "(Sex not set)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -470,9 +477,14 @@ export function AnimalDetailDialog({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {femaleAnimals.map((a) => (
+                    {femaleAnimals.length > 0 && femaleAnimals.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.tag} - {a.name || "Unnamed"}
+                        {a.tag} - {a.name || "Unnamed"} (Female)
+                      </SelectItem>
+                    ))}
+                    {otherAnimals.length > 0 && otherAnimals.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.tag} - {a.name || "Unnamed"} {a.sex ? `(${a.sex})` : "(Sex not set)"}
                       </SelectItem>
                     ))}
                   </SelectContent>
