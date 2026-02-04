@@ -35,8 +35,8 @@ const SA_PROVINCES = [
   "Western Cape",
 ];
 
-// Farm limits per tier
-const FARM_LIMITS = {
+// Farm limits per tier (basic: 10, starter: 3, pro: unlimited as requested)
+const FARM_LIMITS: Record<string, number> = {
   basic: 10,
   starter: 3,
   pro: Infinity,
@@ -65,13 +65,14 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { farms, refetchFarms, setActiveFarm } = useFarm();
-  const { subscription, isActive } = useSubscription();
+  const { farms, refetchFarms, setActiveFarm, loading: farmsLoading } = useFarm();
+  const { subscription, isActive, loading: subscriptionLoading } = useSubscription();
 
   const tier = subscription?.tier || "basic";
-  const farmLimit = FARM_LIMITS[tier] || FARM_LIMITS.basic;
+  const farmLimit = FARM_LIMITS[tier] ?? FARM_LIMITS.basic;
   const currentFarmCount = farms.length;
-  const canCreateFarm = currentFarmCount < farmLimit;
+  // Allow creating farms if within limit, or if still loading (don't show error prematurely)
+  const canCreateFarm = farmsLoading || subscriptionLoading || currentFarmCount < farmLimit;
 
   const searchLocation = useCallback(async () => {
     if (!searchQuery.trim()) return;
@@ -230,8 +231,14 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
           </DialogTitle>
         </DialogHeader>
 
-        {/* Farm limit info */}
-        {!canCreateFarm ? (
+        {/* Loading state */}
+        {(farmsLoading || subscriptionLoading) ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">Loading...</span>
+          </div>
+        ) : /* Farm limit info */
+        currentFarmCount >= farmLimit ? (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 text-center">
             <p className="font-medium text-destructive">Farm Limit Reached</p>
             <p className="text-sm text-muted-foreground mt-1">
