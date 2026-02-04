@@ -417,6 +417,83 @@ export type Database = {
           },
         ]
       }
+      birthing_records: {
+        Row: {
+          birth_date: string
+          birth_weight: string | null
+          created_at: string
+          farm_id: string
+          father_id: string | null
+          health_status_at_birth: string | null
+          id: string
+          mother_id: string
+          notes: string | null
+          nursed_by: string | null
+          offspring_id: string | null
+          updated_at: string
+          weaning_date: string | null
+        }
+        Insert: {
+          birth_date?: string
+          birth_weight?: string | null
+          created_at?: string
+          farm_id: string
+          father_id?: string | null
+          health_status_at_birth?: string | null
+          id?: string
+          mother_id: string
+          notes?: string | null
+          nursed_by?: string | null
+          offspring_id?: string | null
+          updated_at?: string
+          weaning_date?: string | null
+        }
+        Update: {
+          birth_date?: string
+          birth_weight?: string | null
+          created_at?: string
+          farm_id?: string
+          father_id?: string | null
+          health_status_at_birth?: string | null
+          id?: string
+          mother_id?: string
+          notes?: string | null
+          nursed_by?: string | null
+          offspring_id?: string | null
+          updated_at?: string
+          weaning_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "birthing_records_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthing_records_father_id_fkey"
+            columns: ["father_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthing_records_mother_id_fkey"
+            columns: ["mother_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "birthing_records_offspring_id_fkey"
+            columns: ["offspring_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chemical_applications: {
         Row: {
           animal_id: string | null
@@ -980,6 +1057,57 @@ export type Database = {
           },
         ]
       }
+      feeding_log: {
+        Row: {
+          animal_id: string
+          created_at: string
+          farm_id: string
+          fed_at: string
+          fed_by: string | null
+          feed_type: string
+          id: string
+          notes: string | null
+          quantity: string | null
+        }
+        Insert: {
+          animal_id: string
+          created_at?: string
+          farm_id: string
+          fed_at?: string
+          fed_by?: string | null
+          feed_type: string
+          id?: string
+          notes?: string | null
+          quantity?: string | null
+        }
+        Update: {
+          animal_id?: string
+          created_at?: string
+          farm_id?: string
+          fed_at?: string
+          fed_by?: string | null
+          feed_type?: string
+          id?: string
+          notes?: string | null
+          quantity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feeding_log_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "feeding_log_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feeding_schedule: {
         Row: {
           animal_type: string
@@ -1238,70 +1366,126 @@ export type Database = {
       livestock: {
         Row: {
           age: string | null
+          birth_health_status: string | null
+          birth_weight: string | null
+          brand_mark: string | null
           breed: string | null
+          color_markings: string | null
           created_at: string
+          dam_id: string | null
+          date_of_birth: string | null
           farm_id: string
           feed_type: string | null
           id: string
           last_fed: string | null
+          microchip_number: string | null
           name: string
           notes: string | null
+          nursed_by: string | null
+          pregnancy_count: number | null
+          previous_owners_count: number | null
+          previous_owners_notes: string | null
           purchase_cost: number | null
           sale_price: number | null
+          sex: string | null
+          sire_id: string | null
           sold_at: string | null
           sold_to: string | null
           status: string
           tag: string
           type: string
           updated_at: string
+          weaning_date: string | null
           weight: string | null
         }
         Insert: {
           age?: string | null
+          birth_health_status?: string | null
+          birth_weight?: string | null
+          brand_mark?: string | null
           breed?: string | null
+          color_markings?: string | null
           created_at?: string
+          dam_id?: string | null
+          date_of_birth?: string | null
           farm_id: string
           feed_type?: string | null
           id?: string
           last_fed?: string | null
+          microchip_number?: string | null
           name: string
           notes?: string | null
+          nursed_by?: string | null
+          pregnancy_count?: number | null
+          previous_owners_count?: number | null
+          previous_owners_notes?: string | null
           purchase_cost?: number | null
           sale_price?: number | null
+          sex?: string | null
+          sire_id?: string | null
           sold_at?: string | null
           sold_to?: string | null
           status?: string
           tag: string
           type: string
           updated_at?: string
+          weaning_date?: string | null
           weight?: string | null
         }
         Update: {
           age?: string | null
+          birth_health_status?: string | null
+          birth_weight?: string | null
+          brand_mark?: string | null
           breed?: string | null
+          color_markings?: string | null
           created_at?: string
+          dam_id?: string | null
+          date_of_birth?: string | null
           farm_id?: string
           feed_type?: string | null
           id?: string
           last_fed?: string | null
+          microchip_number?: string | null
           name?: string
           notes?: string | null
+          nursed_by?: string | null
+          pregnancy_count?: number | null
+          previous_owners_count?: number | null
+          previous_owners_notes?: string | null
           purchase_cost?: number | null
           sale_price?: number | null
+          sex?: string | null
+          sire_id?: string | null
           sold_at?: string | null
           sold_to?: string | null
           status?: string
           tag?: string
           type?: string
           updated_at?: string
+          weaning_date?: string | null
           weight?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "livestock_dam_id_fkey"
+            columns: ["dam_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "livestock_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
             referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livestock_sire_id_fkey"
+            columns: ["sire_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
             referencedColumns: ["id"]
           },
         ]

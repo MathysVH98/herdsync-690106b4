@@ -23,7 +23,7 @@ export default function Contact() {
     setIsSubmitting(true);
 
     // Create mailto link with form data
-    const mailtoLink = `mailto:91Stephan@gmail.com?subject=${encodeURIComponent(
+    const mailtoLink = `mailto:syncherd@gmail.com?subject=${encodeURIComponent(
       formData.subject || "Contact from HerdSync"
     )}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
@@ -67,10 +67,10 @@ export default function Contact() {
                 <div>
                   <p className="font-medium text-foreground">Email</p>
                   <a
-                    href="mailto:91Stephan@gmail.com"
+                    href="mailto:syncherd@gmail.com"
                     className="text-muted-foreground hover:text-primary transition-colors"
                   >
-                    91Stephan@gmail.com
+                    syncherd@gmail.com
                   </a>
                 </div>
               </div>
