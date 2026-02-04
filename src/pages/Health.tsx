@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Syringe, Stethoscope, Pill, Baby, Scissors, Plus } from "lucide-react";
 import { useFarm } from "@/hooks/useFarm";
+import { useAnimals } from "@/hooks/useAnimals";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,9 +40,11 @@ export default function Health() {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { farm } = useFarm();
+  const { animals } = useAnimals();
   const { toast } = useToast();
 
   const [newRecord, setNewRecord] = useState({
+    animalId: "",
     animalName: "",
     type: "" as HealthRecordType,
     date: new Date().toISOString().split('T')[0],
@@ -49,6 +52,9 @@ export default function Health() {
     notes: "",
     nextDue: "",
   });
+
+  // Get available animals for the dropdown
+  const availableAnimals = animals.filter(a => a.status === "available");
 
   useEffect(() => {
     if (!farm?.id) {
@@ -107,6 +113,7 @@ export default function Health() {
       .from("health_records")
       .insert({
         farm_id: farm.id,
+        animal_id: newRecord.animalId || null,
         animal_name: newRecord.animalName,
         type: newRecord.type,
         date: newRecord.date,
@@ -140,6 +147,7 @@ export default function Health() {
 
     setHealthRecords([record, ...healthRecords]);
     setNewRecord({
+      animalId: "",
       animalName: "",
       type: "" as HealthRecordType,
       date: new Date().toISOString().split('T')[0],
@@ -201,13 +209,29 @@ export default function Health() {
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="animalName">Animal Name</Label>
-                    <Input
-                      id="animalName"
-                      value={newRecord.animalName}
-                      onChange={(e) => setNewRecord({ ...newRecord, animalName: e.target.value })}
-                      placeholder="e.g., Bessie"
-                    />
+                    <Label htmlFor="animalTag">Animal (Tag Number)</Label>
+                    <Select 
+                      value={newRecord.animalId} 
+                      onValueChange={(value) => {
+                        const selectedAnimal = availableAnimals.find(a => a.id === value);
+                        setNewRecord({ 
+                          ...newRecord, 
+                          animalId: value,
+                          animalName: selectedAnimal ? (selectedAnimal.name || selectedAnimal.animal_tag_id) : ""
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select animal" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableAnimals.map((animal) => (
+                          <SelectItem key={animal.id} value={animal.id}>
+                            {animal.animal_tag_id}{animal.name ? ` - ${animal.name}` : ""} ({animal.species})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <Label htmlFor="type">Record Type</Label>
