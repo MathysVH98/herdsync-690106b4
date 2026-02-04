@@ -62,6 +62,7 @@ export function FarmSwitcher() {
 
   const handleCreateFarm = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!user) {
       toast({
@@ -84,7 +85,14 @@ export function FarmSwitcher() {
     setSubmitting(true);
 
     try {
-      const { data, error } = await supabase
+      // First, verify we have a valid session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        throw new Error("Your session has expired. Please sign in again.");
+      }
+
+      // Create the farm
+      const { data: farmData, error: farmError } = await supabase
         .from("farms")
         .insert({
           name: farmName.trim(),
@@ -95,22 +103,35 @@ export function FarmSwitcher() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (farmError) {
+        console.error("Farm creation error:", farmError);
+        throw farmError;
+      }
 
-      // Also add the user as a farm member with 'owner' role
-      await supabase.from("farm_members").insert({
-        farm_id: data.id,
+      // Add the user as a farm member with 'owner' role
+      const { error: memberError } = await supabase.from("farm_members").insert({
+        farm_id: farmData.id,
         user_id: user.id,
         role: "owner",
       });
 
+      if (memberError) {
+        console.error("Farm member creation error:", memberError);
+        // Don't throw - farm was created, this is secondary
+      }
+
       // Create a subscription for the new farm (14-day trial)
-      await supabase.from("subscriptions").insert({
-        farm_id: data.id,
+      const { error: subError } = await supabase.from("subscriptions").insert({
+        farm_id: farmData.id,
         user_id: user.id,
         tier: "basic",
         status: "trialing",
       });
+
+      if (subError) {
+        console.error("Subscription creation error:", subError);
+        // Don't throw - farm was created, this is secondary
+      }
 
       toast({
         title: "Farm Created!",
@@ -119,7 +140,7 @@ export function FarmSwitcher() {
 
       // Refresh farms and set the new one as active
       await refetchFarms();
-      setActiveFarm(data.id);
+      setActiveFarm(farmData.id);
 
       // Reset form and close dialog
       setFarmName("");
@@ -130,7 +151,7 @@ export function FarmSwitcher() {
       console.error("Error creating farm:", error);
       toast({
         title: "Failed to Create Farm",
-        description: error.message || "An error occurred.",
+        description: error.message || error.details || "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -226,6 +247,11 @@ export function FarmSwitcher() {
                   type="submit"
                   disabled={submitting}
                   className="flex-1 bg-gradient-primary text-primary-foreground"
+                  onClick={(e) => {
+                    if (!submitting) {
+                      handleCreateFarm(e as any);
+                    }
+                  }}
                 >
                   {submitting ? "Creating..." : "Create Farm"}
                 </Button>
@@ -354,6 +380,12 @@ export function FarmSwitcher() {
                 type="submit"
                 disabled={submitting}
                 className="flex-1 bg-gradient-primary text-primary-foreground"
+                onClick={(e) => {
+                  // Backup click handler in case form submit doesn't work
+                  if (!submitting) {
+                    handleCreateFarm(e as any);
+                  }
+                }}
               >
                 {submitting ? "Creating..." : "Create Farm"}
               </Button>
