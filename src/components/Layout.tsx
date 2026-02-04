@@ -44,6 +44,7 @@ interface LayoutProps {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Animal Sale", href: "/animal-sale", icon: CreditCard },
+  { name: "Ask a Pro", href: "/ask-a-pro", icon: Sparkles },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
   { name: "Employees", href: "/employees", icon: UserCog },
   { name: "Farm Expenses", href: "/expenses", icon: Receipt },
@@ -56,7 +57,6 @@ const navigation = [
 ];
 
 const proNavigation = [
-  { name: "Ask a Pro", href: "/ask-a-pro", icon: Sparkles },
   { name: "Tracking", href: "/tracking", icon: MapPin },
 ];
 
@@ -180,11 +180,11 @@ export function Layout({ children }: LayoutProps) {
               );
             })}
 
-            {/* Pro Features Section */}
-            {isPro && (
+            {/* Pro Features Section - RFID Tracking */}
+            {isPro && proNavigation.length > 0 && (
               <div className="pt-4 mt-4 border-t border-sidebar-border">
                 <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
-                  Pro Features
+                  RFID Tracking
                 </p>
                 {proNavigation.map((item) => {
                   const isActive = location.pathname === item.href;

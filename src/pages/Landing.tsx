@@ -54,8 +54,8 @@ const features = [
   },
   {
     icon: MapPin,
-    title: "GPS Tracking",
-    description: "Track animal locations with paddock mapping and boundary management.",
+    title: "RFID Tracking",
+    description: "Track animal locations with RFID scanners and checkpoint-based monitoring.",
     image: null,
   },
   {
@@ -115,10 +115,10 @@ const pricingHighlights = [
     tier: "Pro",
     price: null,
     description: "Unlimited animals",
-    features: ["Everything in Starter", "GPS tracking", "AI assistant"],
+    features: ["Everything in Starter", "RFID tracking", "AI assistant"],
     proOptions: [
       { label: "Web-Based", price: "R599/mo" },
-      { label: "GPS Package", price: "R599/mo + hardware" },
+      { label: "RFID Package", price: "R599/mo + hardware" },
     ],
   },
 ];

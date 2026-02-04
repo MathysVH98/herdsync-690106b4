@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAskAProUsage } from "@/hooks/useAskAProUsage";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, User, Loader2, Sparkles, Lock } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, Lock, AlertTriangle, ArrowUpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Message = {
@@ -27,9 +30,18 @@ export default function AskAPro() {
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { subscription, isActive } = useSubscription();
+  const { 
+    questionsUsed, 
+    questionsRemaining, 
+    dailyLimit, 
+    canAsk, 
+    isUnlimited, 
+    loading: usageLoading,
+    incrementUsage 
+  } = useAskAProUsage();
   const navigate = useNavigate();
 
-  const isPro = subscription?.tier === "pro" && isActive;
+  const tier = subscription?.tier || "basic";
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -62,6 +74,17 @@ export default function AskAPro() {
     e?.preventDefault();
     const messageText = suggestedQuestion || input.trim();
     if (!messageText || isLoading) return;
+
+    // Check if user can ask
+    if (!canAsk) {
+      return;
+    }
+
+    // Increment usage first
+    const success = await incrementUsage();
+    if (!success && !isUnlimited) {
+      return;
+    }
 
     const userMessage: Message = { role: "user", content: messageText };
     const updatedMessages = [...messages, userMessage];
@@ -132,7 +155,8 @@ export default function AskAPro() {
     }
   };
 
-  if (!isPro) {
+  // Not active subscription
+  if (!isActive) {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto">
@@ -141,15 +165,15 @@ export default function AskAPro() {
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Lock className="w-8 h-8 text-primary" />
               </div>
-              <CardTitle className="text-2xl font-display">Pro Feature</CardTitle>
+              <CardTitle className="text-2xl font-display">Subscription Required</CardTitle>
               <CardDescription>
-                Ask a Pro is an exclusive feature for Pro subscribers. Get instant AI-powered
+                Ask a Pro requires an active subscription. Get instant AI-powered
                 advice on farming, livestock health, and animal care.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate("/pricing")} className="bg-gradient-primary">
-                Upgrade to Pro
+                View Plans
               </Button>
             </CardContent>
           </Card>
@@ -158,25 +182,78 @@ export default function AskAPro() {
     );
   }
 
+  // Usage limit reached (non-Pro users)
+  const showLimitReached = !isUnlimited && !canAsk && !usageLoading;
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)]">
         <Card className="h-full flex flex-col">
           <CardHeader className="border-b">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles className="w-5 h-5 text-primary" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="font-display">Ask a Pro</CardTitle>
+                  <CardDescription>
+                    AI-powered farming and livestock advice for South African farmers
+                  </CardDescription>
+                </div>
               </div>
-              <div>
-                <CardTitle className="font-display">Ask a Pro</CardTitle>
-                <CardDescription>
-                  AI-powered farming and livestock advice for South African farmers
-                </CardDescription>
-              </div>
+              
+              {/* Usage indicator */}
+              {!isUnlimited && (
+                <div className="text-right">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant={questionsRemaining > 0 ? "secondary" : "destructive"}>
+                      {questionsRemaining} / {dailyLimit} questions left
+                    </Badge>
+                  </div>
+                  <Progress 
+                    value={(questionsUsed / dailyLimit) * 100} 
+                    className="w-32 h-2"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Resets daily</p>
+                </div>
+              )}
+              
+              {isUnlimited && (
+                <Badge variant="default" className="bg-gradient-primary">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Unlimited
+                </Badge>
+              )}
             </div>
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            {/* Limit Reached Banner */}
+            {showLimitReached && (
+              <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    <div>
+                      <p className="font-medium text-destructive">Daily limit reached</p>
+                      <p className="text-sm text-muted-foreground">
+                        You've used all {dailyLimit} questions for today. Upgrade for more!
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/pricing")} 
+                    size="sm"
+                    className="bg-gradient-primary gap-2"
+                  >
+                    <ArrowUpCircle className="w-4 h-4" />
+                    Upgrade Plan
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
               {messages.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8">
@@ -193,6 +270,7 @@ export default function AskAPro() {
                         variant="outline"
                         className="text-left h-auto py-3 px-4 justify-start"
                         onClick={() => handleSubmit(undefined, question)}
+                        disabled={!canAsk || isLoading}
                       >
                         <span className="line-clamp-2">{question}</span>
                       </Button>
@@ -256,8 +334,13 @@ export default function AskAPro() {
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about livestock health, farming advice, or animal care..."
+                placeholder={
+                  canAsk 
+                    ? "Ask about livestock health, farming advice, or animal care..." 
+                    : "Daily question limit reached. Upgrade for more questions!"
+                }
                 className="min-h-[60px] max-h-[120px] resize-none"
+                disabled={!canAsk}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -265,7 +348,12 @@ export default function AskAPro() {
                   }
                 }}
               />
-              <Button type="submit" disabled={isLoading || !input.trim()} size="icon" className="h-auto">
+              <Button 
+                type="submit" 
+                disabled={isLoading || !input.trim() || !canAsk} 
+                size="icon" 
+                className="h-auto"
+              >
                 {isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (

@@ -335,6 +335,44 @@ export type Database = {
           },
         ]
       }
+      ask_a_pro_usage: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          question_count: number
+          updated_at: string
+          usage_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          question_count?: number
+          updated_at?: string
+          usage_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          question_count?: number
+          updated_at?: string
+          usage_date?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ask_a_pro_usage_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_packs: {
         Row: {
           audit_type: Database["public"]["Enums"]["audit_type"]

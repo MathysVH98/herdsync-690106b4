@@ -50,8 +50,8 @@ const features = [
   },
   {
     icon: MapPin,
-    title: "GPS Tracking",
-    description: "Track animal locations with paddock mapping",
+    title: "RFID Tracking",
+    description: "Track animal locations with RFID scanners",
   },
   {
     icon: Wheat,
@@ -128,7 +128,7 @@ const pricingTiers = [
     hidePrice: true,
     features: [
       "Everything in Starter",
-      "GPS tracking & mapping",
+      "RFID tracking & mapping",
       "Audit pack builder",
       "Multi-user access",
       "API access",
@@ -136,7 +136,7 @@ const pricingTiers = [
     ],
     proOptions: [
       { label: "Web-Based Subscription", price: "R599", period: "/month" },
-      { label: "GPS Tracking Package", price: "R599", period: "/month", note: "+ installation & hardware fees" },
+      { label: "RFID Tracking Package", price: "R599", period: "/month", note: "+ installation & hardware fees" },
     ],
   },
 ];
