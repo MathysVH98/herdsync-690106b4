@@ -28,6 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
+// Kept for backward compatibility with existing schedules
 const animalTypes = ["Cattle", "Chickens", "Pigs", "Sheep & Goats", "Horses", "Ducks", "Other"];
 
 interface FeedingLogEntry {
@@ -61,7 +62,7 @@ export default function Feeding() {
   const { toast } = useToast();
 
   const [newItem, setNewItem] = useState({
-    animalType: "",
+    animalId: "",
     feedType: "",
     time: "",
     period: "morning",
@@ -85,17 +86,18 @@ export default function Feeding() {
     const fetchData = async () => {
       setLoading(true);
       
-      // Fetch feeding schedule
+      // Fetch feeding schedule with animal details
       const { data: scheduleData, error: scheduleError } = await supabase
         .from("feeding_schedule")
-        .select("*")
+        .select("*, livestock(id, name, tag, type)")
         .eq("farm_id", farm.id)
         .order("time");
 
       if (!scheduleError && scheduleData) {
-        setFeedingSchedule(scheduleData.map(item => ({
+        setFeedingSchedule(scheduleData.map((item: any) => ({
           id: item.id,
-          animalType: item.animal_type,
+          animalId: item.animal_id,
+          animalType: item.livestock ? `${item.livestock.tag} - ${item.livestock.name}` : item.animal_type || "Unknown",
           feedType: item.feed_type,
           time: item.time,
           period: item.period as "morning" | "evening",
@@ -149,22 +151,25 @@ export default function Feeding() {
       return;
     }
 
-    if (!newItem.animalType || !newItem.feedType || !newItem.time) {
-      toast({ title: "Missing Information", description: "Please fill in animal type, feed type, and time.", variant: "destructive" });
+    if (!newItem.animalId || !newItem.feedType || !newItem.time) {
+      toast({ title: "Missing Information", description: "Please select an animal, feed type, and time.", variant: "destructive" });
       return;
     }
+
+    const selectedAnimal = animals.find(a => a.id === newItem.animalId);
 
     const { data, error } = await supabase
       .from("feeding_schedule")
       .insert({
         farm_id: farm.id,
-        animal_type: newItem.animalType,
+        animal_id: newItem.animalId,
+        animal_type: selectedAnimal ? `${selectedAnimal.tag} - ${selectedAnimal.name}` : null,
         feed_type: newItem.feedType,
         time: newItem.time,
         period: newItem.period,
         notes: newItem.notes || null,
       })
-      .select()
+      .select("*, livestock(id, name, tag, type)")
       .single();
 
     if (error) {
@@ -175,7 +180,8 @@ export default function Feeding() {
 
     const item: FeedingItem = {
       id: data.id,
-      animalType: data.animal_type,
+      animalId: data.animal_id,
+      animalType: data.livestock ? `${data.livestock.tag} - ${data.livestock.name}` : data.animal_type || "Unknown",
       feedType: data.feed_type,
       time: data.time,
       period: data.period as "morning" | "evening",
@@ -183,7 +189,7 @@ export default function Feeding() {
     };
 
     setFeedingSchedule([...feedingSchedule, item].sort((a, b) => a.time.localeCompare(b.time)));
-    setNewItem({ animalType: "", feedType: "", time: "", period: "morning", notes: "" });
+    setNewItem({ animalId: "", feedType: "", time: "", period: "morning", notes: "" });
     setIsAddDialogOpen(false);
     toast({ title: "Schedule Added", description: `Feeding schedule for ${item.animalType} has been added.` });
   };
@@ -343,11 +349,15 @@ export default function Feeding() {
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="animalType">Animal Type</Label>
-                      <Select value={newItem.animalType} onValueChange={(v) => setNewItem({ ...newItem, animalType: v })}>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <Label htmlFor="animalId">Select Animal</Label>
+                      <Select value={newItem.animalId} onValueChange={(v) => setNewItem({ ...newItem, animalId: v })}>
+                        <SelectTrigger><SelectValue placeholder="Select animal" /></SelectTrigger>
                         <SelectContent>
-                          {animalTypes.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                          {animals.map((animal) => (
+                            <SelectItem key={animal.id} value={animal.id}>
+                              {animal.tag} - {animal.name} ({animal.type})
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

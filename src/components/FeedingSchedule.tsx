@@ -3,6 +3,7 @@ import { Clock, Sun, Moon } from "lucide-react";
 
 export interface FeedingItem {
   id: string;
+  animalId?: string;
   animalType: string;
   feedType: string;
   time: string;

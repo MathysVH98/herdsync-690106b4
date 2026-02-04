@@ -1110,7 +1110,8 @@ export type Database = {
       }
       feeding_schedule: {
         Row: {
-          animal_type: string
+          animal_id: string | null
+          animal_type: string | null
           created_at: string
           farm_id: string
           feed_type: string
@@ -1121,7 +1122,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          animal_type: string
+          animal_id?: string | null
+          animal_type?: string | null
           created_at?: string
           farm_id: string
           feed_type: string
@@ -1132,7 +1134,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          animal_type?: string
+          animal_id?: string | null
+          animal_type?: string | null
           created_at?: string
           farm_id?: string
           feed_type?: string
@@ -1143,6 +1146,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feeding_schedule_animal_id_fkey"
+            columns: ["animal_id"]
+            isOneToOne: false
+            referencedRelation: "livestock"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feeding_schedule_farm_id_fkey"
             columns: ["farm_id"]
