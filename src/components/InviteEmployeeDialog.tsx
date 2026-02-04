@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,14 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Eye, Copy, CheckCircle2 } from "lucide-react";
+import { Loader2, Eye, Copy, CheckCircle2, ChevronDown, AlertCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
 
 interface InviteEmployeeDialogProps {
   open: boolean;
@@ -63,6 +70,29 @@ const generatePassword = (): string => {
   return password;
 };
 
+const generateUsernameSuggestions = (fullName: string): string[] => {
+  const nameParts = fullName.toLowerCase().trim().split(/\s+/);
+  if (nameParts.length === 0 || !nameParts[0]) return [];
+
+  const firstName = nameParts[0].replace(/[^a-z]/g, "");
+  const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1].replace(/[^a-z]/g, "") : "";
+
+  const suggestions: string[] = [];
+
+  if (firstName && lastName) {
+    suggestions.push(`${firstName}.${lastName}`);
+    suggestions.push(`${firstName}_${lastName}`);
+    suggestions.push(`${firstName[0]}${lastName}`);
+    suggestions.push(`${firstName}${lastName[0]}`);
+    suggestions.push(`${lastName}.${firstName}`);
+  } else if (firstName) {
+    suggestions.push(firstName);
+    suggestions.push(`${firstName}1`);
+  }
+
+  return [...new Set(suggestions)].slice(0, 5);
+};
+
 export function InviteEmployeeDialog({
   open,
   onOpenChange,
@@ -79,6 +109,37 @@ export function InviteEmployeeDialog({
   const [showPassword, setShowPassword] = useState(true);
   const [permissions, setPermissions] = useState<Permissions>(defaultPermissions);
   const [copied, setCopied] = useState(false);
+
+  // Fetch existing usernames to check for duplicates
+  const { data: existingUsernames = [] } = useQuery({
+    queryKey: ["employee-usernames", farmId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employee_users")
+        .select("username");
+      if (error) throw error;
+      return data.map((u) => u.username.toLowerCase());
+    },
+    enabled: open,
+  });
+
+  // Generate suggestions based on employee name
+  const usernameSuggestions = useMemo(() => {
+    return generateUsernameSuggestions(employeeName);
+  }, [employeeName]);
+
+  // Check if username is already taken
+  const isUsernameTaken = useMemo(() => {
+    return existingUsernames.includes(username.toLowerCase().trim());
+  }, [username, existingUsernames]);
+
+  // Filter suggestions to show availability
+  const suggestionsWithAvailability = useMemo(() => {
+    return usernameSuggestions.map((suggestion) => ({
+      username: suggestion,
+      available: !existingUsernames.includes(suggestion.toLowerCase()),
+    }));
+  }, [usernameSuggestions, existingUsernames]);
 
   const handleClose = () => {
     setStep("setup");
@@ -201,16 +262,60 @@ export function InviteEmployeeDialog({
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""))}
-                    placeholder="e.g., john.doe"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Letters, numbers, dots, underscores, and hyphens only
-                  </p>
+                  <div className="flex gap-2 mt-1">
+                    <div className="relative flex-1">
+                      <Input
+                        id="username"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9._-]/g, ""))}
+                        placeholder="e.g., john.doe"
+                        className={isUsernameTaken && username ? "border-destructive pr-8" : ""}
+                      />
+                      {isUsernameTaken && username && (
+                        <AlertCircle className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-destructive" />
+                      )}
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="icon" className="shrink-0">
+                          <ChevronDown className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+                        <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                          Suggested usernames
+                        </div>
+                        {suggestionsWithAvailability.length > 0 ? (
+                          suggestionsWithAvailability.map(({ username: suggestion, available }) => (
+                            <DropdownMenuItem
+                              key={suggestion}
+                              onClick={() => available && setUsername(suggestion)}
+                              className={!available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                              disabled={!available}
+                            >
+                              <span className="font-mono text-sm">{suggestion}</span>
+                              <span className={`ml-auto text-xs ${available ? "text-primary" : "text-destructive"}`}>
+                                {available ? "Available" : "Taken"}
+                              </span>
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                            No suggestions available
+                          </div>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  {isUsernameTaken && username ? (
+                    <p className="text-xs text-destructive mt-1">
+                      This username is already taken. Please choose another.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Letters, numbers, dots, underscores, and hyphens only
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -277,7 +382,7 @@ export function InviteEmployeeDialog({
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button onClick={handleSubmit} disabled={loading || !username.trim()}>
+              <Button onClick={handleSubmit} disabled={loading || !username.trim() || isUsernameTaken}>
                 {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Create Account
               </Button>
