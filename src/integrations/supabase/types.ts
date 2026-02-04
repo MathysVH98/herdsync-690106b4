@@ -1916,6 +1916,7 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      is_employee_user: { Args: { _user_id: string }; Returns: boolean }
       is_farm_member: {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
