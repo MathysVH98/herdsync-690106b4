@@ -15,11 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Eye, Copy, CheckCircle2, ChevronDown, AlertCircle } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
 
 interface InviteEmployeeDialogProps {
@@ -266,10 +265,10 @@ export function InviteEmployeeDialog({
                     Based on: <span className="font-medium">{employeeName}</span>
                   </p>
                   
-                  {/* Suggestions Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="w-full justify-between mb-2">
+                  {/* Suggestions Popover */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between mb-2" type="button">
                         {username ? (
                           <span className="font-mono">{username}</span>
                         ) : (
@@ -277,32 +276,41 @@ export function InviteEmployeeDialog({
                         )}
                         <ChevronDown className="w-4 h-4 ml-2" />
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] bg-popover z-50">
-                      <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground border-b mb-1">
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-[var(--radix-popover-trigger-width)] p-0 z-[100]">
+                      <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b">
                         Suggested usernames for {employeeName}
                       </div>
-                      {suggestionsWithAvailability.length > 0 ? (
-                        suggestionsWithAvailability.map(({ username: suggestion, available }) => (
-                          <DropdownMenuItem
-                            key={suggestion}
-                            onClick={() => available && setUsername(suggestion)}
-                            className={!available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                            disabled={!available}
-                          >
-                            <span className="font-mono text-sm">{suggestion}</span>
-                            <span className={`ml-auto text-xs ${available ? "text-primary" : "text-destructive"}`}>
-                              {available ? "✓ Available" : "✗ Taken"}
-                            </span>
-                          </DropdownMenuItem>
-                        ))
-                      ) : (
-                        <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                          No suggestions available
-                        </div>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      <div className="py-1">
+                        {suggestionsWithAvailability.length > 0 ? (
+                          suggestionsWithAvailability.map(({ username: suggestion, available }) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => {
+                                if (available) {
+                                  setUsername(suggestion);
+                                }
+                              }}
+                              disabled={!available}
+                              className={`w-full flex items-center justify-between px-3 py-2 text-sm hover:bg-accent ${
+                                !available ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                              }`}
+                            >
+                              <span className="font-mono">{suggestion}</span>
+                              <span className={`text-xs ${available ? "text-primary" : "text-destructive"}`}>
+                                {available ? "✓ Available" : "✗ Taken"}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            No suggestions available
+                          </div>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
 
                   {/* Manual input option */}
                   <div className="relative">
