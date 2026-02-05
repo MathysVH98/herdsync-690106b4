@@ -862,6 +862,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "employee_users_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: true
+            referencedRelation: "employees_safe"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "employee_users_farm_id_fkey"
             columns: ["farm_id"]
             isOneToOne: false
@@ -1957,7 +1964,62 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employees_safe: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          end_date: string | null
+          farm_id: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          role: string | null
+          start_date: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          end_date?: string | null
+          farm_id?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          end_date?: string | null
+          farm_id?: string | null
+          first_name?: string | null
+          id?: string | null
+          last_name?: string | null
+          notes?: string | null
+          phone?: string | null
+          role?: string | null
+          start_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       auto_renew_admin_subscription: {
