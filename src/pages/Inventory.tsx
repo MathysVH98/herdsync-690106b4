@@ -128,7 +128,7 @@ export default function Inventory() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
           <StatsCard
             title="Total Items"
             value={loading ? "-" : totalItems}
@@ -146,16 +146,20 @@ export default function Inventory() {
             value={equipmentLoading ? "-" : equipment.length}
             icon={Tractor}
           />
-          <StatsCard
-            title="Inventory Value"
-            value={loading ? "-" : `R${totalValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
-            icon={Calculator}
-          />
-          <StatsCard
-            title="Equipment Value"
-            value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
-            icon={Calculator}
-          />
+          <div className="col-span-2 md:col-span-1 xl:col-span-1">
+            <StatsCard
+              title="Inventory Value"
+              value={loading ? "-" : `R${totalValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
+              icon={Calculator}
+            />
+          </div>
+          <div className="col-span-2 md:col-span-2 xl:col-span-1">
+            <StatsCard
+              title="Equipment Value"
+              value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
+              icon={Calculator}
+            />
+          </div>
         </div>
 
         {/* Low Stock Alert */}

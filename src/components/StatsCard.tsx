@@ -39,11 +39,11 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <div className={cn("card-stats min-w-0", className)}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
+    <div className={cn("card-stats", className)}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className={cn("stat-number mt-2 truncate", variantStyles[variant])}>
+          <p className={cn("stat-number mt-2 text-xl sm:text-2xl lg:text-3xl", variantStyles[variant])}>
             {value}
           </p>
           {trend && (
@@ -60,8 +60,8 @@ export function StatsCard({
             </p>
           )}
         </div>
-        <div className={cn("w-10 h-10 lg:w-12 lg:h-12 rounded-xl flex items-center justify-center flex-shrink-0", iconBgStyles[variant])}>
-          <Icon className="w-5 h-5 lg:w-6 lg:h-6" />
+        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0", iconBgStyles[variant])}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
     </div>
