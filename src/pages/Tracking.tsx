@@ -187,36 +187,34 @@ export default function Tracking() {
            description="RFID Tracking is a Pro feature that allows you to define tracking zones and place RFID scanner checkpoints on your land."
          />
  
-         {/* Under Development Overlay - only for Pro users to indicate feature is coming soon */}
-         {isPro && (
-           <div className="absolute inset-0 z-[9999] pointer-events-auto overflow-hidden">
-             <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
-             <div 
-               className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
-               style={{
-                 width: '150%',
-                 left: '-25%',
-                 top: '35%',
-                 transform: 'rotate(-35deg)',
-                 transformOrigin: 'center',
-               }}
-             >
-               🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
-             </div>
-             <div 
-               className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
-               style={{
-                 width: '150%',
-                 left: '-25%',
-                 top: '55%',
-                 transform: 'rotate(35deg)',
-                 transformOrigin: 'center',
-               }}
-             >
-               🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
-             </div>
+         {/* Under Development Overlay - always show since feature is not ready */}
+         <div className="absolute inset-0 z-[9998] pointer-events-auto overflow-hidden">
+           <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
+           <div 
+             className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+             style={{
+               width: '150%',
+               left: '-25%',
+               top: '35%',
+               transform: 'rotate(-35deg)',
+               transformOrigin: 'center',
+             }}
+           >
+             🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
            </div>
-         )}
+           <div 
+             className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+             style={{
+               width: '150%',
+               left: '-25%',
+               top: '55%',
+               transform: 'rotate(35deg)',
+               transformOrigin: 'center',
+             }}
+           >
+             🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
+           </div>
+         </div>
  
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
