@@ -166,7 +166,7 @@ export default function Tracking() {
     <Layout>
       <div className="relative space-y-6 h-full">
         {/* Under Development Overlay - z-[9999] to sit above Leaflet map */}
-        <div className="absolute inset-0 z-[9999] pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 z-[9999] pointer-events-auto overflow-hidden">
           {/* Subtle blur overlay */}
           <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
           
