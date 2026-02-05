@@ -13,6 +13,7 @@ export interface FarmExpense {
   supplier_vendor: string | null;
   receipt_reference: string | null;
   notes: string | null;
+   receipt_image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -73,6 +74,7 @@ export function useFarmExpenses() {
         supplier_vendor: expense.supplier_vendor || null,
         receipt_reference: expense.receipt_reference || null,
         notes: expense.notes || null,
+         receipt_image_url: expense.receipt_image_url || null,
       })
       .select()
       .single();
