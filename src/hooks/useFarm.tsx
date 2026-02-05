@@ -44,11 +44,11 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
 
   const fetchFarms = async () => {
-     // Wait for auth to complete first
-     if (authLoading) {
-       return;
-     }
- 
+    // Wait for auth to complete first
+    if (authLoading) {
+      return;
+    }
+
     if (!user) {
       setFarms([]);
       setFarm(null);
@@ -58,83 +58,93 @@ export function FarmProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-     setLoading(true);
- 
-    // First, check if the user is an employee (logged in via username/password)
-    const { data: employeeData, error: employeeError } = await supabase
-      .from("employee_users")
-      .select("id, farm_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    setLoading(true);
 
-    if (employeeData && !employeeError) {
-      // User is an employee - fetch only their assigned farm
-      setIsEmployee(true);
-      setEmployeeInfo({
-        farmId: employeeData.farm_id,
-        employeeUserId: employeeData.id,
-      });
+    try {
+      // First, check if the user is an employee (logged in via username/password)
+      const { data: employeeData, error: employeeError } = await supabase
+        .from("employee_users")
+        .select("id, farm_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      const { data: farmData, error: farmError } = await supabase
-        .from("farms")
-        .select("*")
-        .eq("id", employeeData.farm_id)
-         .maybeSingle();
+      if (employeeData && !employeeError) {
+        // User is an employee - fetch only their assigned farm
+        setIsEmployee(true);
+        setEmployeeInfo({
+          farmId: employeeData.farm_id,
+          employeeUserId: employeeData.id,
+        });
 
-      if (farmData && !farmError) {
-        setFarms([farmData]);
-        setFarm(farmData);
+        const { data: farmData, error: farmError } = await supabase
+          .from("farms")
+          .select("*")
+          .eq("id", employeeData.farm_id)
+          .maybeSingle();
+
+        if (farmData && !farmError) {
+          setFarms([farmData]);
+          setFarm(farmData);
+        }
+
+        setLoading(false);
+        return;
       }
 
+      // Not an employee - fetch farms normally (owner/member)
+      setIsEmployee(false);
+      setEmployeeInfo(null);
+
+      // Fetch owned farms and invited farm IDs in parallel
+      const [ownedFarmsRes, invitedFarmIdsRes] = await Promise.all([
+        supabase
+          .from("farms")
+          .select("*")
+          .eq("owner_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("farm_invited_users")
+          .select("farm_id")
+          .eq("user_id", user.id),
+      ]);
+
+      const ownedFarms = ownedFarmsRes.data || [];
+      const invitedFarmIds = invitedFarmIdsRes.data;
+
+      // Fetch invited farms if any exist
+      let invitedFarms: Farm[] = [];
+      if (invitedFarmIds && invitedFarmIds.length > 0) {
+        const farmIds = invitedFarmIds.map(f => f.farm_id);
+        const { data: farms } = await supabase
+          .from("farms")
+          .select("*")
+          .in("id", farmIds);
+        invitedFarms = farms || [];
+      }
+
+      // Combine and deduplicate farms
+      const allFarms = [...ownedFarms, ...invitedFarms];
+      const uniqueFarms = allFarms.filter((farmItem, index, self) => 
+        index === self.findIndex(f => f.id === farmItem.id)
+      );
+
+      setFarms(uniqueFarms);
+      
+      // Always set first farm as active if we have farms but no active farm selected
+      if (uniqueFarms.length > 0) {
+        setFarm(prevFarm => {
+          // Keep current farm if it exists in the list, otherwise select first
+          if (prevFarm && uniqueFarms.some(f => f.id === prevFarm.id)) {
+            return prevFarm;
+          }
+          return uniqueFarms[0];
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching farms:", error);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Not an employee - fetch farms normally (owner/member)
-    setIsEmployee(false);
-    setEmployeeInfo(null);
-
-     // Fetch owned farms and invited farm IDs in parallel
-     const [ownedFarmsRes, invitedFarmIdsRes] = await Promise.all([
-       supabase
-         .from("farms")
-         .select("*")
-         .eq("owner_id", user.id)
-         .order("created_at", { ascending: true }),
-       supabase
-         .from("farm_invited_users")
-         .select("farm_id")
-         .eq("user_id", user.id),
-     ]);
- 
-     const ownedFarms = ownedFarmsRes.data || [];
-     const invitedFarmIds = invitedFarmIdsRes.data;
- 
-     // Fetch invited farms if any exist
-     let invitedFarms: Farm[] = [];
-     if (invitedFarmIds && invitedFarmIds.length > 0) {
-       const farmIds = invitedFarmIds.map(f => f.farm_id);
-       const { data: farms } = await supabase
-         .from("farms")
-         .select("*")
-         .in("id", farmIds);
-       invitedFarms = farms || [];
-     }
-
-    // Combine and deduplicate farms
-     const allFarms = [...ownedFarms, ...invitedFarms];
-    const uniqueFarms = allFarms.filter((farm, index, self) => 
-      index === self.findIndex(f => f.id === farm.id)
-    );
-
-    setFarms(uniqueFarms);
-    
-    // Set first farm as active if none selected
-    if (uniqueFarms.length > 0 && !farm) {
-      setFarm(uniqueFarms[0]);
-    }
-    
-    setLoading(false);
   };
 
   useEffect(() => {
