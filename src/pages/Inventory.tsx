@@ -128,7 +128,7 @@ export default function Inventory() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 lg:gap-4">
           <StatsCard
             title="Total Items"
             value={loading ? "-" : totalItems}
@@ -148,12 +148,12 @@ export default function Inventory() {
           />
           <StatsCard
             title="Inventory Value"
-            value={loading ? "-" : `R${totalValue.toLocaleString()}`}
+            value={loading ? "-" : `R${totalValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
             icon={Calculator}
           />
           <StatsCard
             title="Equipment Value"
-            value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString()}`}
+            value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
             icon={Calculator}
           />
         </div>
