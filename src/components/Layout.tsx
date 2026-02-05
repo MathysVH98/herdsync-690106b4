@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
@@ -126,6 +126,25 @@ export function Layout({ children }: LayoutProps) {
   // Only show back button on sub-pages (not main navigation pages)
   const showBackButton = !mainNavigationPaths.includes(location.pathname);
 
+  // Preserve sidebar scroll position across navigations
+  const navRef = useRef<HTMLElement>(null);
+  const scrollPositionRef = useRef(0);
+
+  useEffect(() => {
+    // Restore scroll position after navigation
+    if (navRef.current) {
+      navRef.current.scrollTop = scrollPositionRef.current;
+    }
+  }, [location.pathname]);
+
+  const handleNavClick = () => {
+    // Save current scroll position before navigation
+    if (navRef.current) {
+      scrollPositionRef.current = navRef.current.scrollTop;
+    }
+    setSidebarOpen(false);
+  };
+
   return (
     <div 
       className="h-screen flex overflow-hidden farm-background"
@@ -174,14 +193,14 @@ export function Layout({ children }: LayoutProps) {
           </Link>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          <nav ref={navRef} className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={handleNavClick}
                   className={cn("sidebar-nav-item", isActive && "active")}
                 >
                   <item.icon className="w-5 h-5" />
@@ -206,7 +225,7 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={handleNavClick}
                     className={cn("sidebar-nav-item", isActive && "active")}
                   >
                     <item.icon className="w-5 h-5" />
@@ -220,7 +239,7 @@ export function Layout({ children }: LayoutProps) {
                    <Link
                      key={item.name}
                      to={item.href}
-                     onClick={() => setSidebarOpen(false)}
+                      onClick={handleNavClick}
                      className={cn("sidebar-nav-item", isActiveNav && "active")}
                    >
                      <item.icon className="w-5 h-5 text-primary" />
@@ -241,7 +260,7 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={handleNavClick}
                     className={cn("sidebar-nav-item", isActive && "active")}
                   >
                     <item.icon className="w-5 h-5" />
@@ -262,7 +281,7 @@ export function Layout({ children }: LayoutProps) {
                   <Link
                     key={item.name}
                     to={item.href}
-                    onClick={() => setSidebarOpen(false)}
+                    onClick={handleNavClick}
                     className={cn("sidebar-nav-item", isActive && "active")}
                   >
                     <item.icon className="w-5 h-5" />
