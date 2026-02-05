@@ -36,7 +36,7 @@ const FarmContext = createContext<FarmContextType>({
 });
 
 export function FarmProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+   const { user, loading: authLoading } = useAuth();
   const [farm, setFarm] = useState<Farm | null>(null);
   const [farms, setFarms] = useState<Farm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +44,11 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
 
   const fetchFarms = async () => {
+     // Wait for auth to complete first
+     if (authLoading) {
+       return;
+     }
+ 
     if (!user) {
       setFarms([]);
       setFarm(null);
@@ -53,6 +58,8 @@ export function FarmProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+     setLoading(true);
+ 
     // First, check if the user is an employee (logged in via username/password)
     const { data: employeeData, error: employeeError } = await supabase
       .from("employee_users")
@@ -72,7 +79,7 @@ export function FarmProvider({ children }: { children: ReactNode }) {
         .from("farms")
         .select("*")
         .eq("id", employeeData.farm_id)
-        .single();
+         .maybeSingle();
 
       if (farmData && !farmError) {
         setFarms([farmData]);
@@ -87,31 +94,35 @@ export function FarmProvider({ children }: { children: ReactNode }) {
     setIsEmployee(false);
     setEmployeeInfo(null);
 
-    // Fetch owned farms
-    const { data: ownedFarms, error: ownedError } = await supabase
-      .from("farms")
-      .select("*")
-      .eq("owner_id", user.id)
-      .order("created_at", { ascending: true });
-
-    // Fetch farms where user is invited
-    const { data: invitedFarmIds } = await supabase
-      .from("farm_invited_users")
-      .select("farm_id")
-      .eq("user_id", user.id);
-
-    let invitedFarms: Farm[] = [];
-    if (invitedFarmIds && invitedFarmIds.length > 0) {
-      const farmIds = invitedFarmIds.map(f => f.farm_id);
-      const { data: farms } = await supabase
-        .from("farms")
-        .select("*")
-        .in("id", farmIds);
-      invitedFarms = farms || [];
-    }
+     // Fetch owned farms and invited farm IDs in parallel
+     const [ownedFarmsRes, invitedFarmIdsRes] = await Promise.all([
+       supabase
+         .from("farms")
+         .select("*")
+         .eq("owner_id", user.id)
+         .order("created_at", { ascending: true }),
+       supabase
+         .from("farm_invited_users")
+         .select("farm_id")
+         .eq("user_id", user.id),
+     ]);
+ 
+     const ownedFarms = ownedFarmsRes.data || [];
+     const invitedFarmIds = invitedFarmIdsRes.data;
+ 
+     // Fetch invited farms if any exist
+     let invitedFarms: Farm[] = [];
+     if (invitedFarmIds && invitedFarmIds.length > 0) {
+       const farmIds = invitedFarmIds.map(f => f.farm_id);
+       const { data: farms } = await supabase
+         .from("farms")
+         .select("*")
+         .in("id", farmIds);
+       invitedFarms = farms || [];
+     }
 
     // Combine and deduplicate farms
-    const allFarms = [...(ownedFarms || []), ...invitedFarms];
+     const allFarms = [...ownedFarms, ...invitedFarms];
     const uniqueFarms = allFarms.filter((farm, index, self) => 
       index === self.findIndex(f => f.id === farm.id)
     );
@@ -127,8 +138,10 @@ export function FarmProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchFarms();
-  }, [user]);
+     if (!authLoading) {
+       fetchFarms();
+     }
+   }, [user, authLoading]);
 
   const setActiveFarm = (farmId: string) => {
     // Employees can only access their assigned farm

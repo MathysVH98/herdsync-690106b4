@@ -7,6 +7,7 @@ import { WeatherWidget } from "@/components/WeatherWidget";
 import { Badge } from "@/components/ui/badge";
 import { getAnimalImage } from "@/utils/animalImages";
 import { useFarm } from "@/hooks/useFarm";
+ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   PawPrint, 
@@ -47,13 +48,14 @@ interface FeedInventoryItem {
 
 export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { farm } = useFarm();
+   const { user, loading: authLoading } = useAuth();
+   const { farm, loading: farmLoading } = useFarm();
   const [livestock, setLivestock] = useState<LivestockItem[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [feedingSchedule, setFeedingSchedule] = useState<FeedingItem[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [feedInventory, setFeedInventory] = useState<FeedInventoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
+   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -62,12 +64,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!farm?.id) {
-      setLoading(false);
+       setDataLoading(false);
       return;
     }
 
     const fetchData = async () => {
-      setLoading(true);
+       setDataLoading(true);
       
       const [livestockRes, healthRes, feedingRes, alertsRes, inventoryRes] = await Promise.all([
         supabase.from("livestock").select("id, name, type, status").eq("farm_id", farm.id),
@@ -90,12 +92,14 @@ export default function Dashboard() {
       if (alertsRes.data) setAlerts(alertsRes.data);
       if (inventoryRes.data) setFeedInventory(inventoryRes.data);
 
-      setLoading(false);
+       setDataLoading(false);
     };
 
     fetchData();
   }, [farm?.id]);
 
+   const loading = dataLoading;
+ 
   // Calculate stats from real data
   const stats = {
     total: livestock.length,
@@ -131,6 +135,23 @@ export default function Dashboard() {
     return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   }
 
+   // Show loading state while auth or farm is loading
+   if (authLoading || farmLoading) {
+     return (
+       <Layout>
+         <div className="flex items-center justify-center h-96">
+           <div className="text-center space-y-4">
+             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+             <div>
+               <h2 className="text-xl font-semibold text-foreground mb-2">Loading your farm...</h2>
+               <p className="text-muted-foreground">Please wait while we fetch your data.</p>
+             </div>
+           </div>
+         </div>
+       </Layout>
+     );
+   }
+ 
   if (!farm) {
     return (
       <Layout>
