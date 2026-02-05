@@ -1,11 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-yoco-signature",
 };
+
+// Constant-time comparison to prevent timing attacks
+function secureCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+// Verify Yoco webhook signature
+async function verifySignature(payload: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+    const computedSignature = new TextDecoder().decode(hexEncode(new Uint8Array(signatureBuffer)));
+    return secureCompare(computedSignature, signature.toLowerCase());
+  } catch (error) {
+    console.error("Signature verification error:", error);
+    return false;
+  }
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,10 +49,30 @@ serve(async (req) => {
       throw new Error("YOCO_SECRET_KEY not configured");
     }
 
-    // Get webhook signature for verification (optional but recommended)
+    // Get webhook signature for verification
     const signature = req.headers.get("x-yoco-signature");
+    if (!signature) {
+      console.error("Missing webhook signature");
+      return new Response(JSON.stringify({ error: "Missing signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Get raw body for signature verification
+    const rawBody = await req.text();
     
-    const payload = await req.json();
+    // Verify the signature
+    const isValid = await verifySignature(rawBody, signature, yocoSecretKey);
+    if (!isValid) {
+      console.error("Invalid webhook signature");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const payload = JSON.parse(rawBody);
     console.log("Yoco webhook received:", JSON.stringify(payload));
 
     // Handle different webhook event types
