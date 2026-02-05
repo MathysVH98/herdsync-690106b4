@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
@@ -130,10 +130,16 @@ export function Layout({ children }: LayoutProps) {
   const navRef = useRef<HTMLElement>(null);
   const scrollPositionRef = useRef(0);
 
-  useEffect(() => {
+  // Use useLayoutEffect to restore scroll position synchronously after DOM updates
+  useLayoutEffect(() => {
     // Restore scroll position after navigation
     if (navRef.current) {
-      navRef.current.scrollTop = scrollPositionRef.current;
+      // Use requestAnimationFrame to ensure DOM is fully painted
+      requestAnimationFrame(() => {
+        if (navRef.current) {
+          navRef.current.scrollTop = scrollPositionRef.current;
+        }
+      });
     }
   }, [location.pathname]);
 
