@@ -34,6 +34,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
 import { useSubscription } from "@/hooks/useSubscription";
+ import { useAdmin } from "@/hooks/useAdmin";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { FarmSwitcher } from "@/components/FarmSwitcher";
 import farmBackground from "@/assets/farm-background.jpg";
@@ -65,6 +66,10 @@ const settingsNavigation = [
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
+ const adminNavigation = [
+   { name: "Admin Dashboard", href: "/admin", icon: Shield },
+ ];
+ 
 const complianceNavigation = [
   { name: "Chemicals & Remedies", href: "/compliance/chemicals", icon: Beaker },
   { name: "Compliance Dashboard", href: "/compliance", icon: Shield },
@@ -102,6 +107,7 @@ const mainNavigationPaths = [
   "/compliance/chemicals",
   "/compliance/audit-pack",
   "/settings",
+   "/admin",
   "/about",
   "/contact",
   "/terms",
@@ -116,6 +122,7 @@ export function Layout({ children }: LayoutProps) {
   const { user, signOut } = useAuth();
   const { farm } = useFarm();
   const { subscription, isActive } = useSubscription();
+   const { isAdmin } = useAdmin();
   
   const isPro = subscription?.tier === "pro" && isActive;
   
@@ -228,6 +235,20 @@ export function Layout({ children }: LayoutProps) {
                   </Link>
                 );
               })}
+               {isAdmin && adminNavigation.map((item) => {
+                 const isActiveNav = location.pathname === item.href;
+                 return (
+                   <Link
+                     key={item.name}
+                     to={item.href}
+                     onClick={() => setSidebarOpen(false)}
+                     className={cn("sidebar-nav-item", isActiveNav && "active")}
+                   >
+                     <item.icon className="w-5 h-5 text-primary" />
+                     <span className="font-medium">{item.name}</span>
+                   </Link>
+                 );
+               })}
             </div>
 
             {/* Compliance Section */}
