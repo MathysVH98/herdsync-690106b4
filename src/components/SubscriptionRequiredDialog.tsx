@@ -68,21 +68,12 @@
              </p>
            </div>
  
-           <div className="flex flex-col gap-2">
-             <Link to="/pricing" className="w-full">
-               <Button className="w-full bg-gradient-primary gap-2">
-                 <Sparkles className="w-4 h-4" />
-                 View Plans & Upgrade
-               </Button>
-             </Link>
-             <Button 
-               variant="ghost" 
-               onClick={() => onOpenChange(false)}
-               className="w-full"
-             >
-               Maybe Later
-             </Button>
-           </div>
+            <Link to="/pricing" className="w-full">
+              <Button className="w-full bg-gradient-primary gap-2">
+                <Sparkles className="w-4 h-4" />
+                View Plans & Upgrade
+              </Button>
+            </Link>
          </div>
        </DialogContent>
      </Dialog>
