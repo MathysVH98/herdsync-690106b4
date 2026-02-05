@@ -1062,6 +1062,101 @@ export type Database = {
           },
         ]
       }
+      farm_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          farm_id: string
+          id: string
+          invited_by: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          farm_id: string
+          id?: string
+          invited_by: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          farm_id?: string
+          id?: string
+          invited_by?: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_invitations_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      farm_invited_users: {
+        Row: {
+          created_at: string
+          farm_id: string
+          id: string
+          invitation_id: string | null
+          invited_by: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          farm_id: string
+          id?: string
+          invitation_id?: string | null
+          invited_by: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          farm_id?: string
+          id?: string
+          invitation_id?: string | null
+          invited_by?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "farm_invited_users_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "farm_invited_users_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "farm_invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       farm_members: {
         Row: {
           created_at: string
@@ -1870,6 +1965,7 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      count_invited_users: { Args: { _farm_id: string }; Returns: number }
       get_admin_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["subscription_tier"]
@@ -1890,6 +1986,10 @@ export type Database = {
           can_view_livestock: boolean
           can_view_tracking: boolean
         }[]
+      }
+      get_invited_user_limit: {
+        Args: { _tier: Database["public"]["Enums"]["subscription_tier"] }
+        Returns: number
       }
       get_subscription_status: {
         Args: { _farm_id: string }
@@ -1921,6 +2021,7 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      is_invited_user: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       animal_status: "available" | "sold" | "deceased" | "transferred"
@@ -1953,6 +2054,7 @@ export type Database = {
         | "other"
         | "sales"
       incident_severity: "minor" | "moderate" | "serious" | "critical"
+      invitation_status: "pending" | "accepted" | "expired" | "revoked"
       ownership_passes: "on_full_payment" | "on_signature" | "custom"
       payment_method: "eft" | "cash" | "other"
       payment_provider: "paypal" | "yoco"
@@ -2126,6 +2228,7 @@ export const Constants = {
         "sales",
       ],
       incident_severity: ["minor", "moderate", "serious", "critical"],
+      invitation_status: ["pending", "accepted", "expired", "revoked"],
       ownership_passes: ["on_full_payment", "on_signature", "custom"],
       payment_method: ["eft", "cash", "other"],
       payment_provider: ["paypal", "yoco"],

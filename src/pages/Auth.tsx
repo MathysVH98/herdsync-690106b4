@@ -8,6 +8,7 @@ import { Wheat, Mail, Lock, Building, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useFarm } from "@/hooks/useFarm";
 
 export default function Auth() {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -18,12 +19,31 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { refetchFarms } = useFarm();
 
   // Redirect if already logged in
   if (user) {
     navigate("/dashboard");
     return null;
   }
+
+  // Accept any pending invitations after login
+  const acceptPendingInvitations = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.functions.invoke("accept-farm-invitation", {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        });
+        // Refetch farms to include newly accepted invitations
+        await refetchFarms();
+      }
+    } catch (error) {
+      console.error("Error accepting invitations:", error);
+    }
+  };
 
   const isEmail = (value: string): boolean => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -53,6 +73,7 @@ export default function Auth() {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
+        await acceptPendingInvitations();
         navigate("/dashboard");
       }
     } else {
@@ -77,6 +98,7 @@ export default function Auth() {
           title: "Welcome back!",
           description: "You have successfully logged in.",
         });
+        await acceptPendingInvitations();
         navigate("/dashboard");
       }
     }
