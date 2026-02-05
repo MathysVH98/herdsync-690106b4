@@ -29,6 +29,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+ import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,11 +57,9 @@ const navigation = [
   { name: "Livestock", href: "/livestock", icon: PawPrint },
   { name: "Market Area", href: "/market", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+   { name: "Tracking", href: "/tracking", icon: MapPin, proOnly: true },
 ];
 
-const proNavigation = [
-  { name: "Tracking", href: "/tracking", icon: MapPin },
-];
 
 const settingsNavigation = [
   { name: "Settings", href: "/settings", icon: Settings },
@@ -124,8 +123,6 @@ export function Layout({ children }: LayoutProps) {
   const { subscription, isActive } = useSubscription();
    const { isAdmin } = useAdmin();
   
-  const isPro = subscription?.tier === "pro" && isActive;
-  
   // Only show back button on sub-pages (not main navigation pages)
   const showBackButton = !mainNavigationPaths.includes(location.pathname);
 
@@ -188,33 +185,15 @@ export function Layout({ children }: LayoutProps) {
                   className={cn("sidebar-nav-item", isActive && "active")}
                 >
                   <item.icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                   <span className="font-medium">{item.name}</span>
+                   {item.proOnly && (
+                     <Badge variant="outline" className="ml-auto text-[10px] px-1.5 py-0">
+                       PRO
+                     </Badge>
+                   )}
                 </Link>
               );
             })}
-
-            {/* Pro Features Section - RFID Tracking */}
-            {isPro && proNavigation.length > 0 && (
-              <div className="pt-4 mt-4 border-t border-sidebar-border">
-                <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
-                  RFID Tracking
-                </p>
-                {proNavigation.map((item) => {
-                  const isActive = location.pathname === item.href;
-                  return (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={cn("sidebar-nav-item", isActive && "active")}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
 
             {/* Settings Section */}
             <div className="pt-4 mt-4 border-t border-sidebar-border">
