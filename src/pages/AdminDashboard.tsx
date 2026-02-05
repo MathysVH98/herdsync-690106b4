@@ -8,7 +8,7 @@
  import { Badge } from "@/components/ui/badge";
  import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
  import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
- import { Shield, Clock, Users, Building, Plus, Minus, Mail, Calendar, Search } from "lucide-react";
+import { Shield, Clock, Users, Building, Plus, Minus, Search } from "lucide-react";
  import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
  import { supabase } from "@/integrations/supabase/client";
  import { useAdmin } from "@/hooks/useAdmin";
@@ -375,7 +375,7 @@
          </div>
  
          <Tabs defaultValue="users" className="w-full">
-           <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsList className="grid w-full grid-cols-2 max-w-xs">
              <TabsTrigger value="users">All Users</TabsTrigger>
              <TabsTrigger value="subscriptions">Subscriptions</TabsTrigger>
            </TabsList>
@@ -414,12 +414,10 @@
                      <Table>
                        <TableHeader>
                          <TableRow>
-                           <TableHead>Email</TableHead>
-                           <TableHead>Farms</TableHead>
-                           <TableHead>Subscription</TableHead>
+                            <TableHead>User</TableHead>
+                            <TableHead>Farm</TableHead>
+                            <TableHead>Tier</TableHead>
                            <TableHead>Status</TableHead>
-                           <TableHead>Registered</TableHead>
-                           <TableHead>Last Sign In</TableHead>
                            <TableHead className="text-right">Actions</TableHead>
                          </TableRow>
                        </TableHeader>
@@ -427,64 +425,38 @@
                          {filteredUsers.map((u) => (
                            <TableRow key={u.id}>
                              <TableCell>
-                               <div className="flex items-center gap-2">
-                                 <Mail className="w-4 h-4 text-muted-foreground" />
-                                 <span className="font-medium">{u.email}</span>
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-sm truncate max-w-[200px]" title={u.email}>{u.email}</span>
                                  {u.email_confirmed_at && (
-                                   <Badge variant="outline" className="text-xs">Verified</Badge>
+                                    <Badge variant="outline" className="text-[10px] w-fit mt-0.5 px-1 py-0">Verified</Badge>
                                  )}
                                </div>
                              </TableCell>
                              <TableCell>
                                {u.farms.length === 0 ? (
-                                 <span className="text-muted-foreground text-sm">No farms</span>
+                                  <span className="text-muted-foreground text-xs">—</span>
                                ) : (
-                                 <div className="flex flex-col gap-1">
-                                   {u.farms.map(f => (
-                                     <span key={f.id} className="text-sm">{f.name}</span>
-                                   ))}
-                                 </div>
+                                  <span className="text-sm truncate block max-w-[120px]" title={u.farms.map(f => f.name).join(", ")}>
+                                    {u.farms[0].name}{u.farms.length > 1 && ` +${u.farms.length - 1}`}
+                                  </span>
                                )}
                              </TableCell>
                              <TableCell>
                                {u.subscriptions.length === 0 ? (
-                                 <span className="text-muted-foreground text-sm">None</span>
+                                  <span className="text-muted-foreground text-xs">—</span>
                                ) : (
-                                 <div className="flex flex-col gap-1">
-                                   {u.subscriptions.map(s => (
-                                     <div key={s.id}>{getTierBadge(s.tier)}</div>
-                                   ))}
-                                 </div>
+                                  getTierBadge(u.subscriptions[0].tier)
                                )}
                              </TableCell>
                              <TableCell>
                                {u.subscriptions.length === 0 ? (
-                                 <span className="text-muted-foreground text-sm">—</span>
+                                  <span className="text-muted-foreground text-xs">—</span>
                                ) : (
-                                 <div className="flex flex-col gap-1">
-                                   {u.subscriptions.map(s => (
-                                     <div key={s.id}>{getStatusBadge(s.status)}</div>
-                                   ))}
-                                 </div>
-                               )}
-                             </TableCell>
-                             <TableCell>
-                               <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                 <Calendar className="w-3 h-3" />
-                                 {new Date(u.created_at).toLocaleDateString()}
-                               </div>
-                             </TableCell>
-                             <TableCell>
-                               {u.last_sign_in_at ? (
-                                 <span className="text-sm text-muted-foreground">
-                                   {new Date(u.last_sign_in_at).toLocaleDateString()}
-                                 </span>
-                               ) : (
-                                 <span className="text-sm text-muted-foreground">Never</span>
+                                  getStatusBadge(u.subscriptions[0].status)
                                )}
                              </TableCell>
                              <TableCell className="text-right">
-                               {u.subscriptions.length > 0 && (
+                                {u.subscriptions.length > 0 ? (
                                  <Dialog 
                                    open={userDialogOpen && selectedUserSubscription?.id === u.subscriptions[0]?.id} 
                                    onOpenChange={(open) => {
@@ -555,6 +527,8 @@
                                      </DialogFooter>
                                    </DialogContent>
                                  </Dialog>
+                                ) : (
+                                  <span className="text-muted-foreground text-xs">—</span>
                                )}
                              </TableCell>
                            </TableRow>
@@ -585,7 +559,7 @@
                          <TableHead>Farm</TableHead>
                          <TableHead>Tier</TableHead>
                          <TableHead>Status</TableHead>
-                         <TableHead>Animal Limit</TableHead>
+                        <TableHead>Limit</TableHead>
                          <TableHead>Expires</TableHead>
                          <TableHead className="text-right">Actions</TableHead>
                        </TableRow>
@@ -593,13 +567,13 @@
                      <TableBody>
                        {subscriptions.map((sub) => (
                          <TableRow key={sub.id}>
-                           <TableCell className="font-medium">{sub.farm_name}</TableCell>
+                          <TableCell className="font-medium text-sm">{sub.farm_name}</TableCell>
                            <TableCell>{getTierBadge(sub.tier)}</TableCell>
                            <TableCell>{getStatusBadge(sub.status)}</TableCell>
-                           <TableCell>
-                             {sub.animal_limit === 999999 ? "Unlimited" : sub.animal_limit}
+                          <TableCell className="text-sm">
+                            {sub.animal_limit === 999999 ? "∞" : sub.animal_limit}
                            </TableCell>
-                           <TableCell>
+                          <TableCell className="text-sm">
                              {sub.current_period_end 
                                ? new Date(sub.current_period_end).toLocaleDateString()
                                : new Date(sub.trial_ends_at).toLocaleDateString()
