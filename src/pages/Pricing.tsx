@@ -24,7 +24,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
-import farmBackground from "@/assets/farm-background.jpg";
+import { Layout } from "@/components/Layout";
 import { format } from "date-fns";
 
 const features = [
@@ -240,45 +240,12 @@ export default function Pricing() {
   };
 
   return (
-    <div 
-      className="min-h-screen farm-background"
-      style={{ '--farm-bg-image': `url(${farmBackground})` } as React.CSSProperties}
-    >
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Wheat className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold font-display">HerdSync</h1>
-              <p className="text-xs text-muted-foreground">Farm Management</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {user ? (
-              <Button onClick={() => navigate("/dashboard")} variant="outline">
-                Go to Dashboard
-              </Button>
-            ) : (
-              <>
-                <Button variant="ghost" onClick={() => navigate("/auth")}>
-                  Sign In
-                </Button>
-                <Button onClick={() => navigate("/auth")} className="bg-gradient-primary">
-                  Start Free Trial
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
-
+    <Layout>
+      <div className="space-y-8">
       {/* Admin Status Banner */}
-      {user && isAdminLocked && (
-        <div className="bg-accent/20 border-b border-accent/30 py-3">
-          <div className="container mx-auto px-4 text-center">
+      {isAdminLocked && (
+        <div className="bg-accent/20 border border-accent/30 rounded-xl py-3 px-4">
+          <div className="text-center">
             <p className="text-sm flex items-center justify-center gap-2">
               <Lock className="w-4 h-4" />
               <span className="font-semibold">Admin Test Account</span> - Locked to{" "}
@@ -298,9 +265,9 @@ export default function Pricing() {
       )}
 
       {/* Trial Banner */}
-      {user && isTrialing && !isAdminLocked && (
-        <div className="bg-primary/10 border-b border-primary/20 py-3">
-          <div className="container mx-auto px-4 text-center">
+      {isTrialing && !isAdminLocked && (
+        <div className="bg-primary/10 border border-primary/20 rounded-xl py-3 px-4">
+          <div className="text-center">
             <p className="text-sm">
               <span className="font-semibold">🎉 Free Trial Active!</span> You have{" "}
               <span className="font-bold text-primary">{daysRemaining} days</span> remaining.
@@ -311,9 +278,9 @@ export default function Pricing() {
       )}
 
       {/* Active Subscription Banner */}
-      {user && isActive && !isTrialing && !isAdminLocked && subscription?.current_period_end && (
-        <div className="bg-success/10 border-b border-success/20 py-3">
-          <div className="container mx-auto px-4 text-center">
+      {isActive && !isTrialing && !isAdminLocked && subscription?.current_period_end && (
+        <div className="bg-success/10 border border-success/20 rounded-xl py-3 px-4">
+          <div className="text-center">
             <p className="text-sm flex items-center justify-center gap-2">
               <CalendarClock className="w-4 h-4" />
               <span className="font-semibold capitalize">{subscription.tier} Plan Active</span>
@@ -329,12 +296,12 @@ export default function Pricing() {
       )}
 
       {/* Hero Section */}
-      <section className="py-16 lg:py-24">
-        <div className="container mx-auto px-4 text-center">
+      <section className="py-8 lg:py-12">
+        <div className="text-center">
           <Badge variant="secondary" className="mb-4">
             🌾 Built for South African Farmers
           </Badge>
-          <h1 className="text-4xl lg:text-6xl font-bold font-display mb-6">
+          <h1 className="text-3xl lg:text-5xl font-bold font-display mb-6">
             Manage Your Farm
             <span className="text-primary block">Like a Pro</span>
           </h1>
@@ -351,9 +318,9 @@ export default function Pricing() {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-card/60 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold font-display text-center mb-12">
+      <section className="py-8 bg-card/60 backdrop-blur-sm rounded-xl p-6">
+        <div>
+          <h2 className="text-2xl lg:text-3xl font-bold font-display text-center mb-8">
             Everything You Need to Run Your Farm
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -373,15 +340,15 @@ export default function Pricing() {
       </section>
 
       {/* Pricing */}
-      <section className="py-16" id="pricing">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold font-display text-center mb-4">
+      <section className="py-8" id="pricing">
+        <div>
+          <h2 className="text-2xl lg:text-3xl font-bold font-display text-center mb-4">
             Simple, Transparent Pricing
           </h2>
           <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
             All plans include a 14-day free trial. No credit card required to start.
           </p>
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-6">
             {pricingTiers.map((tier) => (
               <Card
                 key={tier.name}
@@ -542,9 +509,9 @@ export default function Pricing() {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 bg-card/60 backdrop-blur-sm">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold font-display text-center mb-12">
+      <section className="py-8 bg-card/60 backdrop-blur-sm rounded-xl p-6">
+        <div>
+          <h2 className="text-2xl lg:text-3xl font-bold font-display text-center mb-8">
             Trusted by Farmers Across South Africa
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
@@ -579,9 +546,9 @@ export default function Pricing() {
       </section>
 
       {/* CTA */}
-      <section className="py-16">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold font-display mb-4">
+      <section className="py-8">
+        <div className="text-center">
+          <h2 className="text-2xl lg:text-3xl font-bold font-display mb-4">
             Ready to Transform Your Farm?
           </h2>
           <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
@@ -601,14 +568,15 @@ export default function Pricing() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/50 py-8 bg-card/80">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-border/50 py-6 mt-8">
+        <div className="text-center text-sm text-muted-foreground">
           <p>© 2024 HerdSync. Built for South African farmers.</p>
           <p className="mt-2">
             Payments secured by PayPal and Yoco. All prices in South African Rand (ZAR).
           </p>
         </div>
       </footer>
-    </div>
+      </div>
+    </Layout>
   );
 }
