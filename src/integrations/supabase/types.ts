@@ -1076,6 +1076,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_by: string | null
+          access_attempted_at: string | null
           created_at: string
           email: string
           expires_at: string
@@ -1089,6 +1090,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_by?: string | null
+          access_attempted_at?: string | null
           created_at?: string
           email: string
           expires_at?: string
@@ -1102,6 +1104,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_by?: string | null
+          access_attempted_at?: string | null
           created_at?: string
           email?: string
           expires_at?: string
@@ -1598,6 +1601,30 @@ export type Database = {
           },
         ]
       }
+      invitation_rate_limits: {
+        Row: {
+          attempt_at: string
+          email_hash: string
+          id: string
+          ip_hash: string
+          success: boolean
+        }
+        Insert: {
+          attempt_at?: string
+          email_hash: string
+          id?: string
+          ip_hash: string
+          success?: boolean
+        }
+        Update: {
+          attempt_at?: string
+          email_hash?: string
+          id?: string
+          ip_hash?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       livestock: {
         Row: {
           age: string | null
@@ -1725,6 +1752,30 @@ export type Database = {
           },
         ]
       }
+      login_attempt_log: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_hash: string | null
+          success: boolean
+          username_hash: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string | null
+          success?: boolean
+          username_hash: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string | null
+          success?: boolean
+          username_hash?: string
+        }
+        Relationships: []
+      }
       monthly_compliance_checklists: {
         Row: {
           category_id: string
@@ -1821,6 +1872,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sensitive_data_access_log: {
+        Row: {
+          accessed_at: string
+          action: string
+          farm_id: string
+          id: string
+          table_name: string
+          user_id: string
+        }
+        Insert: {
+          accessed_at?: string
+          action: string
+          farm_id: string
+          id?: string
+          table_name: string
+          user_id: string
+        }
+        Update: {
+          accessed_at?: string
+          action?: string
+          farm_id?: string
+          id?: string
+          table_name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -1967,14 +2045,12 @@ export type Database = {
       employees_safe: {
         Row: {
           created_at: string | null
-          email: string | null
           end_date: string | null
           farm_id: string | null
           first_name: string | null
           id: string | null
           last_name: string | null
           notes: string | null
-          phone: string | null
           role: string | null
           start_date: string | null
           status: string | null
@@ -1982,14 +2058,12 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          email?: string | null
           end_date?: string | null
           farm_id?: string | null
           first_name?: string | null
           id?: string | null
           last_name?: string | null
           notes?: string | null
-          phone?: string | null
           role?: string | null
           start_date?: string | null
           status?: string | null
@@ -1997,14 +2071,12 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          email?: string | null
           end_date?: string | null
           farm_id?: string | null
           first_name?: string | null
           id?: string | null
           last_name?: string | null
           notes?: string | null
-          phone?: string | null
           role?: string | null
           start_date?: string | null
           status?: string | null
@@ -2020,6 +2092,65 @@ export type Database = {
           },
         ]
       }
+      subscriptions_secure: {
+        Row: {
+          animal_limit: number | null
+          created_at: string | null
+          current_period_end: string | null
+          farm_id: string | null
+          id: string | null
+          payment_provider:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference: string | null
+          status: Database["public"]["Enums"]["subscription_status"] | null
+          tier: Database["public"]["Enums"]["subscription_tier"] | null
+          trial_ends_at: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          animal_limit?: number | null
+          created_at?: string | null
+          current_period_end?: string | null
+          farm_id?: string | null
+          id?: string | null
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference?: never
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          animal_limit?: number | null
+          created_at?: string | null
+          current_period_end?: string | null
+          farm_id?: string | null
+          id?: string | null
+          payment_provider?:
+            | Database["public"]["Enums"]["payment_provider"]
+            | null
+          payment_reference?: never
+          status?: Database["public"]["Enums"]["subscription_status"] | null
+          tier?: Database["public"]["Enums"]["subscription_tier"] | null
+          trial_ends_at?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: true
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       auto_renew_admin_subscription: {
@@ -2028,6 +2159,10 @@ export type Database = {
       }
       can_access_farm: {
         Args: { _farm_id: string; _user_id: string }
+        Returns: boolean
+      }
+      check_login_rate_limit: {
+        Args: { username_to_check: string }
         Returns: boolean
       }
       count_invited_users: { Args: { _farm_id: string }; Returns: number }
@@ -2086,7 +2221,23 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      is_farm_owner: {
+        Args: { p_farm_id: string; user_id: string }
+        Returns: boolean
+      }
       is_invited_user: { Args: { _user_id: string }; Returns: boolean }
+      log_invitation_rate_limit: {
+        Args: { p_email_hash: string; p_ip_hash: string; p_success: boolean }
+        Returns: undefined
+      }
+      log_login_attempt: {
+        Args: { p_ip_hash: string; p_success: boolean; p_username_hash: string }
+        Returns: undefined
+      }
+      mark_invitation_accessed: {
+        Args: { invitation_token: string }
+        Returns: undefined
+      }
     }
     Enums: {
       animal_status: "available" | "sold" | "deceased" | "transferred"

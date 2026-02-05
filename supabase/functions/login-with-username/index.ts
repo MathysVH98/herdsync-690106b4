@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,26 @@ serve(async (req) => {
       );
     }
 
+    // Check rate limiting
+    const { data: canProceed } = await supabaseAdmin.rpc("check_login_rate_limit", {
+      username_to_check: username
+    });
+
+    if (!canProceed) {
+      return new Response(
+        JSON.stringify({ error: "Too many login attempts. Please try again in 15 minutes." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Hash username for logging (don't store plaintext)
+    const encoder = new TextEncoder();
+    const usernameData = encoder.encode(username.toLowerCase());
+    const hashBuffer = await crypto.subtle.digest("SHA-256", usernameData);
+    const usernameHash = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+
     // Look up the employee user by username
     const { data: employeeUser, error: lookupError } = await supabaseAdmin
       .from("employee_users")
@@ -43,6 +64,12 @@ serve(async (req) => {
 
     if (lookupError) {
       console.error("Lookup error:", lookupError);
+      // Log failed attempt
+      await supabaseAdmin.rpc("log_login_attempt", {
+        p_username_hash: usernameHash,
+        p_ip_hash: null,
+        p_success: false
+      });
       return new Response(
         JSON.stringify({ error: "Login failed" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -50,6 +77,12 @@ serve(async (req) => {
     }
 
     if (!employeeUser) {
+      // Log failed attempt
+      await supabaseAdmin.rpc("log_login_attempt", {
+        p_username_hash: usernameHash,
+        p_ip_hash: null,
+        p_success: false
+      });
       return new Response(
         JSON.stringify({ error: "Invalid username or password" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -68,11 +101,24 @@ serve(async (req) => {
     });
 
     if (authError) {
+      // Log failed attempt
+      await supabaseAdmin.rpc("log_login_attempt", {
+        p_username_hash: usernameHash,
+        p_ip_hash: null,
+        p_success: false
+      });
       return new Response(
         JSON.stringify({ error: "Invalid username or password" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Log successful login
+    await supabaseAdmin.rpc("log_login_attempt", {
+      p_username_hash: usernameHash,
+      p_ip_hash: null,
+      p_success: true
+    });
 
     return new Response(
       JSON.stringify({
