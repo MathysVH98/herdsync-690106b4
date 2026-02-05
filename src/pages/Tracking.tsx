@@ -1,4 +1,4 @@
-import { useState } from "react";
+ import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { TrackingMap, Outpost, TrackingZone } from "@/components/TrackingMap";
 import { LocationSearch } from "@/components/LocationSearch";
@@ -31,6 +31,8 @@ import {
   Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+ import { useSubscription } from "@/hooks/useSubscription";
+ import { SubscriptionRequiredDialog } from "@/components/SubscriptionRequiredDialog";
 
 const mockOutposts: Outpost[] = [
   { id: "1", position: [-25.7450, 28.2250], name: "North Gate Tracker", type: "tracker" },
@@ -65,6 +67,17 @@ export default function Tracking() {
   const [newOutpostType, setNewOutpostType] = useState<"tracker" | "camera" | "sensor">("tracker");
   const [newZoneName, setNewZoneName] = useState("");
   const { toast } = useToast();
+   const { subscription, isActive } = useSubscription();
+   
+   const isPro = subscription?.tier === "pro" && isActive;
+    const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+ 
+   // Show upgrade dialog for non-Pro users once subscription loads
+   useEffect(() => {
+     if (subscription && !isPro) {
+       setShowUpgradeDialog(true);
+     }
+   }, [subscription, isPro]);
 
   const handleMapClick = (position: [number, number]) => {
     if (isAddingOutpost) {
@@ -165,39 +178,46 @@ export default function Tracking() {
   return (
     <Layout>
       <div className="relative space-y-6 h-full">
-        {/* Under Development Overlay - z-[9999] to sit above Leaflet map */}
-        <div className="absolute inset-0 z-[9999] pointer-events-auto overflow-hidden">
-          {/* Subtle blur overlay */}
-          <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
-          
-          {/* Cross tape - top-left to bottom-right */}
-          <div 
-            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
-            style={{
-              width: '150%',
-              left: '-25%',
-              top: '35%',
-              transform: 'rotate(-35deg)',
-              transformOrigin: 'center',
-            }}
-          >
-            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
-          </div>
-          
-          {/* Cross tape - top-right to bottom-left */}
-          <div 
-            className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
-            style={{
-              width: '150%',
-              left: '-25%',
-              top: '55%',
-              transform: 'rotate(35deg)',
-              transformOrigin: 'center',
-            }}
-          >
-            🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
-          </div>
-        </div>
+         {/* Subscription Required Dialog for non-Pro users */}
+         <SubscriptionRequiredDialog
+           open={showUpgradeDialog}
+           onOpenChange={setShowUpgradeDialog}
+           featureName="RFID Tracking"
+           requiredTier="pro"
+           description="RFID Tracking is a Pro feature that allows you to define tracking zones and place RFID scanner checkpoints on your land."
+         />
+ 
+         {/* Under Development Overlay - only for Pro users to indicate feature is coming soon */}
+         {isPro && (
+           <div className="absolute inset-0 z-[9999] pointer-events-auto overflow-hidden">
+             <div className="absolute inset-0 backdrop-blur-[2px] bg-background/30" />
+             <div 
+               className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+               style={{
+                 width: '150%',
+                 left: '-25%',
+                 top: '35%',
+                 transform: 'rotate(-35deg)',
+                 transformOrigin: 'center',
+               }}
+             >
+               🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
+             </div>
+             <div 
+               className="absolute bg-warning text-warning-foreground font-bold text-lg tracking-widest py-3 text-center shadow-lg"
+               style={{
+                 width: '150%',
+                 left: '-25%',
+                 top: '55%',
+                 transform: 'rotate(35deg)',
+                 transformOrigin: 'center',
+               }}
+             >
+               🚧 UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT • COMING SOON • UNDER DEVELOPMENT 🚧
+             </div>
+           </div>
+         )}
+ 
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>

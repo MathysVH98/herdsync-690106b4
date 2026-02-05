@@ -11,6 +11,7 @@ import { useAskAProUsage } from "@/hooks/useAskAProUsage";
 import { useNavigate } from "react-router-dom";
 import { Send, Bot, User, Loader2, Sparkles, Lock, AlertTriangle, ArrowUpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+ import { SubscriptionRequiredDialog } from "@/components/SubscriptionRequiredDialog";
 
 type Message = {
   role: "user" | "assistant";
@@ -42,6 +43,14 @@ export default function AskAPro() {
   const navigate = useNavigate();
 
   const tier = subscription?.tier || "basic";
+   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+ 
+   // Show subscription dialog for users without active subscription once it loads
+   useEffect(() => {
+     if (subscription && !isActive) {
+       setShowSubscriptionDialog(true);
+     }
+   }, [subscription, isActive]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -155,38 +164,20 @@ export default function AskAPro() {
     }
   };
 
-  // Not active subscription
-  if (!isActive) {
-    return (
-      <Layout>
-        <div className="max-w-2xl mx-auto">
-          <Card className="text-center">
-            <CardHeader>
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl font-display">Subscription Required</CardTitle>
-              <CardDescription>
-                Ask a Pro requires an active subscription. Get instant AI-powered
-                advice on farming, livestock health, and animal care.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate("/pricing")} className="bg-gradient-primary">
-                View Plans
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </Layout>
-    );
-  }
-
   // Usage limit reached (non-Pro users)
-  const showLimitReached = !isUnlimited && !canAsk && !usageLoading;
+   const showLimitReached = isActive && !isUnlimited && !canAsk && !usageLoading;
 
   return (
     <Layout>
+       {/* Subscription Required Dialog for users without active subscription */}
+       <SubscriptionRequiredDialog
+         open={showSubscriptionDialog && !isActive}
+         onOpenChange={setShowSubscriptionDialog}
+         featureName="Ask a Pro"
+         requiredTier="basic"
+         description="Ask a Pro requires an active subscription. Get instant AI-powered advice on farming, livestock health, and animal care."
+       />
+ 
       <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)]">
         <Card className="h-full flex flex-col">
           <CardHeader className="border-b">
