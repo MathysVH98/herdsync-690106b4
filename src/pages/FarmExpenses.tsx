@@ -45,6 +45,10 @@ import {
   DollarSign,
   TrendingUp,
   Calendar,
+   Camera,
+   Image,
+   X,
+   ExternalLink,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
@@ -89,11 +93,60 @@ export default function FarmExpenses() {
     receipt_reference: "",
     notes: "",
   });
+   const [receiptFile, setReceiptFile] = useState<File | null>(null);
+   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+   const [uploading, setUploading] = useState(false);
+ 
+   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+     const file = e.target.files?.[0];
+     if (file) {
+       if (file.size > 5 * 1024 * 1024) {
+         alert("File size must be less than 5MB");
+         return;
+       }
+       setReceiptFile(file);
+       const reader = new FileReader();
+       reader.onloadend = () => {
+         setReceiptPreview(reader.result as string);
+       };
+       reader.readAsDataURL(file);
+     }
+   };
+ 
+   const clearReceiptFile = () => {
+     setReceiptFile(null);
+     setReceiptPreview(null);
+   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.category || !formData.description || !formData.amount) return;
 
+     setUploading(true);
+     let receiptImageUrl: string | null = null;
+ 
+     // Upload receipt image if provided
+     if (receiptFile && farm?.id) {
+       const fileExt = receiptFile.name.split('.').pop();
+       const fileName = `${farm.id}/${Date.now()}.${fileExt}`;
+       
+       const { data: uploadData, error: uploadError } = await supabase.storage
+         .from('expense-receipts')
+         .upload(fileName, receiptFile);
+ 
+       if (uploadError) {
+         console.error('Upload error:', uploadError);
+         setUploading(false);
+         return;
+       }
+ 
+       const { data: { publicUrl } } = supabase.storage
+         .from('expense-receipts')
+         .getPublicUrl(fileName);
+       
+       receiptImageUrl = publicUrl;
+     }
+ 
     await addExpense({
       expense_date: formData.expense_date,
       category: formData.category,
@@ -102,6 +155,7 @@ export default function FarmExpenses() {
       supplier_vendor: formData.supplier_vendor || null,
       receipt_reference: formData.receipt_reference || null,
       notes: formData.notes || null,
+       receipt_image_url: receiptImageUrl,
     });
 
     setFormData({
@@ -113,6 +167,9 @@ export default function FarmExpenses() {
       receipt_reference: "",
       notes: "",
     });
+     setReceiptFile(null);
+     setReceiptPreview(null);
+     setUploading(false);
     setDialogOpen(false);
   };
 
@@ -245,11 +302,58 @@ export default function FarmExpenses() {
                   />
                 </div>
 
+                 {/* Receipt Photo Upload */}
+                 <div className="space-y-2">
+                   <Label>Receipt Photo (optional)</Label>
+                   {receiptPreview ? (
+                     <div className="relative">
+                       <img 
+                         src={receiptPreview} 
+                         alt="Receipt preview" 
+                         className="w-full h-32 object-cover rounded-lg border"
+                       />
+                       <Button
+                         type="button"
+                         variant="destructive"
+                         size="icon"
+                         className="absolute top-2 right-2 h-6 w-6"
+                         onClick={clearReceiptFile}
+                       >
+                         <X className="w-3 h-3" />
+                       </Button>
+                     </div>
+                   ) : (
+                     <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                       <input
+                         type="file"
+                         accept="image/*"
+                         onChange={handleFileChange}
+                         className="hidden"
+                         id="receipt-upload"
+                       />
+                       <label
+                         htmlFor="receipt-upload"
+                         className="cursor-pointer flex flex-col items-center gap-2"
+                       >
+                         <Camera className="w-8 h-8 text-muted-foreground" />
+                         <span className="text-sm text-muted-foreground">
+                           Click to upload receipt photo
+                         </span>
+                         <span className="text-xs text-muted-foreground">
+                           Max 5MB • JPG, PNG
+                         </span>
+                       </label>
+                     </div>
+                   )}
+                 </div>
+ 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit">Add Expense</Button>
+                   <Button type="submit" disabled={uploading}>
+                     {uploading ? "Uploading..." : "Add Expense"}
+                   </Button>
                 </div>
               </form>
             </DialogContent>
@@ -345,6 +449,7 @@ export default function FarmExpenses() {
                         <TableHead>Category</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Supplier</TableHead>
+                         <TableHead>Receipt</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
@@ -363,6 +468,21 @@ export default function FarmExpenses() {
                           <TableCell className="text-muted-foreground">
                             {expense.supplier_vendor || "-"}
                           </TableCell>
+                           <TableCell>
+                             {expense.receipt_image_url ? (
+                               <a
+                                 href={expense.receipt_image_url}
+                                 target="_blank"
+                                 rel="noopener noreferrer"
+                                 className="flex items-center gap-1 text-primary hover:underline"
+                               >
+                                 <Image className="w-4 h-4" />
+                                 <span className="text-xs">View</span>
+                               </a>
+                             ) : (
+                               <span className="text-muted-foreground text-xs">-</span>
+                             )}
+                           </TableCell>
                           <TableCell className="text-right font-medium">
                             R{Number(expense.amount).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
                           </TableCell>

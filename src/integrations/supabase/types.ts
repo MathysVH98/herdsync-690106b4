@@ -1022,6 +1022,7 @@ export type Database = {
           farm_id: string
           id: string
           notes: string | null
+          receipt_image_url: string | null
           receipt_reference: string | null
           supplier_vendor: string | null
           updated_at: string
@@ -1035,6 +1036,7 @@ export type Database = {
           farm_id: string
           id?: string
           notes?: string | null
+          receipt_image_url?: string | null
           receipt_reference?: string | null
           supplier_vendor?: string | null
           updated_at?: string
@@ -1048,6 +1050,7 @@ export type Database = {
           farm_id?: string
           id?: string
           notes?: string | null
+          receipt_image_url?: string | null
           receipt_reference?: string | null
           supplier_vendor?: string | null
           updated_at?: string

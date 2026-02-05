@@ -208,6 +208,7 @@ export function useInventory() {
       supplier_vendor: supplier || item.supplier,
       receipt_reference: null,
       notes: `Auto-created from inventory restock`,
+       receipt_image_url: null,
     });
 
     toast({ 
