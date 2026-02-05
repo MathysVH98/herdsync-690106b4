@@ -26,6 +26,7 @@ import {
   FileText as FileTextIcon,
   AlertCircle,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -58,6 +59,10 @@ const navigation = [
 
 const proNavigation = [
   { name: "Tracking", href: "/tracking", icon: MapPin },
+];
+
+const settingsNavigation = [
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 const complianceNavigation = [
@@ -96,6 +101,7 @@ const mainNavigationPaths = [
   "/compliance/labour-ohs",
   "/compliance/chemicals",
   "/compliance/audit-pack",
+  "/settings",
   "/about",
   "/contact",
   "/terms",
@@ -202,6 +208,27 @@ export function Layout({ children }: LayoutProps) {
                 })}
               </div>
             )}
+
+            {/* Settings Section */}
+            <div className="pt-4 mt-4 border-t border-sidebar-border">
+              <p className="px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider mb-2">
+                Account
+              </p>
+              {settingsNavigation.map((item) => {
+                const isActive = location.pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={cn("sidebar-nav-item", isActive && "active")}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
 
             {/* Compliance Section */}
             <div className="pt-4 mt-4 border-t border-sidebar-border">
