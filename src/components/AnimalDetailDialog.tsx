@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,10 +19,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
-import { Save, Baby, Heart, Users, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format, differenceInYears, differenceInMonths } from "date-fns";
+import { Save, Baby, Heart, Users, Calendar as CalendarIcon } from "lucide-react";
 
 export type AnimalStatus = "Healthy" | "Under Observation" | "Sick" | "Pregnant";
 
@@ -92,6 +96,19 @@ export function AnimalDetailDialog({
   const [loadingBirthing, setLoadingBirthing] = useState(false);
   
   const [formData, setFormData] = useState<Partial<AnimalDetails>>({});
+
+  // Calculate age from date of birth
+  const calculatedAge = useMemo(() => {
+    if (!formData.dateOfBirth) return "Unknown";
+    const birthDate = new Date(formData.dateOfBirth);
+    const years = differenceInYears(new Date(), birthDate);
+    const months = differenceInMonths(new Date(), birthDate) % 12;
+    
+    if (years > 0) {
+      return months > 0 ? `${years}y ${months}m` : `${years} year${years > 1 ? 's' : ''}`;
+    }
+    return months > 0 ? `${months} month${months > 1 ? 's' : ''}` : "< 1 month";
+  }, [formData.dateOfBirth]);
 
   useEffect(() => {
     if (animal) {
@@ -292,14 +309,45 @@ export function AnimalDetailDialog({
                   </SelectContent>
                 </Select>
               </div>
+              <div className="flex flex-col gap-2">
+                <Label>Date of Birth</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !formData.dateOfBirth && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {formData.dateOfBirth ? format(new Date(formData.dateOfBirth), "PPP") : <span>Select date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
+                      onSelect={(date) => setFormData({ ...formData, dateOfBirth: date ? format(date, "yyyy-MM-dd") : undefined })}
+                      disabled={(date) => date > new Date()}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div>
-                <Label>Age</Label>
+                <Label>Age (calculated)</Label>
                 <Input
-                  value={formData.age || ""}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  placeholder="e.g., 2 years"
+                  value={calculatedAge}
+                  readOnly
+                  disabled
+                  className="bg-muted"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Weight</Label>
                 <Input
@@ -308,9 +356,6 @@ export function AnimalDetailDialog({
                   placeholder="e.g., 500 kg"
                 />
               </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
                 <Select 
@@ -327,13 +372,15 @@ export function AnimalDetailDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Feed Type</Label>
-                <Input
-                  value={formData.feedType || ""}
-                  onChange={(e) => setFormData({ ...formData, feedType: e.target.value })}
-                />
-              </div>
+            </div>
+
+            <div>
+              <Label>Feed Type</Label>
+              <Input
+                value={formData.feedType || ""}
+                onChange={(e) => setFormData({ ...formData, feedType: e.target.value })}
+                placeholder="e.g., Dairy Mix"
+              />
             </div>
 
             <div>
@@ -351,19 +398,19 @@ export function AnimalDetailDialog({
           <TabsContent value="details" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Date of Birth</Label>
-                <Input
-                  type="date"
-                  value={formData.dateOfBirth || ""}
-                  onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                />
-              </div>
-              <div>
                 <Label>Birth Weight</Label>
                 <Input
                   value={formData.birthWeight || ""}
                   onChange={(e) => setFormData({ ...formData, birthWeight: e.target.value })}
                   placeholder="e.g., 35 kg"
+                />
+              </div>
+              <div>
+                <Label>Birth Health Status</Label>
+                <Input
+                  value={formData.birthHealthStatus || ""}
+                  onChange={(e) => setFormData({ ...formData, birthHealthStatus: e.target.value })}
+                  placeholder="Health at birth"
                 />
               </div>
             </div>
@@ -419,15 +466,6 @@ export function AnimalDetailDialog({
                   onChange={(e) => setFormData({ ...formData, weaningDate: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label>Birth Health Status</Label>
-              <Input
-                value={formData.birthHealthStatus || ""}
-                onChange={(e) => setFormData({ ...formData, birthHealthStatus: e.target.value })}
-                placeholder="Health condition at birth"
-              />
             </div>
 
             <div>

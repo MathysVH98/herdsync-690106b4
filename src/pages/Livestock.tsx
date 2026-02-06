@@ -25,7 +25,11 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, Filter, Download, Upload } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Plus, Search, Filter, Download, Upload, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,7 +70,7 @@ export default function Livestock() {
     type: "",
     breed: "",
     tag: "",
-    age: "",
+    dateOfBirth: undefined as Date | undefined,
     weight: "",
     status: "Healthy" as AnimalStatus,
     feedType: "",
@@ -195,7 +199,7 @@ export default function Livestock() {
         type: newAnimal.type,
         breed: newAnimal.breed || null,
         tag: newAnimal.tag,
-        age: newAnimal.age || null,
+        date_of_birth: newAnimal.dateOfBirth ? format(newAnimal.dateOfBirth, "yyyy-MM-dd") : null,
         weight: newAnimal.weight || null,
         status: newAnimal.status,
         feed_type: newAnimal.feedType || null,
@@ -228,7 +232,7 @@ export default function Livestock() {
     };
 
     setAnimals([animal, ...animals]);
-    setNewAnimal({ name: "", type: "", breed: "", tag: "", age: "", weight: "", status: "Healthy", feedType: "", purchaseCost: "" });
+    setNewAnimal({ name: "", type: "", breed: "", tag: "", dateOfBirth: undefined, weight: "", status: "Healthy", feedType: "", purchaseCost: "" });
     setIsAddDialogOpen(false);
     toast({ title: "Animal Added", description: `${animal.name} has been added to your livestock.` });
   };
@@ -496,9 +500,32 @@ export default function Livestock() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="age">Age</Label>
-                      <Input id="age" value={newAnimal.age} onChange={(e) => setNewAnimal({ ...newAnimal, age: e.target.value })} placeholder="e.g., 2 years" />
+                    <div className="flex flex-col gap-2">
+                      <Label>Date of Birth</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !newAnimal.dateOfBirth && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {newAnimal.dateOfBirth ? format(newAnimal.dateOfBirth, "PPP") : <span>Select date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={newAnimal.dateOfBirth}
+                            onSelect={(date) => setNewAnimal({ ...newAnimal, dateOfBirth: date })}
+                            disabled={(date) => date > new Date()}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                     <div>
                       <Label htmlFor="weight">Weight</Label>
