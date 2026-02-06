@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LivestockCard, Animal, AnimalStatus } from "@/components/LivestockCard";
 import { AnimalDetailDialog, AnimalDetails } from "@/components/AnimalDetailDialog";
+import { MarkForSaleDialog } from "@/components/MarkForSaleDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/utils/exportCSV";
 import { ImportCSVDialog } from "@/components/ImportCSVDialog";
 import { domesticAnimalTypes, wildGameAnimalTypes, allAnimalTypes } from "@/utils/animalImages";
+import { differenceInDays, format } from "date-fns";
 
 const statusOptions: AnimalStatus[] = ["Healthy", "Under Observation", "Sick", "Pregnant"];
 
@@ -51,6 +53,7 @@ export default function Livestock() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
+  const [isMarkForSaleDialogOpen, setIsMarkForSaleDialogOpen] = useState(false);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("active");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -112,6 +115,7 @@ export default function Livestock() {
         salePrice: a.sale_price,
         soldAt: a.sold_at,
         soldTo: a.sold_to,
+        plannedSaleDate: a.planned_sale_date,
       })));
     }
     setLoading(false);
@@ -134,17 +138,29 @@ export default function Livestock() {
 
   const activeAnimals = animals.filter(a => !a.soldAt);
   const soldAnimals = animals.filter(a => a.soldAt);
+  const markedForSaleAnimals = activeAnimals.filter(a => a.plannedSaleDate);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    if (value === "sold") {
+    if (value === "sold" || value === "marked-for-sale") {
       setFilterStatus("all");
       setFilterType("all");
       setSearchTerm("");
     }
   };
 
-  const filteredAnimals = (activeTab === "active" ? activeAnimals : soldAnimals).filter((animal) => {
+  const getAnimalsForTab = () => {
+    switch (activeTab) {
+      case "marked-for-sale":
+        return markedForSaleAnimals;
+      case "sold":
+        return soldAnimals;
+      default:
+        return activeAnimals;
+    }
+  };
+
+  const filteredAnimals = getAnimalsForTab().filter((animal) => {
     const matchesSearch = 
       animal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       animal.tag.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -239,6 +255,68 @@ export default function Livestock() {
     setSelectedAnimalId(id);
     setSaleData({ salePrice: "", soldTo: "" });
     setIsSellDialogOpen(true);
+  };
+
+  const handleOpenMarkForSaleDialog = (id: string) => {
+    setSelectedAnimalId(id);
+    setIsMarkForSaleDialogOpen(true);
+  };
+
+  const handleMarkForSale = async (plannedSaleDate: Date) => {
+    if (!selectedAnimalId || !farm?.id) return;
+
+    const { error } = await supabase
+      .from("livestock")
+      .update({ planned_sale_date: format(plannedSaleDate, "yyyy-MM-dd") })
+      .eq("id", selectedAnimalId);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to mark animal for sale.", variant: "destructive" });
+      return;
+    }
+
+    const animal = animals.find(a => a.id === selectedAnimalId);
+    
+    // Create an alert for the planned sale
+    const daysUntilSale = differenceInDays(plannedSaleDate, new Date());
+    if (daysUntilSale >= 30) {
+      const alertDate = new Date(plannedSaleDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      await supabase.from("alerts").insert({
+        farm_id: farm.id,
+        type: "warning",
+        title: `Start Feeding Program for ${animal?.name}`,
+        message: `${animal?.name} (#${animal?.tag}) is scheduled for sale on ${format(plannedSaleDate, "PPP")}. Start the feeding program now.`,
+      });
+    }
+
+    setAnimals(animals.map(a => 
+      a.id === selectedAnimalId 
+        ? { ...a, plannedSaleDate: format(plannedSaleDate, "yyyy-MM-dd") } 
+        : a
+    ));
+    setIsMarkForSaleDialogOpen(false);
+    setSelectedAnimalId(null);
+    toast({ 
+      title: "Marked for Sale", 
+      description: `${animal?.name} is now scheduled for sale on ${format(plannedSaleDate, "PPP")}.` 
+    });
+  };
+
+  const handleCancelPlannedSale = async (id: string) => {
+    const animal = animals.find(a => a.id === id);
+    
+    const { error } = await supabase
+      .from("livestock")
+      .update({ planned_sale_date: null })
+      .eq("id", id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to cancel planned sale.", variant: "destructive" });
+      return;
+    }
+
+    setAnimals(animals.map(a => a.id === id ? { ...a, plannedSaleDate: null } : a));
+    toast({ title: "Planned Sale Cancelled", description: `${animal?.name} is no longer marked for sale.` });
   };
 
   const handleHealthRecord = (id: string) => {
@@ -453,11 +531,19 @@ export default function Livestock() {
           </div>
         </div>
 
-        {/* Tabs for Active vs Sold */}
+        {/* Tabs for Active vs Marked for Sale vs Sold */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="active">Active ({activeAnimals.length})</TabsTrigger>
-            <TabsTrigger value="sold">Sold History ({soldAnimals.length})</TabsTrigger>
+            <TabsTrigger value="marked-for-sale" className="relative">
+              Marked for Sale
+              {markedForSaleAnimals.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {markedForSaleAnimals.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="sold">Sold ({soldAnimals.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-4 mt-4">
@@ -512,7 +598,15 @@ export default function Livestock() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredAnimals.map((animal) => (
                   <div key={animal.id} onClick={() => handleAnimalClick(animal.id)} className="cursor-pointer">
-                    <LivestockCard animal={animal} onFeed={handleFeed} onHealthRecord={handleHealthRecord} onRemove={handleRemove} onSell={handleOpenSellDialog} />
+                    <LivestockCard 
+                      animal={animal} 
+                      onFeed={handleFeed} 
+                      onHealthRecord={handleHealthRecord} 
+                      onRemove={handleRemove} 
+                      onSell={handleOpenSellDialog}
+                      onMarkForSale={handleOpenMarkForSaleDialog}
+                      onCancelPlannedSale={handleCancelPlannedSale}
+                    />
                   </div>
                 ))}
               </div>
@@ -521,6 +615,61 @@ export default function Livestock() {
             {!loading && filteredAnimals.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">{activeAnimals.length === 0 ? "No animals added yet. Click 'Add Animal' to get started." : "No animals found matching your criteria."}</p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="marked-for-sale" className="space-y-4 mt-4">
+            <div className="card-elevated p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search animals marked for sale..." 
+                  value={searchTerm} 
+                  onChange={(e) => setSearchTerm(e.target.value)} 
+                  className="pl-10" 
+                />
+              </div>
+            </div>
+
+            {markedForSaleAnimals.length > 0 && (
+              <div className="card-elevated p-4 bg-info/5 border-info/20">
+                <p className="text-sm text-info">
+                  <span className="font-semibold">{markedForSaleAnimals.length}</span> animal{markedForSaleAnimals.length !== 1 ? 's' : ''} marked for upcoming sales. 
+                  Alerts will trigger 1 month before each sale date to start feeding programs.
+                </p>
+              </div>
+            )}
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (<div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredAnimals.map((animal) => (
+                  <div key={animal.id} onClick={() => handleAnimalClick(animal.id)} className="cursor-pointer">
+                    <LivestockCard 
+                      animal={animal} 
+                      onFeed={handleFeed} 
+                      onHealthRecord={handleHealthRecord} 
+                      onRemove={handleRemove} 
+                      onSell={handleOpenSellDialog}
+                      onMarkForSale={handleOpenMarkForSaleDialog}
+                      onCancelPlannedSale={handleCancelPlannedSale}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && filteredAnimals.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {markedForSaleAnimals.length === 0 
+                    ? "No animals marked for sale. Use the 'Mark for Sale' option on an animal to schedule it for an upcoming sale." 
+                    : "No animals found matching your search."}
+                </p>
               </div>
             )}
           </TabsContent>
@@ -611,6 +760,14 @@ export default function Livestock() {
         onOpenChange={setDetailDialogOpen}
         allAnimals={allAnimalsForLineage}
         onUpdate={fetchLivestock}
+      />
+
+      {/* Mark for Sale Dialog */}
+      <MarkForSaleDialog
+        open={isMarkForSaleDialogOpen}
+        onOpenChange={setIsMarkForSaleDialogOpen}
+        animalName={animals.find(a => a.id === selectedAnimalId)?.name || ""}
+        onConfirm={handleMarkForSale}
       />
     </Layout>
   );

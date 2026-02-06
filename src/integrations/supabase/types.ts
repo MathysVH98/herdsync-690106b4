@@ -1644,6 +1644,7 @@ export type Database = {
           name: string
           notes: string | null
           nursed_by: string | null
+          planned_sale_date: string | null
           pregnancy_count: number | null
           previous_owners_count: number | null
           previous_owners_notes: string | null
@@ -1678,6 +1679,7 @@ export type Database = {
           name: string
           notes?: string | null
           nursed_by?: string | null
+          planned_sale_date?: string | null
           pregnancy_count?: number | null
           previous_owners_count?: number | null
           previous_owners_notes?: string | null
@@ -1712,6 +1714,7 @@ export type Database = {
           name?: string
           notes?: string | null
           nursed_by?: string | null
+          planned_sale_date?: string | null
           pregnancy_count?: number | null
           previous_owners_count?: number | null
           previous_owners_notes?: string | null

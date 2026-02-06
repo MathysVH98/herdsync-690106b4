@@ -5,10 +5,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Utensils, Stethoscope, Trash2, DollarSign } from "lucide-react";
+import { MoreVertical, Utensils, Stethoscope, Trash2, DollarSign, CalendarCheck, X } from "lucide-react";
 import { getAnimalImage } from "@/utils/animalImages";
+import { SaleCountdownBadge } from "@/components/SaleCountdownBadge";
 
 export type AnimalStatus = "Healthy" | "Under Observation" | "Sick" | "Pregnant";
 
@@ -28,6 +30,7 @@ export interface Animal {
   salePrice?: number | null;
   soldAt?: string | null;
   soldTo?: string | null;
+  plannedSaleDate?: string | null;
 }
 
 interface LivestockCardProps {
@@ -36,6 +39,8 @@ interface LivestockCardProps {
   onHealthRecord?: (id: string) => void;
   onRemove?: (id: string) => void;
   onSell?: (id: string) => void;
+  onMarkForSale?: (id: string) => void;
+  onCancelPlannedSale?: (id: string) => void;
   isSold?: boolean;
 }
 
@@ -47,7 +52,7 @@ const statusStyles: Record<AnimalStatus, string> = {
 };
 
 
-export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell, isSold = false }: LivestockCardProps) {
+export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell, onMarkForSale, onCancelPlannedSale, isSold = false }: LivestockCardProps) {
   return (
     <div className={cn("card-elevated p-5 group", isSold && "opacity-80")}>
       <div className="flex items-start gap-4">
@@ -62,7 +67,7 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h3 className="font-semibold text-foreground truncate">{animal.name}</h3>
             <Badge variant="outline" className="text-xs font-mono">
               #{animal.tag}
@@ -71,6 +76,9 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
               <Badge variant="secondary" className="text-xs">
                 Sold
               </Badge>
+            )}
+            {!isSold && animal.plannedSaleDate && (
+              <SaleCountdownBadge plannedSaleDate={animal.plannedSaleDate} />
             )}
           </div>
           
@@ -112,10 +120,31 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
                 <Stethoscope className="w-4 h-4 mr-2" />
                 Add Health Record
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onSell?.(animal.id)}>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Mark as Sold
-              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              {animal.plannedSaleDate ? (
+                <>
+                  <DropdownMenuItem onClick={() => onSell?.(animal.id)}>
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Complete Sale Now
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onCancelPlannedSale?.(animal.id)}>
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel Planned Sale
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={() => onMarkForSale?.(animal.id)}>
+                    <CalendarCheck className="w-4 h-4 mr-2" />
+                    Mark for Sale
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onSell?.(animal.id)}>
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    Sell Now
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={() => onRemove?.(animal.id)}
                 className="text-destructive focus:text-destructive"
