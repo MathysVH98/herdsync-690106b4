@@ -65,7 +65,7 @@ export function MarkForSaleDialog({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Planned Sale Date</Label>
-            <Popover>
+            <Popover modal={true}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -78,7 +78,7 @@ export function MarkForSaleDialog({
                   {selectedDate ? format(selectedDate, "PPP") : "Select a date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className="w-auto p-0 z-[100]" align="start">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
