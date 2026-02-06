@@ -39,12 +39,10 @@
    description,
  }: SubscriptionRequiredDialogProps) {
    return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
         <DialogContent 
-          className="sm:max-w-md"
+          className="sm:max-w-md z-50"
           hideCloseButton
-          onInteractOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
         >
          <DialogHeader className="text-center sm:text-center">
            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
