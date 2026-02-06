@@ -23,14 +23,29 @@ export default function Auth() {
 
   // Redirect if already logged in - wait for both auth and farm loading to complete
   useEffect(() => {
+    // Only redirect once auth is done loading AND user exists AND farm loading is done
     if (!authLoading && user && !farmLoading) {
-      navigate("/dashboard");
+      // Small delay to ensure all state has settled
+      const timer = setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [user, authLoading, farmLoading, navigate]);
 
-  // If user is logged in and data is loading, show nothing (will redirect once ready)
+  // Show loading spinner while auth is settling after a successful login attempt
   if (user && !authLoading) {
-    return null;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <div>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Signing you in...</h2>
+            <p className="text-muted-foreground">Loading your farm data</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Accept any pending invitations after login
@@ -101,20 +116,16 @@ export default function Auth() {
         }
       }
 
-      // Wait for auth state to update, then refetch farms and navigate
+      // Accept invitations
+      await acceptPendingInvitations();
+
       toast({
         title: "Welcome back!",
         description: "You have successfully logged in.",
       });
       
-      // Accept invitations
-      await acceptPendingInvitations();
-      
-      // Refetch farms to ensure data is loaded before navigation
-      await refetchFarms();
-      
-      // Navigate after data is loaded
-      navigate("/dashboard");
+      // Don't navigate here - let the useEffect handle it after auth state fully settles
+      // The useEffect at line 25 will redirect to /dashboard once user is set and farm loading completes
     } catch (error) {
       console.error("Login error:", error);
       toast({
