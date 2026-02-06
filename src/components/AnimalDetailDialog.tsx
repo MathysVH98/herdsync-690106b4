@@ -311,7 +311,7 @@ export function AnimalDetailDialog({
               </div>
               <div className="flex flex-col gap-2">
                 <Label>Date of Birth</Label>
-                <Popover>
+                <Popover modal={true}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -324,7 +324,7 @@ export function AnimalDetailDialog({
                       {formData.dateOfBirth ? format(new Date(formData.dateOfBirth), "PPP") : <span>Select date</span>}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-[100]" align="start">
                     <Calendar
                       mode="single"
                       selected={formData.dateOfBirth ? new Date(formData.dateOfBirth) : undefined}
