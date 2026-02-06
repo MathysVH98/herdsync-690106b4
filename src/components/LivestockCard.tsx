@@ -106,12 +106,12 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
         {/* Actions */}
         {!isSold && (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreVertical className="w-4 h-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
               <DropdownMenuItem onClick={() => onFeed?.(animal.id)}>
                 <Utensils className="w-4 h-4 mr-2" />
                 Record Feeding
