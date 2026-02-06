@@ -298,6 +298,43 @@ export default function Dashboard() {
           <div className="space-y-6">
             {/* Weather Widget */}
             <WeatherWidget />
+
+            {/* Upcoming Sales - Placed prominently after weather */}
+            {upcomingSales.length > 0 && (
+              <div className="card-elevated p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display font-semibold text-lg text-foreground">
+                    Upcoming Sales
+                  </h3>
+                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
+                    {upcomingSales.length} Pending
+                  </Badge>
+                </div>
+                <div className="space-y-3">
+                  {upcomingSales.slice(0, 3).map((animal) => (
+                    <div key={animal.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      <img 
+                        src={getAnimalImage(animal.type)} 
+                        alt={animal.type}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-foreground truncate">{animal.name}</p>
+                          <Badge variant="outline" className="text-xs shrink-0">
+                            #{animal.tag}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {animal.breed || animal.type} • {animal.age || 'Unknown age'} • {animal.weight || 'Unknown weight'}
+                        </p>
+                      </div>
+                      <SaleCountdownBadge plannedSaleDate={animal.planned_sale_date!} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             {/* Alerts */}
             <div className="card-elevated p-6">
@@ -346,43 +383,6 @@ export default function Dashboard() {
                 </p>
               )}
             </div>
-
-            {/* Upcoming Sales */}
-            {upcomingSales.length > 0 && (
-              <div className="card-elevated p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-display font-semibold text-lg text-foreground">
-                    Upcoming Sales
-                  </h3>
-                  <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-                    {upcomingSales.length} Pending
-                  </Badge>
-                </div>
-                <div className="space-y-3">
-                  {upcomingSales.slice(0, 4).map((animal) => (
-                    <div key={animal.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                      <img 
-                        src={getAnimalImage(animal.type)} 
-                        alt={animal.type}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-medium text-foreground truncate">{animal.name}</p>
-                          <Badge variant="outline" className="text-xs shrink-0">
-                            #{animal.tag}
-                          </Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {animal.breed || animal.type} • {animal.age || 'Unknown age'} • {animal.weight || 'Unknown weight'}
-                        </p>
-                      </div>
-                      <SaleCountdownBadge plannedSaleDate={animal.planned_sale_date!} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
