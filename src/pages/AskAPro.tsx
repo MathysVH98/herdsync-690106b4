@@ -11,6 +11,7 @@ import { useAskAProUsage } from "@/hooks/useAskAProUsage";
 import { useNavigate } from "react-router-dom";
 import { Send, Bot, User, Loader2, Sparkles, Lock, AlertTriangle, ArrowUpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
  import { SubscriptionRequiredDialog } from "@/components/SubscriptionRequiredDialog";
 
 type Message = {
@@ -59,21 +60,31 @@ export default function AskAPro() {
   }, [messages]);
 
   const streamChat = async (userMessages: Message[]) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error("Please log in to use Ask a Pro");
+    }
+    
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-a-pro`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({ messages: userMessages }),
       }
     );
 
-    if (!response.ok || !response.body) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || "Failed to get response");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: "Failed to get response" }));
+      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+    }
+    
+    if (!response.body) {
+      throw new Error("No response body received");
     }
 
     return response;
@@ -152,11 +163,12 @@ export default function AskAPro() {
       }
     } catch (error) {
       console.error("Chat error:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       setMessages((prev) => [
         ...prev.slice(0, -1),
         {
           role: "assistant",
-          content: "I'm sorry, I encountered an error. Please try again.",
+          content: `I'm sorry, I couldn't process your request. ${errorMessage}. Please try again.`,
         },
       ]);
     } finally {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,12 +18,18 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user } = useAuth();
-  const { refetchFarms } = useFarm();
+  const { user, loading: authLoading } = useAuth();
+  const { refetchFarms, loading: farmLoading } = useFarm();
 
-  // Redirect if already logged in
-  if (user) {
-    navigate("/dashboard");
+  // Redirect if already logged in - wait for both auth and farm loading to complete
+  useEffect(() => {
+    if (!authLoading && user && !farmLoading) {
+      navigate("/dashboard");
+    }
+  }, [user, authLoading, farmLoading, navigate]);
+
+  // If user is logged in and data is loading, show nothing (will redirect once ready)
+  if (user && !authLoading) {
     return null;
   }
 
@@ -37,8 +43,6 @@ export default function Auth() {
             Authorization: `Bearer ${session.access_token}`,
           },
         });
-        // Refetch farms to include newly accepted invitations
-        await refetchFarms();
       }
     } catch (error) {
       console.error("Error accepting invitations:", error);
@@ -55,54 +59,72 @@ export default function Auth() {
 
     const identifier = loginIdentifier.trim();
 
-    if (isEmail(identifier)) {
-      // Standard email login
-      const { error } = await supabase.auth.signInWithPassword({
-        email: identifier,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: "Login Failed",
-          description: error.message,
-          variant: "destructive",
+    try {
+      if (isEmail(identifier)) {
+        // Standard email login
+        const { error } = await supabase.auth.signInWithPassword({
+          email: identifier,
+          password,
         });
+
+        if (error) {
+          toast({
+            title: "Login Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
       } else {
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
+        // Username login via edge function
+        const { data, error } = await supabase.functions.invoke("login-with-username", {
+          body: { username: identifier.toLowerCase(), password },
         });
-        await acceptPendingInvitations();
-        navigate("/dashboard");
-      }
-    } else {
-      // Username login via edge function
-      const { data, error } = await supabase.functions.invoke("login-with-username", {
-        body: { username: identifier.toLowerCase(), password },
-      });
 
-      if (error || data?.error) {
-        toast({
-          title: "Login Failed",
-          description: data?.error || error?.message || "Invalid username or password",
-          variant: "destructive",
-        });
-      } else if (data?.session) {
-        // Set the session manually
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-        toast({
-          title: "Welcome back!",
-          description: "You have successfully logged in.",
-        });
-        await acceptPendingInvitations();
-        navigate("/dashboard");
+        if (error || data?.error) {
+          toast({
+            title: "Login Failed",
+            description: data?.error || error?.message || "Invalid username or password",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        if (data?.session) {
+          // Set the session manually
+          await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token,
+          });
+        }
       }
+
+      // Wait for auth state to update, then refetch farms and navigate
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully logged in.",
+      });
+      
+      // Accept invitations
+      await acceptPendingInvitations();
+      
+      // Refetch farms to ensure data is loaded before navigation
+      await refetchFarms();
+      
+      // Navigate after data is loaded
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
