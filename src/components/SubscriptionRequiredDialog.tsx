@@ -35,19 +35,16 @@ export function SubscriptionRequiredDialog({
 
   return (
     <>
-      {/* Semi-transparent backdrop that allows clicking through to sidebar */}
+      {/* Semi-transparent backdrop - only covers main content, not sidebar */}
       <div 
-        className="fixed inset-0 z-[10000] pointer-events-none"
+        className="fixed inset-0 left-0 lg:left-64 z-[10000] bg-background/70 backdrop-blur-sm"
         aria-hidden="true"
-      >
-        {/* Only dim the main content area, not the sidebar */}
-        <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
-      </div>
+      />
       
-      {/* Dialog positioned in center with highest z-index */}
-      <div className="fixed inset-0 z-[10001] flex items-center justify-center pointer-events-none">
+      {/* Dialog positioned in center of main content area (offset for sidebar) */}
+      <div className="fixed inset-0 left-0 lg:left-64 z-[10001] flex items-center justify-center">
         <div 
-          className="bg-card border border-border rounded-xl shadow-2xl p-6 max-w-md w-full mx-4 pointer-events-auto"
+          className="bg-card border border-border rounded-xl shadow-2xl p-6 max-w-md w-full mx-4"
           role="dialog"
           aria-modal="false"
           aria-labelledby="subscription-dialog-title"
