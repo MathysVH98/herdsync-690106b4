@@ -21,6 +21,8 @@ import lionImage from "@/assets/animals/lion.jpg";
 import leopardImage from "@/assets/animals/leopard.jpg";
 import elephantImage from "@/assets/animals/elephant.jpg";
 import rhinoImage from "@/assets/animals/rhino.jpg";
+// Other iconic wildlife
+import giraffeImage from "@/assets/animals/giraffe.jpg";
 
 export const animalImages: Record<string, string> = {
   // Domestic livestock
@@ -47,6 +49,7 @@ export const animalImages: Record<string, string> = {
   Leopard: leopardImage,
   Elephant: elephantImage,
   Rhino: rhinoImage,
+  Giraffe: giraffeImage,
 };
 
 export function getAnimalImage(type: string): string {
@@ -59,6 +62,6 @@ export const wildGameAnimalTypes = [
   // Big 5 first
   "Lion", "Leopard", "Elephant", "Rhino", "Buffalo",
   // Other game
-  "Springbok", "Kudu", "Impala", "Eland", "Wildebeest", "Gemsbok", "Zebra", "Nyala", "Warthog", "Ostrich"
+  "Giraffe", "Springbok", "Kudu", "Impala", "Eland", "Wildebeest", "Gemsbok", "Zebra", "Nyala", "Warthog", "Ostrich"
 ];
 export const allAnimalTypes = [...domesticAnimalTypes, ...wildGameAnimalTypes];
