@@ -16,6 +16,11 @@ import buffaloImage from "@/assets/animals/buffalo.jpg";
 import nyalaImage from "@/assets/animals/nyala.jpg";
 import warthogImage from "@/assets/animals/warthog.jpg";
 import ostrichImage from "@/assets/animals/ostrich.jpg";
+// Big 5
+import lionImage from "@/assets/animals/lion.jpg";
+import leopardImage from "@/assets/animals/leopard.jpg";
+import elephantImage from "@/assets/animals/elephant.jpg";
+import rhinoImage from "@/assets/animals/rhino.jpg";
 
 export const animalImages: Record<string, string> = {
   // Domestic livestock
@@ -37,6 +42,11 @@ export const animalImages: Record<string, string> = {
   Nyala: nyalaImage,
   Warthog: warthogImage,
   Ostrich: ostrichImage,
+  // Big 5
+  Lion: lionImage,
+  Leopard: leopardImage,
+  Elephant: elephantImage,
+  Rhino: rhinoImage,
 };
 
 export function getAnimalImage(type: string): string {
@@ -45,5 +55,10 @@ export function getAnimalImage(type: string): string {
 
 // Organized animal type options for UI
 export const domesticAnimalTypes = ["Cattle", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Horse"];
-export const wildGameAnimalTypes = ["Springbok", "Kudu", "Impala", "Eland", "Wildebeest", "Gemsbok", "Zebra", "Buffalo", "Nyala", "Warthog", "Ostrich"];
+export const wildGameAnimalTypes = [
+  // Big 5 first
+  "Lion", "Leopard", "Elephant", "Rhino", "Buffalo",
+  // Other game
+  "Springbok", "Kudu", "Impala", "Eland", "Wildebeest", "Gemsbok", "Zebra", "Nyala", "Warthog", "Ostrich"
+];
 export const allAnimalTypes = [...domesticAnimalTypes, ...wildGameAnimalTypes];
