@@ -19,6 +19,7 @@ export interface Animal {
   status: "available" | "sold" | "deceased" | "transferred";
   name: string; // livestock name
   weight: string | null;
+  plannedSaleDate: string | null; // maps to livestock.planned_sale_date
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +60,7 @@ export function useAnimals() {
         status: livestock.sold_at ? "sold" : "available",
         name: livestock.name,
         weight: livestock.weight,
+        plannedSaleDate: livestock.planned_sale_date,
         created_at: livestock.created_at,
         updated_at: livestock.updated_at,
       }));
