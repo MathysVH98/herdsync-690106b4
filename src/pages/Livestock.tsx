@@ -16,7 +16,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -28,9 +30,9 @@ import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/utils/exportCSV";
 import { ImportCSVDialog } from "@/components/ImportCSVDialog";
+import { domesticAnimalTypes, wildGameAnimalTypes, allAnimalTypes } from "@/utils/animalImages";
 
 const statusOptions: AnimalStatus[] = ["Healthy", "Under Observation", "Sick", "Pregnant"];
-const typeOptions = ["Cattle", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Horse"];
 
 const normalizeAnimalType = (value: string) => {
   const v = (value || "").trim().toLowerCase();
@@ -399,7 +401,14 @@ export default function Livestock() {
                       <Select value={newAnimal.type} onValueChange={(v) => setNewAnimal({ ...newAnimal, type: v })}>
                         <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                         <SelectContent>
-                          {typeOptions.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                          <SelectGroup>
+                            <SelectLabel>Domestic Livestock</SelectLabel>
+                            {domesticAnimalTypes.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                          </SelectGroup>
+                          <SelectGroup>
+                            <SelectLabel>Wild Game</SelectLabel>
+                            {wildGameAnimalTypes.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                          </SelectGroup>
                         </SelectContent>
                       </Select>
                     </div>
@@ -473,7 +482,14 @@ export default function Livestock() {
                     <SelectTrigger className="w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-                      {typeOptions.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                      <SelectGroup>
+                        <SelectLabel>Domestic</SelectLabel>
+                        {domesticAnimalTypes.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                      </SelectGroup>
+                      <SelectGroup>
+                        <SelectLabel>Wild Game</SelectLabel>
+                        {wildGameAnimalTypes.map((type) => (<SelectItem key={type} value={type}>{type}</SelectItem>))}
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>
