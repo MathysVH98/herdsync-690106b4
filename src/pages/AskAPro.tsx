@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +9,21 @@ import { Progress } from "@/components/ui/progress";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAskAProUsage } from "@/hooks/useAskAProUsage";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, User, Loader2, Sparkles, Lock, AlertTriangle, ArrowUpCircle } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, AlertTriangle, ArrowUpCircle, Camera, X, ImageIcon } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
- import { SubscriptionRequiredDialog } from "@/components/SubscriptionRequiredDialog";
+import { SubscriptionRequiredDialog } from "@/components/SubscriptionRequiredDialog";
+import { useToast } from "@/hooks/use-toast";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
+  image?: string; // base64 data URL
 };
+
+const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
 
 const SUGGESTED_QUESTIONS = [
   "My cow has stopped eating and seems lethargic. What could be wrong?",
@@ -30,28 +36,30 @@ export default function AskAPro() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { subscription, isActive } = useSubscription();
-  const { 
-    questionsUsed, 
-    questionsRemaining, 
-    dailyLimit, 
-    canAsk, 
-    isUnlimited, 
+  const {
+    questionsUsed,
+    questionsRemaining,
+    dailyLimit,
+    canAsk,
+    isUnlimited,
     loading: usageLoading,
-    incrementUsage 
+    incrementUsage,
   } = useAskAProUsage();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const tier = subscription?.tier || "basic";
-   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
- 
-   // Show subscription dialog for users without active subscription once it loads
-   useEffect(() => {
-     if (subscription && !isActive) {
-       setShowSubscriptionDialog(true);
-     }
-   }, [subscription, isActive]);
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+
+  useEffect(() => {
+    if (subscription && !isActive) {
+      setShowSubscriptionDialog(true);
+    }
+  }, [subscription, isActive]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -59,13 +67,81 @@ export default function AskAPro() {
     }
   }, [messages]);
 
-  const streamChat = async (userMessages: Message[]) => {
+  const handleImageCapture = useCallback(async () => {
+    if (!canAsk) return;
+
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Native: use Capacitor Camera
+        const photo = await CapCamera.getPhoto({
+          quality: 80,
+          allowEditing: false,
+          resultType: CameraResultType.Base64,
+          source: CameraSource.Prompt, // Let user choose camera or gallery
+        });
+
+        if (photo.base64String) {
+          const format = photo.format || "jpeg";
+          const dataUrl = `data:image/${format};base64,${photo.base64String}`;
+          
+          // Check size (base64 is ~33% larger than binary)
+          const sizeEstimate = (photo.base64String.length * 3) / 4;
+          if (sizeEstimate > MAX_IMAGE_SIZE) {
+            toast({ variant: "destructive", title: "Image too large", description: "Please select an image under 20MB." });
+            return;
+          }
+          setSelectedImage(dataUrl);
+        }
+      } else {
+        // Web: use file input
+        fileInputRef.current?.click();
+      }
+    } catch (err: any) {
+      // User cancelled - not an error
+      if (err?.message?.includes("cancelled") || err?.message?.includes("canceled")) return;
+      console.error("Camera error:", err);
+      toast({ variant: "destructive", title: "Camera Error", description: "Could not access camera. Please try selecting a file instead." });
+    }
+  }, [canAsk, toast]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast({ variant: "destructive", title: "Image too large", description: "Please select an image under 20MB." });
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast({ variant: "destructive", title: "Invalid file", description: "Please select an image file." });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset input so the same file can be selected again
+    e.target.value = "";
+  }, [toast]);
+
+  const streamChat = async (chatMessages: Message[]) => {
     const { data: { session } } = await supabase.auth.getSession();
-    
+
     if (!session?.access_token) {
       throw new Error("Please log in to use Ask a Pro");
     }
-    
+
+    // Send messages with optional image field
+    const payload = chatMessages.map((m) => ({
+      role: m.role,
+      content: m.content,
+      ...(m.image ? { image: m.image } : {}),
+    }));
+
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ask-a-pro`,
       {
@@ -74,7 +150,7 @@ export default function AskAPro() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ messages: userMessages }),
+        body: JSON.stringify({ messages: payload }),
       }
     );
 
@@ -82,7 +158,7 @@ export default function AskAPro() {
       const errorData = await response.json().catch(() => ({ error: "Failed to get response" }));
       throw new Error(errorData.error || `Request failed with status ${response.status}`);
     }
-    
+
     if (!response.body) {
       throw new Error("No response body received");
     }
@@ -93,23 +169,22 @@ export default function AskAPro() {
   const handleSubmit = async (e?: React.FormEvent, suggestedQuestion?: string) => {
     e?.preventDefault();
     const messageText = suggestedQuestion || input.trim();
-    if (!messageText || isLoading) return;
+    if ((!messageText && !selectedImage) || isLoading) return;
 
-    // Check if user can ask
-    if (!canAsk) {
-      return;
-    }
+    if (!canAsk) return;
 
-    // Increment usage first
     const success = await incrementUsage();
-    if (!success && !isUnlimited) {
-      return;
-    }
+    if (!success && !isUnlimited) return;
 
-    const userMessage: Message = { role: "user", content: messageText };
+    const userMessage: Message = {
+      role: "user",
+      content: messageText || "Please analyze this image.",
+      ...(selectedImage ? { image: selectedImage } : {}),
+    };
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput("");
+    setSelectedImage(null);
     setIsLoading(true);
 
     let assistantContent = "";
@@ -120,7 +195,6 @@ export default function AskAPro() {
       const decoder = new TextDecoder();
       let textBuffer = "";
 
-      // Add empty assistant message
       setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
 
       while (true) {
@@ -176,20 +250,28 @@ export default function AskAPro() {
     }
   };
 
-  // Usage limit reached (non-Pro users)
-   const showLimitReached = isActive && !isUnlimited && !canAsk && !usageLoading;
+  const showLimitReached = isActive && !isUnlimited && !canAsk && !usageLoading;
 
   return (
     <Layout>
-       {/* Subscription Required Dialog for users without active subscription */}
-       <SubscriptionRequiredDialog
-         open={showSubscriptionDialog && !isActive}
-         onOpenChange={setShowSubscriptionDialog}
-         featureName="Ask a Pro"
-         requiredTier="basic"
-         description="Ask a Pro requires an active subscription. Get instant AI-powered advice on farming, livestock health, and animal care."
-       />
- 
+      <SubscriptionRequiredDialog
+        open={showSubscriptionDialog && !isActive}
+        onOpenChange={setShowSubscriptionDialog}
+        featureName="Ask a Pro"
+        requiredTier="basic"
+        description="Ask a Pro requires an active subscription. Get instant AI-powered advice on farming, livestock health, and animal care."
+      />
+
+      {/* Hidden file input for web image selection */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+
       <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)]">
         <Card className="h-full flex flex-col">
           <CardHeader className="border-b">
@@ -201,12 +283,11 @@ export default function AskAPro() {
                 <div>
                   <CardTitle className="font-display">Ask a Pro</CardTitle>
                   <CardDescription>
-                    AI-powered farming and livestock advice for South African farmers
+                    AI-powered farming advice — text or 📷 photo identification
                   </CardDescription>
                 </div>
               </div>
-              
-              {/* Usage indicator */}
+
               {!isUnlimited && (
                 <div className="text-right">
                   <div className="flex items-center gap-2 mb-1">
@@ -214,14 +295,14 @@ export default function AskAPro() {
                       {questionsRemaining} / {dailyLimit} questions left
                     </Badge>
                   </div>
-                  <Progress 
-                    value={(questionsUsed / dailyLimit) * 100} 
+                  <Progress
+                    value={(questionsUsed / dailyLimit) * 100}
                     className="w-32 h-2"
                   />
                   <p className="text-xs text-muted-foreground mt-1">Resets daily</p>
                 </div>
               )}
-              
+
               {isUnlimited && (
                 <Badge variant="default" className="bg-gradient-primary">
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -232,7 +313,6 @@ export default function AskAPro() {
           </CardHeader>
 
           <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-            {/* Limit Reached Banner */}
             {showLimitReached && (
               <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-3">
                 <div className="flex items-center justify-between">
@@ -245,8 +325,8 @@ export default function AskAPro() {
                       </p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={() => navigate("/pricing")} 
+                  <Button
+                    onClick={() => navigate("/pricing")}
                     size="sm"
                     className="bg-gradient-primary gap-2"
                   >
@@ -263,8 +343,7 @@ export default function AskAPro() {
                   <Bot className="w-16 h-16 text-muted-foreground/30 mb-4" />
                   <h3 className="text-lg font-semibold mb-2">How can I help you today?</h3>
                   <p className="text-muted-foreground mb-6 max-w-md">
-                    Ask me anything about farming, livestock health, animal nutrition, or farm
-                    management. I'm here to help!
+                    Ask me anything about farming, livestock health, or snap a photo for instant identification!
                   </p>
                   <div className="grid gap-2 w-full max-w-lg">
                     {SUGGESTED_QUESTIONS.map((question, index) => (
@@ -301,6 +380,16 @@ export default function AskAPro() {
                             : "bg-muted"
                         }`}
                       >
+                        {/* Image thumbnail in user messages */}
+                        {message.image && (
+                          <div className="mb-2">
+                            <img
+                              src={message.image}
+                              alt="Uploaded"
+                              className="rounded-md max-h-48 max-w-full object-cover"
+                            />
+                          </div>
+                        )}
                         {message.role === "assistant" ? (
                           <div className="prose prose-sm dark:prose-invert max-w-none">
                             <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
@@ -321,14 +410,42 @@ export default function AskAPro() {
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                         <Bot className="w-4 h-4 text-primary" />
                       </div>
-                      <div className="bg-muted rounded-lg px-4 py-3">
+                      <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm text-muted-foreground">
+                          {messages[messages.length - 1]?.image ? "Analyzing image..." : "Thinking..."}
+                        </span>
                       </div>
                     </div>
                   )}
                 </div>
               )}
             </ScrollArea>
+
+            {/* Image preview bar */}
+            {selectedImage && (
+              <div className="px-4 pt-3 border-t flex items-center gap-3">
+                <div className="relative">
+                  <img
+                    src={selectedImage}
+                    alt="Selected"
+                    className="h-16 w-16 rounded-md object-cover border"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>Photo attached — add a question or send as-is</span>
+                </div>
+              </div>
+            )}
 
             <form
               onSubmit={handleSubmit}
@@ -338,8 +455,8 @@ export default function AskAPro() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
-                  canAsk 
-                    ? "Ask about livestock health, farming advice, or animal care..." 
+                  canAsk
+                    ? "Ask about livestock health, or attach a photo for ID..."
                     : "Daily question limit reached. Upgrade for more questions!"
                 }
                 className="min-h-[60px] max-h-[120px] resize-none"
@@ -351,18 +468,31 @@ export default function AskAPro() {
                   }
                 }}
               />
-              <Button 
-                type="submit" 
-                disabled={isLoading || !input.trim() || !canAsk} 
-                size="icon" 
-                className="h-auto"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-auto flex-1"
+                  disabled={!canAsk || isLoading}
+                  onClick={handleImageCapture}
+                  title="Take or select a photo"
+                >
+                  <Camera className="w-4 h-4" />
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading || (!input.trim() && !selectedImage) || !canAsk}
+                  size="icon"
+                  className="h-auto flex-1"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>

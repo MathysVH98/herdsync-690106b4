@@ -32,6 +32,14 @@ const SYSTEM_PROMPT = `You are "Ask a Pro" - an expert farming and livestock adv
 - Local feed sources and seasonal considerations
 - Regional climate challenges
 
+**Image Analysis & Animal Identification:**
+- When images are provided, carefully analyze them to identify animal species, breed, and health condition
+- Recognize common South African livestock breeds: Nguni, Brahman, Bonsmara, Drakensberger, Afrikaner (cattle); Dorper, Merino, Damara, Dormer (sheep); Boer, Savanna, Kalahari Red (goats); Large Black, Kolbroek (pigs)
+- Identify visible health issues: skin conditions, wounds, parasites, lameness, eye problems, body condition scoring
+- Assess animal body condition and nutritional status from photos
+- Identify common plants, grasses, and potential toxic plants in images
+- When analyzing images, describe what you see and provide specific, actionable advice
+
 Always provide practical, actionable advice. When discussing serious health issues, remind farmers to consult a local veterinarian for definitive diagnosis and treatment. Be friendly, supportive, and encouraging.`;
 
 serve(async (req) => {
@@ -40,10 +48,8 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      console.error("No authorization header provided");
       return new Response(JSON.stringify({ error: "Authorization required. Please log in and try again." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -55,12 +61,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const token = authHeader.replace("Bearer ", "");
-    
-    // Use getUser to verify the token properly
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !userData?.user) {
-      console.error("Auth error:", userError?.message || "No user found");
       return new Response(JSON.stringify({ error: "Session expired. Please log in again." }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -70,7 +73,6 @@ serve(async (req) => {
     const body = await req.json();
     const messages = body.messages;
     
-    // Validate messages is an array
     if (!messages || !Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "Invalid request: 'messages' must be an array" }), {
         status: 400,
@@ -81,14 +83,39 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY is not configured");
       return new Response(JSON.stringify({ error: "AI service is not configured. Please contact support." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Calling Lovable AI gateway for user:", userData.user.id);
+    // Check if any message contains an image
+    const hasImage = messages.some((m: any) => m.image);
+
+    // Build the messages for the AI, converting image messages to multimodal format
+    const aiMessages = messages.map((m: any) => {
+      if (m.image) {
+        // Multimodal message with image
+        return {
+          role: m.role,
+          content: [
+            { type: "text", text: m.content || "Please analyze this image." },
+            {
+              type: "image_url",
+              image_url: {
+                url: m.image, // already a data:image/... base64 URL
+              },
+            },
+          ],
+        };
+      }
+      return { role: m.role, content: m.content };
+    });
+
+    // Use a vision-capable model when images are present
+    const model = hasImage ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+
+    console.log(`Calling AI gateway for user: ${userData.user.id}, model: ${model}, hasImage: ${hasImage}`);
     
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -97,10 +124,10 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model,
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
-          ...messages,
+          ...aiMessages,
         ],
         stream: true,
       }),
