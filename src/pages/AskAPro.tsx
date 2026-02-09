@@ -272,39 +272,37 @@ export default function AskAPro() {
         onChange={handleFileSelect}
       />
 
-      <div className="max-w-4xl mx-auto h-[calc(100vh-12rem)]">
+      <div className="max-w-4xl mx-auto h-[calc(100dvh-8rem)] sm:h-[calc(100dvh-10rem)] md:h-[calc(100dvh-12rem)]">
         <Card className="h-full flex flex-col">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-primary" />
+          <CardHeader className="border-b px-3 py-3 sm:px-6 sm:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
-                <div>
-                  <CardTitle className="font-display">Ask a Pro</CardTitle>
-                  <CardDescription>
-                    AI-powered farming advice — text or 📷 photo identification
+                <div className="min-w-0">
+                  <CardTitle className="font-display text-base sm:text-lg">Ask a Pro</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm truncate">
+                    AI advice — text or 📷 photo
                   </CardDescription>
                 </div>
               </div>
 
               {!isUnlimited && (
-                <div className="text-right">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={questionsRemaining > 0 ? "secondary" : "destructive"}>
-                      {questionsRemaining} / {dailyLimit} questions left
-                    </Badge>
-                  </div>
+                <div className="text-right flex-shrink-0">
+                  <Badge variant={questionsRemaining > 0 ? "secondary" : "destructive"} className="text-[10px] sm:text-xs">
+                    {questionsRemaining}/{dailyLimit} left
+                  </Badge>
                   <Progress
                     value={(questionsUsed / dailyLimit) * 100}
-                    className="w-32 h-2"
+                    className="w-20 sm:w-32 h-1.5 sm:h-2 mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Resets daily</p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Resets daily</p>
                 </div>
               )}
 
               {isUnlimited && (
-                <Badge variant="default" className="bg-gradient-primary">
+                <Badge variant="default" className="bg-gradient-primary text-[10px] sm:text-xs">
                   <Sparkles className="w-3 h-3 mr-1" />
                   Unlimited
                 </Badge>
@@ -337,13 +335,13 @@ export default function AskAPro() {
               </div>
             )}
 
-            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+            <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollAreaRef}>
               {messages.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8">
-                  <Bot className="w-16 h-16 text-muted-foreground/30 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">How can I help you today?</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md">
-                    Ask me anything about farming, livestock health, or snap a photo for instant identification!
+                <div className="h-full flex flex-col items-center justify-center text-center p-4 sm:p-8">
+                  <Bot className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground/30 mb-3 sm:mb-4" />
+                  <h3 className="text-base sm:text-lg font-semibold mb-2">How can I help you today?</h3>
+                  <p className="text-sm text-muted-foreground mb-4 sm:mb-6 max-w-md">
+                    Ask about farming, livestock health, or snap a photo for ID!
                   </p>
                   <div className="grid gap-2 w-full max-w-lg">
                     {SUGGESTED_QUESTIONS.map((question, index) => (
@@ -360,21 +358,21 @@ export default function AskAPro() {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {messages.map((message, index) => (
                     <div
                       key={index}
-                      className={`flex gap-3 ${
+                      className={`flex gap-2 sm:gap-3 ${
                         message.role === "user" ? "justify-end" : "justify-start"
                       }`}
                     >
                       {message.role === "assistant" && (
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Bot className="w-4 h-4 text-primary" />
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                         </div>
                       )}
                       <div
-                        className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                        className={`max-w-[85%] sm:max-w-[80%] rounded-lg px-3 py-2 sm:px-4 sm:py-3 ${
                           message.role === "user"
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
@@ -391,24 +389,24 @@ export default function AskAPro() {
                           </div>
                         )}
                         {message.role === "assistant" ? (
-                          <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:overflow-x-auto [&_code]:break-words leading-relaxed">
                             <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
                           </div>
                         ) : (
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                         )}
                       </div>
                       {message.role === "user" && (
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                          <User className="w-4 h-4 text-primary-foreground" />
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-3 h-3 sm:w-4 sm:h-4 text-primary-foreground" />
                         </div>
                       )}
                     </div>
                   ))}
                   {isLoading && messages[messages.length - 1]?.role === "user" && (
-                    <div className="flex gap-3 justify-start">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Bot className="w-4 h-4 text-primary" />
+                    <div className="flex gap-2 sm:gap-3 justify-start">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Bot className="w-3 h-3 sm:w-4 sm:h-4 text-primary" />
                       </div>
                       <div className="bg-muted rounded-lg px-4 py-3 flex items-center gap-2">
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -424,7 +422,7 @@ export default function AskAPro() {
 
             {/* Image preview bar */}
             {selectedImage && (
-              <div className="px-4 pt-3 border-t flex items-center gap-3">
+              <div className="px-3 sm:px-4 pt-2 sm:pt-3 border-t flex items-center gap-2 sm:gap-3">
                 <div className="relative">
                   <img
                     src={selectedImage}
@@ -440,26 +438,27 @@ export default function AskAPro() {
                     <X className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  <span>Photo attached — add a question or send as-is</span>
+                <div className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+                  <ImageIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  <span className="hidden sm:inline">Photo attached — add a question or send as-is</span>
+                  <span className="sm:hidden">Photo attached</span>
                 </div>
               </div>
             )}
 
             <form
               onSubmit={handleSubmit}
-              className="p-4 border-t flex gap-2"
+              className="p-2 sm:p-4 border-t flex gap-2 pb-[env(safe-area-inset-bottom,0.5rem)]"
             >
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
                   canAsk
-                    ? "Ask about livestock health, or attach a photo for ID..."
-                    : "Daily question limit reached. Upgrade for more questions!"
+                    ? "Ask about livestock health, attach a photo..."
+                    : "Daily limit reached. Upgrade for more!"
                 }
-                className="min-h-[60px] max-h-[120px] resize-none"
+                className="min-h-[44px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] resize-none text-sm"
                 disabled={!canAsk}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -468,12 +467,12 @@ export default function AskAPro() {
                   }
                 }}
               />
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5 sm:gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="h-auto flex-1"
+                  className="h-[44px] w-[44px] sm:h-auto sm:flex-1"
                   disabled={!canAsk || isLoading}
                   onClick={handleImageCapture}
                   title="Take or select a photo"
@@ -484,7 +483,7 @@ export default function AskAPro() {
                   type="submit"
                   disabled={isLoading || (!input.trim() && !selectedImage) || !canAsk}
                   size="icon"
-                  className="h-auto flex-1"
+                  className="h-[44px] w-[44px] sm:h-auto sm:flex-1"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
