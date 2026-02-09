@@ -8,6 +8,7 @@ import { FarmProvider } from "@/hooks/useFarm";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { EmployeePermissionsProvider } from "@/hooks/useEmployeePermissions";
 import { SupportChat } from "@/components/SupportChat";
+import { AndroidBackButtonHandler } from "@/components/AndroidBackButtonHandler";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Livestock from "./pages/Livestock";
@@ -83,6 +84,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
                 <SupportChat />
+                <AndroidBackButtonHandler />
               </BrowserRouter>
             </TooltipProvider>
            </EmployeePermissionsProvider>
