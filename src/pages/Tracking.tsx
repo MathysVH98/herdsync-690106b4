@@ -1,4 +1,5 @@
  import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { TrackingMap, Outpost, TrackingZone } from "@/components/TrackingMap";
 import { LocationSearch } from "@/components/LocationSearch";
@@ -28,7 +29,8 @@ import {
   Layers,
   Target,
   Trash2,
-  Search
+  Search,
+  ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
  import { useSubscription } from "@/hooks/useSubscription";
@@ -56,6 +58,7 @@ const outpostTypeIcons = {
 };
 
 export default function Tracking() {
+  const navigate = useNavigate();
   const [outposts, setOutposts] = useState<Outpost[]>(mockOutposts);
   const [zones, setZones] = useState<TrackingZone[]>(mockZones);
   const [isAddingOutpost, setIsAddingOutpost] = useState(false);
@@ -218,13 +221,23 @@ export default function Tracking() {
  
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div>
+        <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="shrink-0 min-w-[44px] min-h-[44px] text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div>
             <h1 className="text-3xl font-bold font-display text-foreground">
               RFID Tracking
             </h1>
             <p className="text-muted-foreground mt-1">
               Define tracking zones and place RFID scanner checkpoints on your land
             </p>
+            </div>
           </div>
 
           <div className="flex gap-3">
