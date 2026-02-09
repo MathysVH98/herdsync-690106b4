@@ -53,33 +53,33 @@ export function DashboardTasks() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
+        <div className="bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <ClipboardList className="h-4 w-4 text-primary" />
+            <ClipboardList className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-1">{tasks.length}</p>
-          <p className="text-xs text-muted-foreground">Total Tasks</p>
+          <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mt-1">{tasks.length}</p>
+          <p className="text-xs text-emerald-700 dark:text-emerald-300">Total Tasks</p>
         </div>
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+        <div className="bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <Clock className="h-4 w-4 text-blue-700 dark:text-blue-300" />
           </div>
-          <p className="text-2xl font-bold text-foreground mt-1">{pendingTasks.length}</p>
-          <p className="text-xs text-muted-foreground">Pending</p>
+          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">{pendingTasks.length}</p>
+          <p className="text-xs text-blue-700 dark:text-blue-300">Pending</p>
         </div>
-        <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+        <div className="bg-orange-100 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <AlertCircle className="h-4 w-4 text-orange-700 dark:text-orange-300" />
           </div>
-          <p className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">{dueTodayTasks.length}</p>
-          <p className="text-xs text-muted-foreground">Due Today</p>
+          <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 mt-1">{dueTodayTasks.length}</p>
+          <p className="text-xs text-orange-700 dark:text-orange-300">Due Today</p>
         </div>
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+        <div className="bg-red-100 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-300" />
           </div>
-          <p className="text-2xl font-bold text-destructive mt-1">{overdueTasks.length}</p>
-          <p className="text-xs text-muted-foreground">Overdue</p>
+          <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-1">{overdueTasks.length}</p>
+          <p className="text-xs text-red-700 dark:text-red-300">Overdue</p>
         </div>
       </div>
 
@@ -103,10 +103,10 @@ export function DashboardTasks() {
                 className={cn(
                   "flex items-start gap-3 p-3 rounded-lg border",
                   isOverdue 
-                    ? "bg-destructive/5 border-destructive/30" 
+                    ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800" 
                     : isDueToday 
-                    ? "bg-orange-500/5 border-orange-500/30" 
-                    : "bg-muted/50 border-border"
+                    ? "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800" 
+                    : "bg-card border-border"
                 )}
               >
                 <div className="flex-1 min-w-0">
