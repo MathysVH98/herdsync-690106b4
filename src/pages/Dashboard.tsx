@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { getAnimalImage } from "@/utils/animalImages";
 import { SaleCountdownBadge } from "@/components/SaleCountdownBadge";
 import { DashboardTasks } from "@/components/dashboard/DashboardTasks";
+import { CreateFarmDialog } from "@/components/CreateFarmDialog";
 import { useFarm } from "@/hooks/useFarm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -178,9 +179,10 @@ export default function Dashboard() {
     return (
       <Layout>
         <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-foreground mb-2">No Farm Selected</h2>
-            <p className="text-muted-foreground">Create or select a farm to view your dashboard.</p>
+          <div className="text-center space-y-4">
+            <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to HerdSync!</h2>
+            <p className="text-muted-foreground">Create your first farm to get started.</p>
+            <CreateFarmDialog />
           </div>
         </div>
       </Layout>
