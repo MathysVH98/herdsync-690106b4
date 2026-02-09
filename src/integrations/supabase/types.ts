@@ -2248,6 +2248,10 @@ export type Database = {
         Args: { _farm_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_employees: {
+        Args: { _farm_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_login_rate_limit: {
         Args: { username_to_check: string }
         Returns: boolean
