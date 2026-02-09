@@ -7,10 +7,10 @@ import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const priorityConfig = {
-  low: { label: "Low", className: "bg-muted text-muted-foreground" },
-  medium: { label: "Medium", className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
-  high: { label: "High", className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
-  urgent: { label: "Urgent", className: "bg-destructive/10 text-destructive" },
+  low: { label: "Low", className: "bg-background border-border text-muted-foreground" },
+  medium: { label: "Medium", className: "bg-background border-info text-info" },
+  high: { label: "High", className: "bg-background border-warning text-warning" },
+  urgent: { label: "Urgent", className: "bg-background border-destructive text-destructive" },
 };
 
 export function DashboardTasks() {
@@ -43,7 +43,7 @@ export function DashboardTasks() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="text-primary hover:text-primary/80"
+          className="text-primary hover:text-primary hover:underline"
           onClick={() => navigate("/employees")}
         >
           View All
@@ -53,33 +53,33 @@ export function DashboardTasks() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-        <div className="bg-emerald-100 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+        <div className="bg-card border border-border border-l-4 border-l-primary rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <ClipboardList className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
+            <ClipboardList className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-100 mt-1">{tasks.length}</p>
-          <p className="text-xs text-emerald-700 dark:text-emerald-300">Total Tasks</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{tasks.length}</p>
+          <p className="text-xs text-muted-foreground">Total Tasks</p>
         </div>
-        <div className="bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <div className="bg-card border border-border border-l-4 border-l-info rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <Clock className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+            <Clock className="h-4 w-4 text-info" />
           </div>
-          <p className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-1">{pendingTasks.length}</p>
-          <p className="text-xs text-blue-700 dark:text-blue-300">Pending</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{pendingTasks.length}</p>
+          <p className="text-xs text-muted-foreground">Pending</p>
         </div>
-        <div className="bg-orange-100 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
+        <div className="bg-card border border-border border-l-4 border-l-warning rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <AlertCircle className="h-4 w-4 text-orange-700 dark:text-orange-300" />
+            <AlertCircle className="h-4 w-4 text-warning" />
           </div>
-          <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 mt-1">{dueTodayTasks.length}</p>
-          <p className="text-xs text-orange-700 dark:text-orange-300">Due Today</p>
+          <p className="text-2xl font-bold text-warning mt-1">{dueTodayTasks.length}</p>
+          <p className="text-xs text-muted-foreground">Due Today</p>
         </div>
-        <div className="bg-red-100 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+        <div className="bg-card border border-border border-l-4 border-l-destructive rounded-lg p-3">
           <div className="flex items-center justify-between">
-            <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-300" />
+            <AlertCircle className="h-4 w-4 text-destructive" />
           </div>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-300 mt-1">{overdueTasks.length}</p>
-          <p className="text-xs text-red-700 dark:text-red-300">Overdue</p>
+          <p className="text-2xl font-bold text-destructive mt-1">{overdueTasks.length}</p>
+          <p className="text-xs text-muted-foreground">Overdue</p>
         </div>
       </div>
 
@@ -101,18 +101,24 @@ export function DashboardTasks() {
               <div 
                 key={task.id} 
                 className={cn(
-                  "flex items-start gap-3 p-3 rounded-lg border",
+                  "flex items-start gap-3 p-3 rounded-lg border bg-card",
                   isOverdue 
-                    ? "bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800" 
+                    ? "border-destructive" 
                     : isDueToday 
-                    ? "bg-orange-50 dark:bg-orange-950 border-orange-200 dark:border-orange-800" 
-                    : "bg-card border-border"
+                    ? "border-warning" 
+                    : "border-border"
                 )}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-sm font-medium text-foreground truncate">{task.title}</p>
-                    <Badge variant="outline" className={cn("text-xs shrink-0", priorityConfig[task.priority].className)}>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-xs shrink-0 bg-background",
+                        priorityConfig[task.priority].className,
+                      )}
+                    >
                       {priorityConfig[task.priority].label}
                     </Badge>
                   </div>
@@ -123,10 +129,12 @@ export function DashboardTasks() {
                         : "Unassigned"}
                     </span>
                     <span>•</span>
-                    <span className={cn(
-                      isOverdue && "text-destructive font-medium",
-                      isDueToday && "text-orange-600 dark:text-orange-400 font-medium"
-                    )}>
+                    <span
+                      className={cn(
+                        isOverdue && "text-destructive font-medium",
+                        isDueToday && "text-warning font-medium",
+                      )}
+                    >
                       {format(dueDate, "MMM d, yyyy")}
                       {isOverdue && " (Overdue)"}
                       {isDueToday && " (Today)"}
@@ -134,7 +142,7 @@ export function DashboardTasks() {
                   </div>
                 </div>
                 {task.status === "completed" ? (
-                  <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-success shrink-0" />
                 ) : (
                   <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                 )}

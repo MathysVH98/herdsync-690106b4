@@ -27,17 +27,17 @@ interface TasksTableProps {
 }
 
 const priorityConfig = {
-  low: { label: "Low", className: "bg-muted text-muted-foreground" },
-  medium: { label: "Medium", className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
-  high: { label: "High", className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
-  urgent: { label: "Urgent", className: "bg-destructive/10 text-destructive" },
+  low: { label: "Low", className: "bg-background border-border text-muted-foreground" },
+  medium: { label: "Medium", className: "bg-background border-info text-info" },
+  high: { label: "High", className: "bg-background border-warning text-warning" },
+  urgent: { label: "Urgent", className: "bg-background border-destructive text-destructive" },
 };
 
 const statusConfig = {
-  pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300" },
-  in_progress: { label: "In Progress", className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
-  completed: { label: "Completed", className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" },
-  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground line-through" },
+  pending: { label: "Pending", className: "bg-background border-warning text-warning" },
+  in_progress: { label: "In Progress", className: "bg-background border-info text-info" },
+  completed: { label: "Completed", className: "bg-background border-success text-success" },
+  cancelled: { label: "Cancelled", className: "bg-background border-border text-muted-foreground line-through" },
 };
 
 export function TasksTable({ tasks, onEdit, onDelete, onMarkComplete }: TasksTableProps) {
@@ -92,7 +92,7 @@ export function TasksTable({ tasks, onEdit, onDelete, onMarkComplete }: TasksTab
                   <span
                     className={cn(
                       isOverdue && "text-destructive font-medium",
-                      isDueToday && "text-orange-600 dark:text-orange-400 font-medium"
+                      isDueToday && "text-warning font-medium"
                     )}
                   >
                     {format(dueDate, "MMM d, yyyy")}
@@ -101,12 +101,12 @@ export function TasksTable({ tasks, onEdit, onDelete, onMarkComplete }: TasksTab
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={priorityConfig[task.priority].className}>
+                  <Badge variant="outline" className={cn("bg-background", priorityConfig[task.priority].className)}>
                     {priorityConfig[task.priority].label}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={statusConfig[task.status].className}>
+                  <Badge variant="outline" className={cn("bg-background", statusConfig[task.status].className)}>
                     {statusConfig[task.status].label}
                   </Badge>
                 </TableCell>
