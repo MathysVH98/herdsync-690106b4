@@ -167,7 +167,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none overflow-hidden",
+          "fixed lg:static inset-y-0 left-0 z-50 w-64 bg-sidebar transform transition-transform duration-300 ease-in-out lg:transform-none overflow-hidden pt-[env(safe-area-inset-top)]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -335,7 +335,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
-        <header className="lg:hidden flex items-center gap-4 px-4 py-3 bg-card border-b border-border">
+        <header className="lg:hidden flex items-center gap-4 px-4 py-3 bg-card border-b border-border pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             onClick={() => setSidebarOpen(true)}
             className="p-2 -ml-2 text-muted-foreground hover:text-foreground"
