@@ -1,1 +1,4 @@
 project_id = "ynvwapmenvogfztopwyv"
+
+[functions.ask-a-pro]
+verify_jwt = false
