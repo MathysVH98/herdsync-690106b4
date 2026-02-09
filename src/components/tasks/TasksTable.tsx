@@ -43,14 +43,14 @@ const statusConfig = {
 export function TasksTable({ tasks, onEdit, onDelete, onMarkComplete }: TasksTableProps) {
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
+      <div className="text-center py-12 text-muted-foreground bg-card rounded-md border">
         No tasks found. Create your first task to get started.
       </div>
     );
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border bg-card">
       <Table>
         <TableHeader>
           <TableRow>
