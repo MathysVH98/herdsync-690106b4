@@ -825,6 +825,90 @@ export type Database = {
           },
         ]
       }
+      employee_tasks: {
+        Row: {
+          assigned_to: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          due_date: string
+          farm_id: string
+          id: string
+          priority: Database["public"]["Enums"]["task_priority"]
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          due_date: string
+          farm_id: string
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          due_date?: string
+          farm_id?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["task_priority"]
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "employees_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "employees_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_tasks_farm_id_fkey"
+            columns: ["farm_id"]
+            isOneToOne: false
+            referencedRelation: "farms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_users: {
         Row: {
           created_at: string
@@ -2287,6 +2371,8 @@ export type Database = {
         | "expired"
         | "past_due"
       subscription_tier: "basic" | "starter" | "pro"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      task_status: "pending" | "in_progress" | "completed" | "cancelled"
       transport_responsibility: "buyer" | "seller" | "split" | "custom"
     }
     CompositeTypes: {
@@ -2462,6 +2548,8 @@ export const Constants = {
         "past_due",
       ],
       subscription_tier: ["basic", "starter", "pro"],
+      task_priority: ["low", "medium", "high", "urgent"],
+      task_status: ["pending", "in_progress", "completed", "cancelled"],
       transport_responsibility: ["buyer", "seller", "split", "custom"],
     },
   },
