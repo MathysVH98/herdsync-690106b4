@@ -46,9 +46,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck, KeyRound } from "lucide-react";
+import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck, KeyRound, ClipboardList } from "lucide-react";
 import { format } from "date-fns";
 import { InviteEmployeeDialog } from "@/components/InviteEmployeeDialog";
+import { TasksSection } from "@/components/tasks";
 
 interface Employee {
   id: string;
@@ -561,6 +562,10 @@ export default function Employees() {
           <TabsList>
             <TabsTrigger value="active">Active ({activeEmployees.length})</TabsTrigger>
             <TabsTrigger value="former">Former ({formerEmployees.length})</TabsTrigger>
+            <TabsTrigger value="tasks" className="flex gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Tasks
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
@@ -692,6 +697,10 @@ export default function Employees() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <TasksSection />
           </TabsContent>
         </Tabs>
 
