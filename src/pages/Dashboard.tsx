@@ -7,8 +7,9 @@ import { WeatherWidget } from "@/components/WeatherWidget";
 import { Badge } from "@/components/ui/badge";
 import { getAnimalImage } from "@/utils/animalImages";
 import { SaleCountdownBadge } from "@/components/SaleCountdownBadge";
+import { DashboardTasks } from "@/components/dashboard/DashboardTasks";
 import { useFarm } from "@/hooks/useFarm";
- import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   PawPrint, 
@@ -275,6 +276,9 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+
+            {/* Employee Tasks */}
+            <DashboardTasks />
 
             {/* Feeding Schedule */}
             {morningFeedings.length > 0 ? (
