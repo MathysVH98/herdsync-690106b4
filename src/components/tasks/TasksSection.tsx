@@ -127,44 +127,44 @@ export function TasksSection() {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-primary/10 border-primary/20">
+        <Card className="bg-emerald-100 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
-            <ClipboardList className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium text-emerald-900 dark:text-emerald-100">Total Tasks</CardTitle>
+            <ClipboardList className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tasks.length}</div>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">{tasks.length}</div>
+            <p className="text-xs text-emerald-700 dark:text-emerald-300">All time</p>
           </CardContent>
         </Card>
-        <Card className="bg-blue-500/10 border-blue-500/20">
+        <Card className="bg-blue-100 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">Pending</CardTitle>
+            <Clock className="h-4 w-4 text-blue-700 dark:text-blue-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pendingTasks.length}</div>
-            <p className="text-xs text-muted-foreground">Need attention</p>
+            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{pendingTasks.length}</div>
+            <p className="text-xs text-blue-700 dark:text-blue-300">Need attention</p>
           </CardContent>
         </Card>
-        <Card className="bg-orange-500/10 border-orange-500/20">
+        <Card className="bg-orange-100 dark:bg-orange-950 border-orange-200 dark:border-orange-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Due Today</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+            <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-100">Due Today</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-700 dark:text-orange-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{dueTodayTasks.length}</div>
-            <p className="text-xs text-muted-foreground">Tasks due today</p>
+            <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">{dueTodayTasks.length}</div>
+            <p className="text-xs text-orange-700 dark:text-orange-300">Tasks due today</p>
           </CardContent>
         </Card>
-        <Card className="bg-destructive/10 border-destructive/20">
+        <Card className="bg-red-100 dark:bg-red-950 border-red-200 dark:border-red-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium text-red-900 dark:text-red-100">Overdue</CardTitle>
+            <AlertCircle className="h-4 w-4 text-red-700 dark:text-red-300" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{overdueTasks.length}</div>
-            <p className="text-xs text-muted-foreground">Past due date</p>
+            <div className="text-2xl font-bold text-red-700 dark:text-red-300">{overdueTasks.length}</div>
+            <p className="text-xs text-red-700 dark:text-red-300">Past due date</p>
           </CardContent>
         </Card>
       </div>
