@@ -6,12 +6,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MessageCircle, X, Send, Loader2, Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "react-router-dom";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/support-chat`;
 
 export function SupportChat() {
+  const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -92,6 +94,8 @@ export function SupportChat() {
       }
     }
   }, []);
+
+  if (pathname === "/ask-a-pro") return null;
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
