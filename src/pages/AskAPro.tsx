@@ -343,18 +343,18 @@ export default function AskAPro() {
                   <p className="text-sm text-muted-foreground mb-4 sm:mb-6 max-w-md">
                     Ask about farming, livestock health, or snap a photo for ID!
                   </p>
-                  <div className="grid gap-2 w-full max-w-lg">
-                    {SUGGESTED_QUESTIONS.map((question, index) => (
-                      <Button
-                        key={index}
-                        variant="outline"
-                        className="text-left h-auto py-3 px-4 justify-start"
-                        onClick={() => handleSubmit(undefined, question)}
-                        disabled={!canAsk || isLoading}
-                      >
-                        <span className="line-clamp-2">{question}</span>
-                      </Button>
-                    ))}
+                    <div className="grid gap-2 w-full max-w-lg px-2">
+                     {SUGGESTED_QUESTIONS.map((question, index) => (
+                       <Button
+                         key={index}
+                         variant="outline"
+                         className="text-left h-auto py-3 px-4 justify-start whitespace-normal break-words"
+                         onClick={() => handleSubmit(undefined, question)}
+                         disabled={!canAsk || isLoading}
+                       >
+                         <span className="line-clamp-2 text-xs sm:text-sm">{question}</span>
+                       </Button>
+                     ))}
                   </div>
                 </div>
               ) : (
