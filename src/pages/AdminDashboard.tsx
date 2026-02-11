@@ -78,25 +78,48 @@ import { Shield, Clock, Users, Building, Plus, Minus, Search } from "lucide-reac
    const [dialogOpen, setDialogOpen] = useState(false);
    const [userDialogOpen, setUserDialogOpen] = useState(false);
  
-   useEffect(() => {
-     if (!authLoading && !adminLoading) {
-       if (!user) {
-         navigate("/auth");
-         return;
-       }
-       if (!isAdmin) {
-         navigate("/dashboard");
-         toast({
-           title: "Access Denied",
-           description: "You don't have permission to access the admin dashboard.",
-           variant: "destructive",
-         });
-         return;
-       }
-       fetchSubscriptions();
-       fetchUsers();
-     }
-   }, [isAdmin, adminLoading, user, authLoading, navigate]);
+  useEffect(() => {
+    if (!authLoading && !adminLoading) {
+      if (!user) {
+        navigate("/auth");
+        return;
+      }
+      if (!isAdmin) {
+        navigate("/dashboard");
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access the admin dashboard.",
+          variant: "destructive",
+        });
+        return;
+      }
+      fetchSubscriptions();
+      fetchUsers();
+
+      // Auto-refresh every 30 seconds
+      const interval = setInterval(() => {
+        fetchSubscriptions();
+        fetchUsers();
+      }, 30000);
+
+      // Realtime subscription for farms and subscriptions changes
+      const channel = supabase
+        .channel('admin-dashboard-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'farms' }, () => {
+          fetchUsers();
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'subscriptions' }, () => {
+          fetchSubscriptions();
+          fetchUsers();
+        })
+        .subscribe();
+
+      return () => {
+        clearInterval(interval);
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isAdmin, adminLoading, user, authLoading, navigate]);
  
    const fetchUsers = async () => {
      setUsersLoading(true);
