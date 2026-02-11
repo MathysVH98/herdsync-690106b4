@@ -2,3 +2,6 @@ project_id = "ynvwapmenvogfztopwyv"
 
 [functions.ask-a-pro]
 verify_jwt = false
+
+[functions.admin-get-users]
+verify_jwt = false
