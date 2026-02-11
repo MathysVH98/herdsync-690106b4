@@ -26,6 +26,34 @@ export function SupportChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
+  // Draggable state
+  const [position, setPosition] = useState({ x: 24, y: 24 }); // offset from bottom-right
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number } | null>(null);
+  const isDragging = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    dragRef.current = { startX: e.clientX, startY: e.clientY, startPosX: position.x, startPosY: position.y };
+    isDragging.current = false;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) isDragging.current = true;
+    const newX = Math.max(0, dragRef.current.startPosX - dx);
+    const newY = Math.max(0, dragRef.current.startPosY - dy);
+    setPosition({
+      x: Math.min(newX, window.innerWidth - 64),
+      y: Math.min(newY, window.innerHeight - 64),
+    });
+  };
+
+  const handlePointerUp = () => {
+    dragRef.current = null;
+  };
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -129,13 +157,17 @@ export function SupportChat() {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button - Draggable */}
       <Button
-        onClick={() => setIsOpen(true)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onClick={() => { if (!isDragging.current) setIsOpen(true); }}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50",
+          "fixed h-14 w-14 rounded-full shadow-lg z-50 touch-none cursor-grab active:cursor-grabbing",
           isOpen && "hidden"
         )}
+        style={{ bottom: position.y, right: position.x }}
         size="icon"
       >
         <MessageCircle className="h-6 w-6" />
@@ -143,7 +175,10 @@ export function SupportChat() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-[380px] h-[500px] shadow-2xl z-50 flex flex-col">
+        <Card
+          className="fixed w-[380px] h-[500px] shadow-2xl z-50 flex flex-col"
+          style={{ bottom: position.y, right: position.x }}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bot className="h-5 w-5 text-primary" />
