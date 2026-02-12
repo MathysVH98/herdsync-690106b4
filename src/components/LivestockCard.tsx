@@ -42,6 +42,7 @@ interface LivestockCardProps {
   onMarkForSale?: (id: string) => void;
   onCancelPlannedSale?: (id: string) => void;
   isSold?: boolean;
+  hideFinancials?: boolean;
 }
 
 const statusStyles: Record<AnimalStatus, string> = {
@@ -52,7 +53,7 @@ const statusStyles: Record<AnimalStatus, string> = {
 };
 
 
-export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell, onMarkForSale, onCancelPlannedSale, isSold = false }: LivestockCardProps) {
+export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell, onMarkForSale, onCancelPlannedSale, isSold = false, hideFinancials = false }: LivestockCardProps) {
   return (
     <div className={cn("card-elevated p-5 group", isSold && "opacity-80")}>
       <div className="flex items-start gap-4">
@@ -165,11 +166,13 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
             <span className="font-medium text-foreground">{animal.feedType || "-"}</span>
           </div>
         )}
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Purchase Cost:</span>
-          <span className="font-medium text-foreground">R{animal.purchaseCost?.toFixed(2) || "0.00"}</span>
-        </div>
-        {isSold && animal.salePrice != null && (
+        {!hideFinancials && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Purchase Cost:</span>
+            <span className="font-medium text-foreground">R{animal.purchaseCost?.toFixed(2) || "0.00"}</span>
+          </div>
+        )}
+        {isSold && animal.salePrice != null && !hideFinancials && (
           <>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Sale Price:</span>
@@ -186,13 +189,13 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
                 R{(animal.salePrice - (animal.purchaseCost || 0)).toFixed(2)}
               </span>
             </div>
-            {animal.soldTo && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Sold To:</span>
-                <span className="font-medium text-foreground">{animal.soldTo}</span>
-              </div>
-            )}
           </>
+        )}
+        {isSold && animal.soldTo && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Sold To:</span>
+            <span className="font-medium text-foreground">{animal.soldTo}</span>
+          </div>
         )}
       </div>
     </div>
