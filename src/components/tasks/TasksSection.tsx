@@ -20,15 +20,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, ClipboardList, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Search, ClipboardList, Clock, CheckCircle2, AlertCircle, ChevronDown, RotateCcw } from "lucide-react";
 import { useEmployeeTasks, EmployeeTask } from "@/hooks/useEmployeeTasks";
+import { useDailyTasks } from "@/hooks/useDailyTasks";
 import { AddTaskDialog } from "./AddTaskDialog";
+import { AddDailyTaskDialog } from "./AddDailyTaskDialog";
 import { EditTaskDialog } from "./EditTaskDialog";
 import { TasksTable } from "./TasksTable";
+import { DailyTasksList } from "./DailyTasksList";
 import { useFarm } from "@/hooks/useFarm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { isToday, isPast } from "date-fns";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 
 interface Employee {
   id: string;
@@ -39,10 +49,16 @@ interface Employee {
 
 export function TasksSection() {
   const { farm } = useFarm();
+  const { isEmployee } = useEmployeePermissions();
   const { tasks, isLoading, createTask, updateTask, deleteTask } = useEmployeeTasks();
+  const {
+    dailyTasks, missedTasks, isCompletedToday,
+    createDailyTask, toggleCompletion, deleteDailyTask,
+  } = useDailyTasks();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterEmployee, setFilterEmployee] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isAddDailyDialogOpen, setIsAddDailyDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<EmployeeTask | null>(null);
@@ -67,6 +83,12 @@ export function TasksSection() {
   const handleAddTask = (data: Parameters<typeof createTask.mutate>[0]) => {
     createTask.mutate(data, {
       onSuccess: () => setIsAddDialogOpen(false),
+    });
+  };
+
+  const handleAddDailyTask = (data: Parameters<typeof createDailyTask.mutate>[0]) => {
+    createDailyTask.mutate(data, {
+      onSuccess: () => setIsAddDailyDialogOpen(false),
     });
   };
 
@@ -198,11 +220,37 @@ export function TasksSection() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Task
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+              <ChevronDown className="w-4 h-4 ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setIsAddDialogOpen(true)}>
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Add Task
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setIsAddDailyDialogOpen(true)}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Add Daily Task
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      {/* Daily Tasks */}
+      <DailyTasksList
+        dailyTasks={dailyTasks}
+        missedTasks={missedTasks}
+        isCompletedToday={isCompletedToday}
+        onToggle={(taskId, employeeId) => toggleCompletion.mutate({ taskId, employeeId })}
+        onDelete={(taskId) => deleteDailyTask.mutate(taskId)}
+        isEmployee={isEmployee}
+        filterEmployee={filterEmployee}
+      />
 
       {/* Tasks Tabs */}
       <Tabs defaultValue="pending" className="space-y-4">
@@ -279,6 +327,13 @@ export function TasksSection() {
         isSubmitting={createTask.isPending}
       />
 
+      <AddDailyTaskDialog
+        open={isAddDailyDialogOpen}
+        onOpenChange={setIsAddDailyDialogOpen}
+        employees={employees}
+        onSubmit={handleAddDailyTask}
+        isSubmitting={createDailyTask.isPending}
+      />
       <EditTaskDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
