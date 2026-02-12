@@ -18,8 +18,11 @@ import {
   AlertTriangle, 
   Package,
   Clock,
-  Calendar
+  Calendar,
+  ArrowRight
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface LivestockItem {
   id: string;
@@ -55,6 +58,7 @@ interface FeedInventoryItem {
 }
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
    const { user, loading: authLoading } = useAuth();
    const { farm, loading: farmLoading } = useFarm();
@@ -250,9 +254,14 @@ export default function Dashboard() {
           <div className="lg:col-span-2 space-y-6">
             {/* Livestock Breakdown */}
             <div className="card-elevated p-6">
-              <h3 className="font-display font-semibold text-lg text-foreground mb-4">
-                Livestock Breakdown
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-semibold text-lg text-foreground">
+                  Livestock Breakdown
+                </h3>
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:underline" onClick={() => navigate("/livestock")}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
               {Object.keys(stats.byType).length === 0 ? (
                 <p className="text-muted-foreground text-center py-8">
                   No livestock added yet. Go to the Livestock page to add your animals.
@@ -290,9 +299,14 @@ export default function Dashboard() {
               />
             ) : (
               <div className="card-elevated p-6">
-                <h3 className="font-display font-semibold text-lg text-foreground mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-semibold text-lg text-foreground">
                   Morning Feeding Schedule
                 </h3>
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:underline" onClick={() => navigate("/feeding")}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
                 <p className="text-muted-foreground text-center py-8">
                   No feeding schedule set up yet. Go to the Feeding page to create one.
                 </p>
@@ -312,6 +326,9 @@ export default function Dashboard() {
                   <h3 className="font-display font-semibold text-lg text-foreground">
                     Upcoming Sales
                   </h3>
+                  <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:underline" onClick={() => navigate("/animal-sale")}>
+                    View All <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
                   <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
                     {upcomingSales.length} Pending
                   </Badge>
@@ -348,6 +365,7 @@ export default function Dashboard() {
                 <h3 className="font-display font-semibold text-lg text-foreground">
                   Alerts
                 </h3>
+                {/* Alerts are dashboard-only, no separate page */}
                 {formattedAlerts.length > 0 && (
                   <Badge variant="destructive" className="animate-pulse-soft">
                     {formattedAlerts.length} Active
@@ -365,9 +383,14 @@ export default function Dashboard() {
 
             {/* Recent Health Records */}
             <div className="card-elevated p-6">
-              <h3 className="font-display font-semibold text-lg text-foreground mb-4">
-                Recent Health Records
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display font-semibold text-lg text-foreground">
+                  Recent Health Records
+                </h3>
+                <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:underline" onClick={() => navigate("/health")}>
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </div>
               {healthRecords.length > 0 ? (
                 <div className="space-y-3">
                   {healthRecords.slice(0, 3).map((record) => (

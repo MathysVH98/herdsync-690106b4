@@ -44,7 +44,7 @@ export function DashboardTasks() {
           variant="ghost" 
           size="sm" 
           className="text-primary hover:text-primary hover:underline"
-          onClick={() => navigate("/employees")}
+          onClick={() => navigate("/employee-tasks")}
         >
           View All
           <ArrowRight className="ml-1 h-4 w-4" />
