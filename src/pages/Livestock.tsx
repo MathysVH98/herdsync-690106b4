@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { exportToCSV } from "@/utils/exportCSV";
 import { ImportCSVDialog } from "@/components/ImportCSVDialog";
@@ -48,6 +49,7 @@ const normalizeAnimalType = (value: string) => {
 
 export default function Livestock() {
   const navigate = useNavigate();
+  const { isEmployee } = useEmployeePermissions();
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [rawAnimalsData, setRawAnimalsData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -702,7 +704,7 @@ export default function Livestock() {
           </TabsContent>
 
           <TabsContent value="sold" className="space-y-4 mt-4">
-            {soldAnimals.length > 0 && (
+            {soldAnimals.length > 0 && !isEmployee && (
               <div className="card-elevated p-4">
                 <h3 className="font-semibold text-foreground mb-3">Sales Summary</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
