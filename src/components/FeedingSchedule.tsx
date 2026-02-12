@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
-import { Clock, Sun, Moon } from "lucide-react";
+import { Clock, Sun, Moon, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 export interface FeedingItem {
   id: string;
@@ -61,9 +63,15 @@ interface FeedingScheduleProps {
 }
 
 export function FeedingSchedule({ items, title = "Today's Schedule" }: FeedingScheduleProps) {
+  const navigate = useNavigate();
   return (
     <div className="card-elevated p-6">
-      <h3 className="font-display font-semibold text-lg text-foreground mb-4">{title}</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-display font-semibold text-lg text-foreground">{title}</h3>
+        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:underline" onClick={() => navigate("/feeding")}>
+          View All <ArrowRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
       <div className="space-y-0">
         {items.map((item) => (
           <FeedingScheduleItem key={item.id} item={item} />
