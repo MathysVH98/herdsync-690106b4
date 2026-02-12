@@ -78,9 +78,8 @@ export default function Inventory() {
   const equipmentValue = getEquipmentTotalValue();
   const totalItems = inventory.length;
 
-  const filteredItems = activeCategory === "all" 
-    ? inventory 
-    : inventory.filter(item => item.category === activeCategory);
+  const getFilteredItems = (category: string) => 
+    category === "all" ? inventory : inventory.filter(item => item.category === category);
 
   if (!farm) {
     return (
@@ -216,7 +215,7 @@ export default function Inventory() {
                 <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
               ) : (
                 <InventoryTable
-                  items={filteredItems}
+                  items={getFilteredItems(cat)}
                   onRestock={setRestockItem}
                   onLogUsage={setUsageItem}
                   onDelete={deleteItem}
