@@ -109,6 +109,25 @@ export default function FarmExpenses() {
     storage_location: "",
   });
   const UNITS = ["kg", "L", "units", "bags", "boxes", "rolls", "m", "pairs"];
+
+  // Map expense categories to inventory categories
+  const expenseToInventoryCategory: Record<string, InventoryCategory> = {
+    "Medicine & Veterinary": "Medicine",
+    "Petrol": "Fuel",
+    "Diesel": "Fuel",
+    "Feed & Supplements": "Feed",
+    "Equipment & Repairs": "Spare Parts",
+    "Chemicals & Pesticides": "Chemicals",
+    "Seeds & Fertilizer": "Chemicals",
+  };
+
+  const handleExpenseCategoryChange = (value: string) => {
+    setFormData({ ...formData, category: value });
+    if (linkToInventory) {
+      const mappedCategory = expenseToInventoryCategory[value] || "";
+      setInventoryData((prev) => ({ ...prev, category: mappedCategory }));
+    }
+  };
    const [receiptFile, setReceiptFile] = useState<File | null>(null);
    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
    const [uploading, setUploading] = useState(false);
@@ -288,7 +307,7 @@ export default function FarmExpenses() {
                   <Label htmlFor="category">Category</Label>
                   <Select
                     value={formData.category}
-                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                    onValueChange={handleExpenseCategoryChange}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -349,7 +368,14 @@ export default function FarmExpenses() {
                   <Checkbox
                     id="link-inventory"
                     checked={linkToInventory}
-                    onCheckedChange={(checked) => setLinkToInventory(checked === true)}
+                    onCheckedChange={(checked) => {
+                      const isChecked = checked === true;
+                      setLinkToInventory(isChecked);
+                      if (isChecked && formData.category) {
+                        const mappedCategory = expenseToInventoryCategory[formData.category] || "";
+                        setInventoryData((prev) => ({ ...prev, category: mappedCategory }));
+                      }
+                    }}
                   />
                   <Label htmlFor="link-inventory" className="text-sm font-medium cursor-pointer">
                     Link this expense to Farm Inventory
@@ -371,20 +397,13 @@ export default function FarmExpenses() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="inv_category">Category *</Label>
-                        <Select
-                          value={inventoryData.category}
-                          onValueChange={(v) => setInventoryData({ ...inventoryData, category: v as InventoryCategory })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {INVENTORY_CATEGORIES.map((cat) => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <Label htmlFor="inv_category">Category</Label>
+                        <Input
+                          id="inv_category"
+                          value={inventoryData.category || (formData.category ? "No matching category" : "Select expense category first")}
+                          readOnly
+                          className="bg-muted cursor-not-allowed"
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-3 gap-4">
