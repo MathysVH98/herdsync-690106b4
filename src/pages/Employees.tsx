@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,8 @@ import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, Sh
 import { format } from "date-fns";
 import { InviteEmployeeDialog } from "@/components/InviteEmployeeDialog";
 import { TasksSection } from "@/components/tasks";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
+import { useToast as useToastHook } from "@/hooks/use-toast";
 
 interface Employee {
   id: string;
@@ -86,6 +89,8 @@ const roleOptions = [
 export default function Employees() {
   const { farm } = useFarm();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isEmployee } = useEmployeePermissions();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -111,6 +116,13 @@ export default function Employees() {
     emergency_contact_phone: "",
     notes: "",
   });
+
+  // Block employee access - redirect to tasks page
+  useEffect(() => {
+    if (isEmployee) {
+      navigate("/employee-tasks", { replace: true });
+    }
+  }, [isEmployee, navigate]);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees", farm?.id],
