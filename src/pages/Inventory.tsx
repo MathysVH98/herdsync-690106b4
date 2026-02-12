@@ -18,6 +18,7 @@ import {
   Tractor
 } from "lucide-react";
 import { useFarm } from "@/hooks/useFarm";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 import { useInventory, InventoryItem, INVENTORY_CATEGORIES } from "@/hooks/useInventory";
 import { useFarmEquipment } from "@/hooks/useFarmEquipment";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
@@ -47,6 +48,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 
 export default function Inventory() {
   const { farm } = useFarm();
+  const { isEmployee } = useEmployeePermissions();
   const { 
     inventory, 
     usageLog,
@@ -152,13 +154,15 @@ export default function Inventory() {
               icon={Calculator}
             />
           </div>
-          <div className="col-span-2 md:col-span-2 xl:col-span-1">
-            <StatsCard
-              title="Equipment Value"
-              value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
-              icon={Calculator}
-            />
-          </div>
+          {!isEmployee && (
+            <div className="col-span-2 md:col-span-2 xl:col-span-1">
+              <StatsCard
+                title="Equipment Value"
+                value={equipmentLoading ? "-" : `R${equipmentValue.toLocaleString("en-ZA", { maximumFractionDigits: 0 })}`}
+                icon={Calculator}
+              />
+            </div>
+          )}
         </div>
 
         {/* Low Stock Alert */}
