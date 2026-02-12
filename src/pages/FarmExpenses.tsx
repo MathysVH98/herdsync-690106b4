@@ -32,7 +32,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFarmExpenses, EXPENSE_CATEGORIES, FarmExpense } from "@/hooks/useFarmExpenses";
 import { useFarm } from "@/hooks/useFarm";
 import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
+import { useInventory, INVENTORY_CATEGORIES, InventoryCategory } from "@/hooks/useInventory";
 import { supabase } from "@/integrations/supabase/client";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useQuery } from "@tanstack/react-query";
 import {
   Plus,
@@ -67,7 +69,9 @@ export default function FarmExpenses() {
   const { expenses, loading, addExpense, deleteExpense, getTotalByMonth, getTotalByCategory } = useFarmExpenses();
   const { farm } = useFarm();
   const { isEmployee } = useEmployeePermissions();
+  const { addItem: addInventoryItem } = useInventory();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [linkToInventory, setLinkToInventory] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
   // Fetch employees for salary data
@@ -95,6 +99,16 @@ export default function FarmExpenses() {
     receipt_reference: "",
     notes: "",
   });
+  const [inventoryData, setInventoryData] = useState({
+    name: "",
+    category: "" as InventoryCategory | "",
+    quantity: "",
+    unit: "units",
+    reorder_level: "",
+    cost_per_unit: "",
+    storage_location: "",
+  });
+  const UNITS = ["kg", "L", "units", "bags", "boxes", "rolls", "m", "pairs"];
    const [receiptFile, setReceiptFile] = useState<File | null>(null);
    const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
    const [uploading, setUploading] = useState(false);
@@ -149,16 +163,32 @@ export default function FarmExpenses() {
        receiptImageUrl = publicUrl;
      }
  
-    await addExpense({
-      expense_date: formData.expense_date,
-      category: formData.category,
-      description: formData.description,
-      amount: parseFloat(formData.amount),
-      supplier_vendor: formData.supplier_vendor || null,
-      receipt_reference: formData.receipt_reference || null,
-      notes: formData.notes || null,
-       receipt_image_url: receiptImageUrl,
-    });
+     await addExpense({
+       expense_date: formData.expense_date,
+       category: formData.category,
+       description: formData.description,
+       amount: parseFloat(formData.amount),
+       supplier_vendor: formData.supplier_vendor || null,
+       receipt_reference: formData.receipt_reference || null,
+       notes: formData.notes || null,
+        receipt_image_url: receiptImageUrl,
+     });
+
+     // Create linked inventory item if checkbox is checked
+     if (linkToInventory && inventoryData.name && inventoryData.category) {
+       await addInventoryItem({
+         name: inventoryData.name,
+         category: inventoryData.category as InventoryCategory,
+         quantity: Number(inventoryData.quantity) || 0,
+         unit: inventoryData.unit,
+         reorder_level: Number(inventoryData.reorder_level) || 0,
+         cost_per_unit: Number(inventoryData.cost_per_unit) || 0,
+         supplier: formData.supplier_vendor || null,
+         storage_location: inventoryData.storage_location || null,
+         notes: formData.notes || null,
+         last_restocked: formData.expense_date,
+       });
+     }
 
     setFormData({
       expense_date: format(new Date(), "yyyy-MM-dd"),
@@ -169,6 +199,16 @@ export default function FarmExpenses() {
       receipt_reference: "",
       notes: "",
     });
+    setInventoryData({
+      name: "",
+      category: "",
+      quantity: "",
+      unit: "units",
+      reorder_level: "",
+      cost_per_unit: "",
+      storage_location: "",
+    });
+    setLinkToInventory(false);
      setReceiptFile(null);
      setReceiptPreview(null);
      setUploading(false);
@@ -214,7 +254,7 @@ export default function FarmExpenses() {
                 Add Expense
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Expense</DialogTitle>
               </DialogHeader>
@@ -303,6 +343,117 @@ export default function FarmExpenses() {
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   />
                 </div>
+
+                {/* Link to Inventory Checkbox */}
+                <div className="flex items-center space-x-2 pt-2 border-t">
+                  <Checkbox
+                    id="link-inventory"
+                    checked={linkToInventory}
+                    onCheckedChange={(checked) => setLinkToInventory(checked === true)}
+                  />
+                  <Label htmlFor="link-inventory" className="text-sm font-medium cursor-pointer">
+                    Link this expense to Farm Inventory
+                  </Label>
+                </div>
+
+                {linkToInventory && (
+                  <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                    <p className="text-sm font-medium text-muted-foreground">Inventory Item Details</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_name">Item Name *</Label>
+                        <Input
+                          id="inv_name"
+                          placeholder="e.g., Diesel Fuel"
+                          value={inventoryData.name}
+                          onChange={(e) => setInventoryData({ ...inventoryData, name: e.target.value })}
+                          required={linkToInventory}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_category">Category *</Label>
+                        <Select
+                          value={inventoryData.category}
+                          onValueChange={(v) => setInventoryData({ ...inventoryData, category: v as InventoryCategory })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {INVENTORY_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_quantity">Quantity *</Label>
+                        <Input
+                          id="inv_quantity"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0"
+                          value={inventoryData.quantity}
+                          onChange={(e) => setInventoryData({ ...inventoryData, quantity: e.target.value })}
+                          required={linkToInventory}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_unit">Unit</Label>
+                        <Select
+                          value={inventoryData.unit}
+                          onValueChange={(v) => setInventoryData({ ...inventoryData, unit: v })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UNITS.map((u) => (
+                              <SelectItem key={u} value={u}>{u}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_reorder">Reorder Level</Label>
+                        <Input
+                          id="inv_reorder"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={inventoryData.reorder_level}
+                          onChange={(e) => setInventoryData({ ...inventoryData, reorder_level: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_cost">Cost per Unit (R)</Label>
+                        <Input
+                          id="inv_cost"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          value={inventoryData.cost_per_unit}
+                          onChange={(e) => setInventoryData({ ...inventoryData, cost_per_unit: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="inv_storage">Storage Location</Label>
+                        <Input
+                          id="inv_storage"
+                          placeholder="e.g., Shed A, Fuel Tank 1"
+                          value={inventoryData.storage_location}
+                          onChange={(e) => setInventoryData({ ...inventoryData, storage_location: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                  {/* Receipt Photo Upload */}
                  <div className="space-y-2">
