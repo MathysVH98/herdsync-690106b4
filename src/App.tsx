@@ -27,6 +27,7 @@ import ChemicalsRemedies from "./pages/ChemicalsRemedies";
 import AuditPackBuilder from "./pages/AuditPackBuilder";
 import Pricing from "./pages/Pricing";
 import Employees from "./pages/Employees";
+import EmployeeTasks from "./pages/EmployeeTasks";
 import AnimalSale from "./pages/AnimalSale";
 import FarmExpenses from "./pages/FarmExpenses";
 import Contact from "./pages/Contact";
@@ -71,6 +72,7 @@ const App = () => (
                   <Route path="/compliance/labour-ohs" element={<LabourOHS />} />
                   <Route path="/compliance/chemicals" element={<ChemicalsRemedies />} />
                   <Route path="/employees" element={<Employees />} />
+                  <Route path="/employee-tasks" element={<EmployeeTasks />} />
                   <Route path="/animal-sale" element={<AnimalSale />} />
                   <Route path="/expenses" element={<FarmExpenses />} />
                   <Route path="/contact" element={<Contact />} />

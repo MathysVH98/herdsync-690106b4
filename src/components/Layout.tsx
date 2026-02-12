@@ -27,6 +27,7 @@ import {
   AlertCircle,
   Sparkles,
   Settings,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
  import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
 import { useSubscription } from "@/hooks/useSubscription";
  import { useAdmin } from "@/hooks/useAdmin";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { FarmSwitcher } from "@/components/FarmSwitcher";
 import farmBackground from "@/assets/farm-background.jpg";
@@ -49,7 +51,8 @@ const navigation = [
   { name: "Animal Sale", href: "/animal-sale", icon: CreditCard },
   { name: "Ask a Pro", href: "/ask-a-pro", icon: Sparkles },
   { name: "Audit & Compliance", href: "/audit", icon: ClipboardCheck },
-  { name: "Employees", href: "/employees", icon: UserCog },
+  { name: "Employees", href: "/employees", icon: UserCog, ownerOnly: true },
+  { name: "Employee Tasks", href: "/employee-tasks", icon: ClipboardList },
   { name: "Farm Expenses", href: "/expenses", icon: Receipt },
   { name: "Farm Inventory", href: "/inventory", icon: Package },
   { name: "Feeding Schedule", href: "/feeding", icon: Clock },
@@ -88,7 +91,8 @@ const informationNavigation = [
 const mainNavigationPaths = [
   "/dashboard",
   "/livestock",
-  "/employees", 
+  "/employees",
+  "/employee-tasks", 
   "/feeding",
   "/inventory",
   "/health",
@@ -122,6 +126,7 @@ export function Layout({ children }: LayoutProps) {
   const { farm } = useFarm();
   const { subscription, isActive } = useSubscription();
    const { isAdmin } = useAdmin();
+  const { isEmployee } = useEmployeePermissions();
   
   // Only show back button on sub-pages (not main navigation pages)
   const showBackButton = !mainNavigationPaths.includes(location.pathname);
@@ -200,7 +205,9 @@ export function Layout({ children }: LayoutProps) {
 
           {/* Navigation */}
           <nav ref={navRef} className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-            {navigation.map((item) => {
+            {navigation
+              .filter((item) => !item.ownerOnly || !isEmployee)
+              .map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
