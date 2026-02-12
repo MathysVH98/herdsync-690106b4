@@ -635,6 +635,7 @@ export default function Livestock() {
                       onSell={handleOpenSellDialog}
                       onMarkForSale={handleOpenMarkForSaleDialog}
                       onCancelPlannedSale={handleCancelPlannedSale}
+                      hideFinancials={isEmployee}
                     />
                   </div>
                 ))}
@@ -686,6 +687,7 @@ export default function Livestock() {
                       onSell={handleOpenSellDialog}
                       onMarkForSale={handleOpenMarkForSaleDialog}
                       onCancelPlannedSale={handleCancelPlannedSale}
+                      hideFinancials={isEmployee}
                     />
                   </div>
                 ))}
@@ -739,7 +741,7 @@ export default function Livestock() {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filteredAnimals.map((animal) => (
                   <div key={animal.id} onClick={() => handleAnimalClick(animal.id)} className="cursor-pointer">
-                    <LivestockCard animal={animal} isSold />
+                    <LivestockCard animal={animal} isSold hideFinancials={isEmployee} />
                   </div>
                 ))}
               </div>
