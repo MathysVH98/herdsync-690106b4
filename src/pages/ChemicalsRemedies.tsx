@@ -105,6 +105,21 @@ export default function ChemicalsRemedies() {
 
     if (editingInventory?.id) {
       await supabase.from("chemicals_inventory").update(data).eq("id", editingInventory.id);
+
+      // Sync to farm inventory - update matching item
+      await supabase
+        .from("inventory")
+        .update({
+          name: data.product_name,
+          quantity: data.quantity ?? 0,
+          unit: data.unit ?? "L",
+          supplier: null,
+          storage_location: data.storage_location || null,
+          notes: data.notes || null,
+        })
+        .eq("farm_id", farm.id)
+        .eq("category", "Chemicals")
+        .eq("name", editingInventory.product_name);
     } else {
       const insertData = {
         farm_id: farm.id,
@@ -118,6 +133,21 @@ export default function ChemicalsRemedies() {
         notes: data.notes,
       };
       await supabase.from("chemicals_inventory").insert(insertData);
+
+      // Sync to farm inventory - create matching item
+      await supabase.from("inventory").insert({
+        farm_id: farm.id,
+        name: data.product_name!,
+        category: "Chemicals",
+        quantity: data.quantity ?? 0,
+        unit: data.unit ?? "L",
+        reorder_level: 0,
+        cost_per_unit: 0,
+        supplier: null,
+        storage_location: data.storage_location || null,
+        notes: data.notes || null,
+        last_restocked: new Date().toISOString().split("T")[0],
+      });
     }
     toast({ title: "Saved", description: "Chemical inventory updated" });
     setIsInventoryOpen(false);
@@ -126,7 +156,17 @@ export default function ChemicalsRemedies() {
   };
 
   const deleteInventory = async (id: string) => {
+    const item = inventory.find((i) => i.id === id);
     await supabase.from("chemicals_inventory").delete().eq("id", id);
+    // Also remove from farm inventory
+    if (item && farm?.id) {
+      await supabase
+        .from("inventory")
+        .delete()
+        .eq("farm_id", farm.id)
+        .eq("category", "Chemicals")
+        .eq("name", item.product_name);
+    }
     toast({ title: "Deleted", description: "Chemical removed from inventory" });
     fetchData();
   };
