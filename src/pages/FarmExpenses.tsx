@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFarmExpenses, EXPENSE_CATEGORIES, FarmExpense } from "@/hooks/useFarmExpenses";
 import { useFarm } from "@/hooks/useFarm";
+import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -65,6 +66,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 export default function FarmExpenses() {
   const { expenses, loading, addExpense, deleteExpense, getTotalByMonth, getTotalByCategory } = useFarmExpenses();
   const { farm } = useFarm();
+  const { isEmployee } = useEmployeePermissions();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
 
@@ -377,52 +379,54 @@ export default function FarmExpenses() {
           </Select>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Operating Expenses
-              </CardTitle>
-              <Receipt className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R{monthlyExpenseTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
-              <p className="text-xs text-muted-foreground">{monthlyExpenses.length} transactions</p>
-            </CardContent>
-          </Card>
+        {/* Summary Cards - hidden from employees */}
+        {!isEmployee && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Operating Expenses
+                </CardTitle>
+                <Receipt className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">R{monthlyExpenseTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
+                <p className="text-xs text-muted-foreground">{monthlyExpenses.length} transactions</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Employee Salaries
-              </CardTitle>
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">R{totalSalaries.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
-              <p className="text-xs text-muted-foreground">{employees.length} active employees</p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Employee Salaries
+                </CardTitle>
+                <Users className="w-4 h-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">R{totalSalaries.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
+                <p className="text-xs text-muted-foreground">{employees.length} active employees</p>
+              </CardContent>
+            </Card>
 
-          <Card className="bg-primary/5 border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-primary">
-                Total Monthly Cost
-              </CardTitle>
-              <TrendingUp className="w-4 h-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">R{grandTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
-              <p className="text-xs text-muted-foreground">Expenses + Salaries</p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="bg-primary/5 border-primary/20">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-primary">
+                  Total Monthly Cost
+                </CardTitle>
+                <TrendingUp className="w-4 h-4 text-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary">R{grandTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</div>
+                <p className="text-xs text-muted-foreground">Expenses + Salaries</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <Tabs defaultValue="expenses" className="space-y-4">
           <TabsList>
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
-            <TabsTrigger value="summary">Monthly Summary</TabsTrigger>
+            {!isEmployee && <TabsTrigger value="summary">Monthly Summary</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="expenses">
@@ -450,7 +454,7 @@ export default function FarmExpenses() {
                         <TableHead>Description</TableHead>
                         <TableHead>Supplier</TableHead>
                          <TableHead>Receipt</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
+                        {!isEmployee && <TableHead className="text-right">Amount</TableHead>}
                         <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -483,9 +487,11 @@ export default function FarmExpenses() {
                                <span className="text-muted-foreground text-xs">-</span>
                              )}
                            </TableCell>
-                          <TableCell className="text-right font-medium">
-                            R{Number(expense.amount).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-                          </TableCell>
+                          {!isEmployee && (
+                            <TableCell className="text-right font-medium">
+                              R{Number(expense.amount).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                            </TableCell>
+                          )}
                           <TableCell>
                             <Button
                               variant="ghost"
@@ -504,87 +510,89 @@ export default function FarmExpenses() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="summary">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Expenses by Category */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Expenses by Category</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {expensesByCategory.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">No expenses this month</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {expensesByCategory.map((item) => (
-                        <div key={item.category} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {categoryIcons[item.category] || <DollarSign className="w-4 h-4" />}
-                            <span className="text-sm">{item.category}</span>
+          {!isEmployee && (
+            <TabsContent value="summary">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Expenses by Category */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Expenses by Category</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {expensesByCategory.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-4">No expenses this month</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {expensesByCategory.map((item) => (
+                          <div key={item.category} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {categoryIcons[item.category] || <DollarSign className="w-4 h-4" />}
+                              <span className="text-sm">{item.category}</span>
+                            </div>
+                            <span className="font-medium">
+                              R{item.total.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                            </span>
                           </div>
-                          <span className="font-medium">
-                            R{item.total.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-                          </span>
+                        ))}
+                        <div className="border-t pt-3 flex items-center justify-between font-semibold">
+                          <span>Total Expenses</span>
+                          <span>R{monthlyExpenseTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
                         </div>
-                      ))}
-                      <div className="border-t pt-3 flex items-center justify-between font-semibold">
-                        <span>Total Expenses</span>
-                        <span>R{monthlyExpenseTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Employee Salaries */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Employee Salaries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {employees.length === 0 ? (
+                      <p className="text-muted-foreground text-center py-4">No active employees</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {employees.map((emp: any) => (
+                          <div key={emp.id} className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm">{emp.first_name} {emp.last_name}</span>
+                              <Badge variant="secondary" className="text-xs">{emp.role}</Badge>
+                            </div>
+                            <span className="font-medium">
+                              R{(emp.salary || 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                        <div className="border-t pt-3 flex items-center justify-between font-semibold">
+                          <span>Total Salaries</span>
+                          <span>R{totalSalaries.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Grand Total */}
+                <Card className="lg:col-span-2 bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">Monthly Grand Total</h3>
+                        <p className="text-sm text-muted-foreground">
+                          All operating costs including salaries for {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
+                        </p>
+                      </div>
+                      <div className="text-3xl font-bold text-primary">
+                        R{grandTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
                       </div>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Employee Salaries */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Employee Salaries</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {employees.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-4">No active employees</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {employees.map((emp: any) => (
-                        <div key={emp.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm">{emp.first_name} {emp.last_name}</span>
-                            <Badge variant="secondary" className="text-xs">{emp.role}</Badge>
-                          </div>
-                          <span className="font-medium">
-                            R{(emp.salary || 0).toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      ))}
-                      <div className="border-t pt-3 flex items-center justify-between font-semibold">
-                        <span>Total Salaries</span>
-                        <span>R{totalSalaries.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Grand Total */}
-              <Card className="lg:col-span-2 bg-primary/5 border-primary/20">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">Monthly Grand Total</h3>
-                      <p className="text-sm text-muted-foreground">
-                        All operating costs including salaries for {format(new Date(selectedMonth + "-01"), "MMMM yyyy")}
-                      </p>
-                    </div>
-                    <div className="text-3xl font-bold text-primary">
-                      R{grandTotal.toLocaleString("en-ZA", { minimumFractionDigits: 2 })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </Layout>
