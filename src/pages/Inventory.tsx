@@ -208,8 +208,44 @@ export default function Inventory() {
             </TabsTrigger>
           </TabsList>
 
-          {/* All and Category Views */}
-          {["all", ...INVENTORY_CATEGORIES].map((cat) => (
+          {/* All View - shows inventory + equipment */}
+          <TabsContent value="all" className="mt-4 space-y-6">
+            {loading || equipmentLoading ? (
+              <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
+            ) : (
+              <>
+                {inventory.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">Inventory Items</h3>
+                    <InventoryTable
+                      items={inventory}
+                      onRestock={setRestockItem}
+                      onLogUsage={setUsageItem}
+                      onDelete={deleteItem}
+                    />
+                  </div>
+                )}
+                {equipment.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2 text-foreground">Equipment</h3>
+                    <EquipmentTable
+                      items={equipment}
+                      onDelete={deleteEquipment}
+                    />
+                  </div>
+                )}
+                {inventory.length === 0 && equipment.length === 0 && (
+                  <div className="card-elevated p-12 text-center">
+                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No inventory items or equipment yet.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          {/* Category Views */}
+          {INVENTORY_CATEGORIES.map((cat) => (
             <TabsContent key={cat} value={cat} className="mt-4">
               {loading ? (
                 <div className="h-48 bg-muted/50 animate-pulse rounded-xl" />
