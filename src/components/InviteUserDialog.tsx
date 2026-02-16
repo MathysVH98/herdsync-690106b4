@@ -10,6 +10,13 @@
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
  import { Label } from "@/components/ui/label";
+ import {
+   Select,
+   SelectContent,
+   SelectItem,
+   SelectTrigger,
+   SelectValue,
+ } from "@/components/ui/select";
  import { Mail, Crown, AlertCircle } from "lucide-react";
  import { useInvitedUsers } from "@/hooks/useInvitedUsers";
  import { useSubscription } from "@/hooks/useSubscription";
@@ -22,20 +29,22 @@
  
  export function InviteUserDialog({ open, onOpenChange }: InviteUserDialogProps) {
    const [email, setEmail] = useState("");
+   const [role, setRole] = useState("viewer");
    const { subscription } = useSubscription();
    const { canInvite, remainingSlots, limit, inviteUser, isInviting } = useInvitedUsers();
  
-   const handleSubmit = (e: React.FormEvent) => {
-     e.preventDefault();
-     if (!email.trim() || !canInvite) return;
-     
-     inviteUser(email.trim(), {
-       onSuccess: () => {
-         setEmail("");
-         onOpenChange(false);
-       },
-     });
-   };
+    const handleSubmit = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!email.trim() || !canInvite) return;
+      
+      inviteUser({ email: email.trim(), role }, {
+        onSuccess: () => {
+          setEmail("");
+          setRole("viewer");
+          onOpenChange(false);
+        },
+      });
+    };
  
    const isStarterTier = subscription?.tier === "starter";
  
@@ -99,8 +108,21 @@
                    ? "You can invite unlimited users with your Pro plan"
                    : `${remainingSlots} invitation${remainingSlots !== 1 ? "s" : ""} remaining on your plan`}
                </p>
-             </div>
- 
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="role">Role</Label>
+                <Select value={role} onValueChange={setRole} disabled={!canInvite}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="viewer">Viewer — Can view farm data</SelectItem>
+                    <SelectItem value="manager">Farm Manager — Can view all tasks & employees</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
              <DialogFooter>
                <Button
                  type="button"
