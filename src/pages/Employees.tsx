@@ -47,7 +47,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useFarm } from "@/hooks/useFarm";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck, KeyRound, ClipboardList } from "lucide-react";
+import { Plus, Search, UserMinus, Edit, Users, UserCheck, UserX, Phone, Mail, ShieldCheck, KeyRound, ClipboardList, Crown } from "lucide-react";
 import { format } from "date-fns";
 import { InviteEmployeeDialog } from "@/components/InviteEmployeeDialog";
 import { TasksSection } from "@/components/tasks";
@@ -138,6 +138,87 @@ export default function Employees() {
     },
     enabled: !!farm?.id,
   });
+
+  // Fetch employee_users to know which employees have system access
+  const { data: employeeUsers = [] } = useQuery({
+    queryKey: ["employee-users", farm?.id],
+    queryFn: async () => {
+      if (!farm?.id) return [];
+      const { data, error } = await supabase
+        .from("employee_users")
+        .select("id, employee_id, user_id")
+        .eq("farm_id", farm.id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!farm?.id,
+  });
+
+  // Fetch farm_members to know which employees are managers
+  const { data: farmManagers = [] } = useQuery({
+    queryKey: ["farm-managers", farm?.id],
+    queryFn: async () => {
+      if (!farm?.id) return [];
+      const { data, error } = await supabase
+        .from("farm_members")
+        .select("id, user_id, role")
+        .eq("farm_id", farm.id)
+        .eq("role", "manager");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!farm?.id,
+  });
+
+  const promoteToManagerMutation = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      if (!farm?.id) throw new Error("No farm selected");
+      const { error } = await supabase.from("farm_members").insert({
+        farm_id: farm.id,
+        user_id: userId,
+        role: "manager",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["farm-managers", farm?.id] });
+      toast({ title: "Employee promoted to Farm Manager" });
+    },
+    onError: (error) => {
+      toast({ title: "Error promoting employee", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const demoteManagerMutation = useMutation({
+    mutationFn: async ({ userId }: { userId: string }) => {
+      if (!farm?.id) throw new Error("No farm selected");
+      const { error } = await supabase
+        .from("farm_members")
+        .delete()
+        .eq("farm_id", farm.id)
+        .eq("user_id", userId)
+        .eq("role", "manager");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["farm-managers", farm?.id] });
+      toast({ title: "Farm Manager role removed" });
+    },
+    onError: (error) => {
+      toast({ title: "Error demoting employee", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const getEmployeeUserId = (employeeId: string): string | null => {
+    const eu = employeeUsers.find((e) => e.employee_id === employeeId);
+    return eu?.user_id ?? null;
+  };
+
+  const isManager = (employeeId: string): boolean => {
+    const userId = getEmployeeUserId(employeeId);
+    if (!userId) return false;
+    return farmManagers.some((m) => m.user_id === userId);
+  };
 
   const addMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -637,6 +718,24 @@ export default function Employees() {
                           <TableCell>R {(employee.salary || 0).toLocaleString()}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
+                              {getEmployeeUserId(employee.id) && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  title={isManager(employee.id) ? "Remove Farm Manager role" : "Promote to Farm Manager"}
+                                  onClick={() => {
+                                    const userId = getEmployeeUserId(employee.id);
+                                    if (!userId) return;
+                                    if (isManager(employee.id)) {
+                                      demoteManagerMutation.mutate({ userId });
+                                    } else {
+                                      promoteToManagerMutation.mutate({ userId });
+                                    }
+                                  }}
+                                >
+                                  <Crown className={`w-4 h-4 ${isManager(employee.id) ? "text-yellow-500 fill-yellow-500" : "text-muted-foreground"}`} />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
