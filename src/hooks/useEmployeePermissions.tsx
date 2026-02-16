@@ -22,6 +22,7 @@ interface EmployeePermissionsContextType {
   permissions: EmployeePermissions | null;
   isEmployee: boolean;
   isFarmOwner: boolean;
+  isFarmManager: boolean;
   loading: boolean;
   canView: (page: string) => boolean;
   canAdd: (page: string) => boolean;
@@ -46,6 +47,7 @@ const EmployeePermissionsContext = createContext<EmployeePermissionsContextType>
   permissions: null,
   isEmployee: false,
   isFarmOwner: true,
+  isFarmManager: false,
   loading: true,
   canView: () => true,
   canAdd: () => true,
@@ -57,6 +59,7 @@ export function EmployeePermissionsProvider({ children }: { children: ReactNode 
   const [permissions, setPermissions] = useState<EmployeePermissions | null>(null);
   const [isEmployee, setIsEmployee] = useState(false);
   const [isFarmOwner, setIsFarmOwner] = useState(true);
+  const [isFarmManager, setIsFarmManager] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -72,9 +75,25 @@ export function EmployeePermissionsProvider({ children }: { children: ReactNode 
       if (farm.owner_id === user.id) {
         setIsFarmOwner(true);
         setIsEmployee(false);
+        setIsFarmManager(false);
         setPermissions(null);
         setLoading(false);
         return;
+      }
+
+      // Check if user is a farm manager (employee promoted to manager)
+      const { data: managerRecord } = await supabase
+        .from("farm_members")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("farm_id", farm.id)
+        .eq("role", "manager")
+        .maybeSingle();
+
+      if (managerRecord) {
+        setIsFarmManager(true);
+      } else {
+        setIsFarmManager(false);
       }
 
       // Check if user is an employee
@@ -126,7 +145,7 @@ export function EmployeePermissionsProvider({ children }: { children: ReactNode 
   }, [user, farm?.id, farm?.owner_id]);
 
   const canView = (page: string): boolean => {
-    if (isFarmOwner) return true;
+    if (isFarmOwner || isFarmManager) return true;
     if (!isEmployee || !permissions) return false;
 
     const pageMap: Record<string, keyof EmployeePermissions> = {
@@ -144,7 +163,7 @@ export function EmployeePermissionsProvider({ children }: { children: ReactNode 
   };
 
   const canAdd = (page: string): boolean => {
-    if (isFarmOwner) return true;
+    if (isFarmOwner || isFarmManager) return true;
     if (!isEmployee || !permissions) return false;
 
     const addMap: Record<string, keyof EmployeePermissions> = {
@@ -161,7 +180,7 @@ export function EmployeePermissionsProvider({ children }: { children: ReactNode 
 
   return (
     <EmployeePermissionsContext.Provider
-      value={{ permissions, isEmployee, isFarmOwner, loading, canView, canAdd }}
+      value={{ permissions, isEmployee, isFarmOwner, isFarmManager, loading, canView, canAdd }}
     >
       {children}
     </EmployeePermissionsContext.Provider>
