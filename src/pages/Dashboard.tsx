@@ -9,6 +9,7 @@ import { getAnimalImage } from "@/utils/animalImages";
 import { SaleCountdownBadge } from "@/components/SaleCountdownBadge";
 import { DashboardTasks } from "@/components/dashboard/DashboardTasks";
 import { CreateFarmDialog } from "@/components/CreateFarmDialog";
+import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { useFarm } from "@/hooks/useFarm";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -195,6 +196,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
+      <WelcomeDialog />
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

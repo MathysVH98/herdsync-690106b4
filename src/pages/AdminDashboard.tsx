@@ -350,52 +350,63 @@ import { Shield, Clock, Users, Building, Plus, Minus, Search } from "lucide-reac
            <p className="text-muted-foreground">Manage user subscriptions and access</p>
          </div>
  
-         <div className="grid gap-4 md:grid-cols-4">
-           <Card>
-             <CardHeader className="pb-2">
-               <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="text-2xl font-bold flex items-center gap-2">
-                 <Users className="w-5 h-5 text-primary" />
-                 {users.length}
-               </div>
-             </CardContent>
-           </Card>
-           <Card>
-             <CardHeader className="pb-2">
-               <CardTitle className="text-sm font-medium text-muted-foreground">Total Farms</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="text-2xl font-bold flex items-center gap-2">
-                 <Building className="w-5 h-5 text-primary" />
-                 {users.reduce((acc, u) => acc + u.farms.length, 0)}
-               </div>
-             </CardContent>
-           </Card>
-           <Card>
-             <CardHeader className="pb-2">
-               <CardTitle className="text-sm font-medium text-muted-foreground">Active Subscriptions</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="text-2xl font-bold flex items-center gap-2">
-                 <Clock className="w-5 h-5 text-primary" />
-                 {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === "active").length, 0)}
-               </div>
-             </CardContent>
-           </Card>
-           <Card>
-             <CardHeader className="pb-2">
-               <CardTitle className="text-sm font-medium text-muted-foreground">Pro Users</CardTitle>
-             </CardHeader>
-             <CardContent>
-               <div className="text-2xl font-bold flex items-center gap-2">
-                 <Shield className="w-5 h-5 text-primary" />
-                 {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.tier === "pro").length, 0)}
-               </div>
-             </CardContent>
-           </Card>
-         </div>
+          <div className="grid gap-4 md:grid-cols-5">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  {users.length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Farms</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  <Building className="w-5 h-5 text-primary" />
+                  {users.reduce((acc, u) => acc + u.farms.length, 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-primary" />
+                  {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === "active").length, 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">On Trial</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-muted-foreground" />
+                  {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.status === "trialing").length, 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pro Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  {users.reduce((acc, u) => acc + u.subscriptions.filter(s => s.tier === "pro").length, 0)}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
  
          <Tabs defaultValue="users" className="w-full">
             <TabsList className="grid w-full grid-cols-2 max-w-xs">
@@ -435,50 +446,61 @@ import { Shield, Clock, Users, Building, Plus, Minus, Search } from "lucide-reac
                  ) : (
                    <div className="overflow-x-auto">
                      <Table>
-                       <TableHeader>
-                         <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Farm</TableHead>
-                            <TableHead>Tier</TableHead>
-                           <TableHead>Status</TableHead>
-                           <TableHead className="text-right">Actions</TableHead>
-                         </TableRow>
-                       </TableHeader>
-                       <TableBody>
-                         {filteredUsers.map((u) => (
-                           <TableRow key={u.id}>
-                             <TableCell>
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-sm truncate max-w-[200px]" title={u.email}>{u.email}</span>
-                                 {u.email_confirmed_at && (
-                                    <Badge variant="outline" className="text-[10px] w-fit mt-0.5 px-1 py-0">Verified</Badge>
-                                 )}
-                               </div>
-                             </TableCell>
-                             <TableCell>
-                               {u.farms.length === 0 ? (
-                                  <span className="text-muted-foreground text-xs">—</span>
-                               ) : (
-                                  <span className="text-sm truncate block max-w-[120px]" title={u.farms.map(f => f.name).join(", ")}>
-                                    {u.farms[0].name}{u.farms.length > 1 && ` +${u.farms.length - 1}`}
-                                  </span>
-                               )}
-                             </TableCell>
-                             <TableCell>
-                               {u.subscriptions.length === 0 ? (
-                                  <span className="text-muted-foreground text-xs">—</span>
-                               ) : (
-                                  getTierBadge(u.subscriptions[0].tier)
-                               )}
-                             </TableCell>
-                             <TableCell>
-                               {u.subscriptions.length === 0 ? (
-                                  <span className="text-muted-foreground text-xs">—</span>
-                               ) : (
-                                  getStatusBadge(u.subscriptions[0].status)
-                               )}
-                             </TableCell>
-                             <TableCell className="text-right">
+                        <TableHeader>
+                          <TableRow>
+                             <TableHead>User</TableHead>
+                             <TableHead>Farm</TableHead>
+                             <TableHead>Plan</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Registered</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((u) => (
+                            <TableRow key={u.id}>
+                              <TableCell>
+                                 <div className="flex flex-col">
+                                   <span className="font-medium text-sm truncate max-w-[200px]" title={u.email}>{u.email}</span>
+                                  {u.email_confirmed_at && (
+                                     <Badge variant="outline" className="text-[10px] w-fit mt-0.5 px-1 py-0">Verified</Badge>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {u.farms.length === 0 ? (
+                                   <span className="text-muted-foreground text-xs">—</span>
+                                ) : (
+                                   <span className="text-sm truncate block max-w-[120px]" title={u.farms.map(f => f.name).join(", ")}>
+                                     {u.farms[0].name}{u.farms.length > 1 && ` +${u.farms.length - 1}`}
+                                   </span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {u.subscriptions.length === 0 ? (
+                                   <Badge variant="outline" className="text-xs">No Plan</Badge>
+                                ) : (
+                                   <div className="flex flex-col gap-0.5">
+                                     {getTierBadge(u.subscriptions[0].tier)}
+                                     {u.subscriptions[0].status === "trialing" && (
+                                       <span className="text-[10px] text-muted-foreground">
+                                         Trial ends {new Date(u.subscriptions[0].trial_ends_at).toLocaleDateString()}
+                                       </span>
+                                     )}
+                                   </div>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {u.subscriptions.length === 0 ? (
+                                   <span className="text-muted-foreground text-xs">—</span>
+                                ) : (
+                                   getStatusBadge(u.subscriptions[0].status)
+                                )}
+                              </TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {new Date(u.created_at).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell className="text-right">
                                 {u.subscriptions.length > 0 ? (
                                  <Dialog 
                                    open={userDialogOpen && selectedUserSubscription?.id === u.subscriptions[0]?.id} 
