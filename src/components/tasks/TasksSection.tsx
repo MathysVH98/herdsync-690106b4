@@ -49,7 +49,7 @@ interface Employee {
 
 export function TasksSection() {
   const { farm } = useFarm();
-  const { isEmployee } = useEmployeePermissions();
+  const { isEmployee, isFarmManager } = useEmployeePermissions();
   const { tasks, isLoading, createTask, updateTask, deleteTask } = useEmployeeTasks();
   const {
     dailyTasks, missedTasks, isCompletedToday,
@@ -248,7 +248,7 @@ export function TasksSection() {
         isCompletedToday={isCompletedToday}
         onToggle={(taskId, employeeId) => toggleCompletion.mutate({ taskId, employeeId })}
         onDelete={(taskId) => deleteDailyTask.mutate(taskId)}
-        isEmployee={isEmployee}
+        isEmployee={isEmployee && !isFarmManager}
         filterEmployee={filterEmployee}
       />
 

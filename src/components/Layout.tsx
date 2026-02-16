@@ -41,6 +41,7 @@ import { useEmployeePermissions } from "@/hooks/useEmployeePermissions";
 import { SubscriptionBanner } from "@/components/SubscriptionBanner";
 import { FarmSwitcher } from "@/components/FarmSwitcher";
 import farmBackground from "@/assets/farm-background.jpg";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -349,15 +350,19 @@ export function Layout({ children }: LayoutProps) {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2">
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 flex-1">
             <Wheat className="w-6 h-6 text-primary" />
             <span className="font-bold text-lg font-display">HerdSync</span>
           </Link>
+          {user && <NotificationBell />}
         </header>
 
         {/* Page content */}
         <main className="flex-1 overflow-auto">
           <div className="p-3 sm:p-4 lg:p-6 xl:p-8">
+            <div className="hidden lg:flex justify-end mb-2">
+              {user && <NotificationBell />}
+            </div>
             <SubscriptionBanner />
             {showBackButton && (
               <Button

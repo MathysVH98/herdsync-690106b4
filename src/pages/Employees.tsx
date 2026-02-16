@@ -90,7 +90,7 @@ export default function Employees() {
   const { farm } = useFarm();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isEmployee } = useEmployeePermissions();
+  const { isEmployee, isFarmManager } = useEmployeePermissions();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -117,12 +117,12 @@ export default function Employees() {
     notes: "",
   });
 
-  // Block employee access - redirect to tasks page
+  // Block employee access - redirect to tasks page (but allow farm managers)
   useEffect(() => {
-    if (isEmployee) {
+    if (isEmployee && !isFarmManager) {
       navigate("/employee-tasks", { replace: true });
     }
-  }, [isEmployee, navigate]);
+  }, [isEmployee, isFarmManager, navigate]);
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees", farm?.id],
@@ -171,7 +171,7 @@ export default function Employees() {
   });
 
   const promoteToManagerMutation = useMutation({
-    mutationFn: async ({ userId }: { userId: string }) => {
+    mutationFn: async ({ userId, employeeName }: { userId: string; employeeName: string }) => {
       if (!farm?.id) throw new Error("No farm selected");
       const { error } = await supabase.from("farm_members").insert({
         farm_id: farm.id,
@@ -179,6 +179,14 @@ export default function Employees() {
         role: "manager",
       });
       if (error) throw error;
+
+      // Create notification for the employee
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        farm_id: farm.id,
+        title: "You've been promoted!",
+        message: `You have been promoted to Farm Manager for ${farm.name}. You can now view all employee tasks and daily tasks.`,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["farm-managers", farm?.id] });
@@ -729,7 +737,7 @@ export default function Employees() {
                                     if (isManager(employee.id)) {
                                       demoteManagerMutation.mutate({ userId });
                                     } else {
-                                      promoteToManagerMutation.mutate({ userId });
+                                      promoteToManagerMutation.mutate({ userId, employeeName: `${employee.first_name} ${employee.last_name}` });
                                     }
                                   }}
                                 >
