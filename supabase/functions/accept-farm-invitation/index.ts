@@ -103,15 +103,41 @@
          continue;
        }
  
-       // Add user to farm_invited_users
-       const { error: insertError } = await supabaseAdmin
-         .from("farm_invited_users")
-         .insert({
-           farm_id: invitation.farm_id,
-           user_id: user.id,
-           invited_by: invitation.invited_by,
-           invitation_id: invitation.id,
-         });
+        // If role is 'manager', add to farm_members instead of farm_invited_users
+        if (invitation.role === "manager") {
+          // Check if already a farm member
+          const { data: existingFarmMember } = await supabaseAdmin
+            .from("farm_members")
+            .select("id")
+            .eq("farm_id", invitation.farm_id)
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (!existingFarmMember) {
+            const { error: memberError } = await supabaseAdmin
+              .from("farm_members")
+              .insert({
+                farm_id: invitation.farm_id,
+                user_id: user.id,
+                role: "manager",
+              });
+
+            if (memberError) {
+              console.error("Error adding manager to farm:", memberError);
+              continue;
+            }
+          }
+        }
+
+        // Add user to farm_invited_users (for farm access tracking)
+        const { error: insertError } = await supabaseAdmin
+          .from("farm_invited_users")
+          .insert({
+            farm_id: invitation.farm_id,
+            user_id: user.id,
+            invited_by: invitation.invited_by,
+            invitation_id: invitation.id,
+          });
  
        if (insertError) {
          console.error("Error adding user to farm:", insertError);

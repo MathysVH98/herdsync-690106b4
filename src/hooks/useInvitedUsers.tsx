@@ -79,19 +79,20 @@
    const remainingSlots = Math.max(0, limit - currentCount);
  
    // Send invitation mutation
-   const inviteMutation = useMutation({
-     mutationFn: async (email: string) => {
-       if (!farm?.id) throw new Error("No farm selected");
-       if (!canInvite) throw new Error("User limit reached for your plan");
- 
-       const { data: { user } } = await supabase.auth.getUser();
-       if (!user) throw new Error("Not authenticated");
- 
-       const { error } = await supabase.from("farm_invitations").insert({
-         farm_id: farm.id,
-         invited_by: user.id,
-         email: email.toLowerCase(),
-       });
+    const inviteMutation = useMutation({
+      mutationFn: async ({ email, role = "viewer" }: { email: string; role?: string }) => {
+        if (!farm?.id) throw new Error("No farm selected");
+        if (!canInvite) throw new Error("User limit reached for your plan");
+
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error("Not authenticated");
+
+        const { error } = await supabase.from("farm_invitations").insert({
+          farm_id: farm.id,
+          invited_by: user.id,
+          email: email.toLowerCase(),
+          role,
+        });
  
        if (error) {
          if (error.code === "23505") {

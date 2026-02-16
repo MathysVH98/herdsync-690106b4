@@ -1271,6 +1271,7 @@ export type Database = {
           farm_id: string
           id: string
           invited_by: string
+          role: string
           status: Database["public"]["Enums"]["invitation_status"]
           token: string
           updated_at: string
@@ -1285,6 +1286,7 @@ export type Database = {
           farm_id: string
           id?: string
           invited_by: string
+          role?: string
           status?: Database["public"]["Enums"]["invitation_status"]
           token?: string
           updated_at?: string
@@ -1299,6 +1301,7 @@ export type Database = {
           farm_id?: string
           id?: string
           invited_by?: string
+          role?: string
           status?: Database["public"]["Enums"]["invitation_status"]
           token?: string
           updated_at?: string
