@@ -105,6 +105,20 @@ export function useMarketPrices() {
         }
       );
 
+      // Sort commodities within each category to group similar items
+      const getSortKey = (name: string): string => {
+        const lower = name.toLowerCase();
+        if (lower.startsWith("beef")) return "01_beef_" + name;
+        if (lower.includes("weaner calf")) return "01_beef_z_" + name;
+        if (lower.startsWith("lamb") || lower.startsWith("mutton")) return "02_mutton_" + name;
+        if (lower.includes("feeder lamb")) return "02_mutton_z_" + name;
+        if (lower.startsWith("pork")) return "03_pork_" + name;
+        if (lower.startsWith("chicken")) return "04_chicken_" + name;
+        return "99_" + name;
+      };
+
+      commoditiesWithPrices.sort((a, b) => getSortKey(a.name).localeCompare(getSortKey(b.name)));
+
       // Group by category
       const groupedByCategory = categories.map((category) => ({
         category,
