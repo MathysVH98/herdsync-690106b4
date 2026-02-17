@@ -181,9 +181,93 @@ export default function Audit() {
   };
 
   const generateReport = () => {
-    toast({ 
-      title: "Report Generated", 
-      description: "Your compliance report has been prepared and is ready for download.",
+    import("jspdf").then(({ default: jsPDF }) => {
+      import("jspdf-autotable").then((autoTableModule) => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        // Title
+        doc.setFontSize(20);
+        doc.text("Audit & Compliance Report", pageWidth / 2, 20, { align: "center" });
+        doc.setFontSize(11);
+        doc.text(`Farm: ${farm?.name || "N/A"}`, pageWidth / 2, 28, { align: "center" });
+        doc.text(`Generated: ${new Date().toLocaleDateString("en-ZA")}`, pageWidth / 2, 34, { align: "center" });
+
+        let y = 44;
+
+        // Monthly Compliance Summary
+        doc.setFontSize(14);
+        doc.text(`Monthly Compliance - ${getMonthYearLabel(currentMonthYear)}`, 14, y);
+        y += 6;
+        doc.setFontSize(10);
+        doc.text(`Overall Progress: ${getOverallProgress()}% | Status: ${complianceStatus.label}`, 14, y);
+        y += 8;
+
+        // Checklist categories table
+        const categoryRows = categories.map((cat) => {
+          const completed = cat.items.filter((i) => i.completed).length;
+          return [cat.name, `${completed}/${cat.items.length}`, `${getCategoryProgress(cat.id)}%`];
+        });
+
+        (doc as any).autoTable({
+          startY: y,
+          head: [["Category", "Items Completed", "Progress"]],
+          body: categoryRows,
+          theme: "grid",
+          headStyles: { fillColor: [56, 96, 56] },
+          margin: { left: 14, right: 14 },
+        });
+
+        y = (doc as any).lastAutoTable.finalY + 10;
+
+        // Compliance Records
+        if (y > 240) { doc.addPage(); y = 20; }
+        doc.setFontSize(14);
+        doc.text("Compliance Records", 14, y);
+        y += 4;
+
+        const recordRows = records.map((r) => [
+          r.date,
+          r.type.charAt(0).toUpperCase() + r.type.slice(1),
+          r.title,
+          r.status.charAt(0).toUpperCase() + r.status.slice(1),
+        ]);
+
+        (doc as any).autoTable({
+          startY: y,
+          head: [["Date", "Type", "Title", "Status"]],
+          body: recordRows,
+          theme: "grid",
+          headStyles: { fillColor: [56, 96, 56] },
+          margin: { left: 14, right: 14 },
+        });
+
+        y = (doc as any).lastAutoTable.finalY + 10;
+
+        // Scheduled Audits
+        if (y > 240) { doc.addPage(); y = 20; }
+        doc.setFontSize(14);
+        doc.text("Scheduled Audits", 14, y);
+        y += 4;
+
+        const auditRows = audits.map((a) => [a.date, a.name, a.type, a.status.charAt(0).toUpperCase() + a.status.slice(1)]);
+
+        (doc as any).autoTable({
+          startY: y,
+          head: [["Date", "Name", "Type", "Status"]],
+          body: auditRows,
+          theme: "grid",
+          headStyles: { fillColor: [56, 96, 56] },
+          margin: { left: 14, right: 14 },
+        });
+
+        doc.save(`Audit_Report_${farm?.name || "Farm"}_${new Date().toISOString().split("T")[0]}.pdf`);
+
+        toast({
+          title: "Report Downloaded",
+          description: "Your audit report PDF has been downloaded.",
+        });
+      });
     });
   };
 
