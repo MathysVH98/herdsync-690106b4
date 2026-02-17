@@ -67,9 +67,16 @@ serve(async (req) => {
               role: "system",
               content: `You are a South African agricultural market analyst. Provide realistic current market prices for commodities in South Africa. Use your knowledge of typical SA market prices and current trends. Prices should be in South African Rand (ZAR). Be realistic and consistent with known market ranges:
 
-- Beef carcass: R50-80/kg
-- Lamb/Mutton carcass: R80-120/kg
-- Pork: R30-50/kg
+- Beef A2/A3 carcass: R60-75/kg
+- Beef B2/B3 carcass: R55-65/kg
+- Beef C2/C3 carcass: R50-62/kg
+- Weaner Calf (Bulls): R35-50/kg
+- Lamb/Mutton A2/A3 carcass: R95-115/kg
+- Mutton B2/B3 carcass: R75-90/kg
+- Mutton C2/C3 carcass: R70-90/kg
+- Feeder Lamb: R45-60/kg
+- Pork Porkers: R35-45/kg
+- Pork Baconers: R35-45/kg
 - Chicken frozen: R45-65/kg
 - White/Yellow Maize: R3,500-5,500/ton
 - Wheat: R5,000-8,000/ton
