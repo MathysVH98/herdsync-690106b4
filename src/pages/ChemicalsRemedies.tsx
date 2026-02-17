@@ -480,6 +480,8 @@ function ApplicationDialog({ open, onOpenChange, editing, onSave, inventory }: {
   onSave: (data: Partial<ChemicalApplication>) => void;
   inventory: ChemicalInventory[];
 }) {
+  const { farm } = useFarm();
+  const [animals, setAnimals] = useState<{ id: string; tag: string; name: string; type: string }[]>([]);
   const [applicationDate, setApplicationDate] = useState("");
   const [productName, setProductName] = useState("");
   const [batchNo, setBatchNo] = useState("");
@@ -490,6 +492,18 @@ function ApplicationDialog({ open, onOpenChange, editing, onSave, inventory }: {
   const [location, setLocation] = useState("");
   const [operatorName, setOperatorName] = useState("");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (farm?.id && open) {
+      supabase
+        .from("livestock")
+        .select("id, tag, name, type")
+        .eq("farm_id", farm.id)
+        .is("sold_at", null)
+        .order("tag", { ascending: true })
+        .then(({ data }) => setAnimals(data || []));
+    }
+  }, [farm?.id, open]);
 
   useEffect(() => {
     if (editing) {
@@ -575,7 +589,17 @@ function ApplicationDialog({ open, onOpenChange, editing, onSave, inventory }: {
           {target === "animal" && (
             <div>
               <Label>Animal ID (optional)</Label>
-              <Input value={animalId} onChange={(e) => setAnimalId(e.target.value)} placeholder="e.g., Tag #A001" />
+              <Select value={animalId} onValueChange={setAnimalId}>
+                <SelectTrigger><SelectValue placeholder="Select animal" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {animals.map((animal) => (
+                    <SelectItem key={animal.id} value={animal.tag}>
+                      {animal.tag} — {animal.name} ({animal.type})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div>
