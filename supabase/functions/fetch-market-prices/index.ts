@@ -99,11 +99,15 @@ Return prices that reflect current South African market conditions.`,
             },
             {
               role: "user",
-              content: `Provide current South African market prices for these commodities as of ${today}: ${commodityList}. Return ONLY a JSON object with this exact format, no other text:
+              content: `Provide current South African market prices for these commodities as of ${today}: ${commodityList}. 
+
+IMPORTANT: Use the EXACT commodity names as listed above in your response. Each commodity must appear in the output with its exact name.
+
+Return ONLY a JSON object with this exact format, no other text:
 {
   "prices": [
     {"commodity_name": "Beef (A2/A3 Carcass)", "price": 65.50, "unit": "R/kg"},
-    ...
+    ...for each commodity listed above...
   ],
   "source": "SA Agricultural Market Estimates",
   "date": "${today}"
@@ -164,11 +168,13 @@ Return prices that reflect current South African market conditions.`,
     for (const price of priceData.prices) {
       // Find matching commodity (flexible matching)
       const commodity = commodities.find((c) => {
-        const aiName = price.commodity_name.toLowerCase();
-        const dbName = c.name.toLowerCase();
-        return aiName.includes(dbName.split("(")[0].trim()) || 
-               dbName.includes(aiName.split("(")[0].trim()) ||
-               aiName === dbName;
+        const aiName = price.commodity_name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const dbName = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return aiName === dbName || 
+               aiName.includes(dbName) || 
+               dbName.includes(aiName) ||
+               // Match base name without parenthetical
+               aiName.includes(c.name.toLowerCase().split("(")[0].trim().replace(/[^a-z0-9]/g, ''));
       });
 
       if (commodity) {
