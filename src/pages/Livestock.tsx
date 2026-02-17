@@ -321,6 +321,16 @@ export default function Livestock() {
       return;
     }
 
+    // Auto-dismiss any feeding program alerts related to this animal
+    if (animal?.name && farm?.id) {
+      await supabase
+        .from("alerts")
+        .update({ dismissed: true })
+        .eq("farm_id", farm.id)
+        .eq("dismissed", false)
+        .ilike("title", `%${animal.name}%`);
+    }
+
     setAnimals(animals.map(a => a.id === id ? { ...a, plannedSaleDate: null } : a));
     toast({ title: "Planned Sale Cancelled", description: `${animal?.name} is no longer marked for sale.` });
   };
