@@ -163,6 +163,38 @@ export default function Health() {
     });
   };
 
+  const handleEditRecord = async (updated: HealthRecord) => {
+    const { error } = await supabase
+      .from("health_records")
+      .update({
+        animal_name: updated.animalName,
+        type: updated.type,
+        date: updated.date,
+        provider: updated.provider || null,
+        notes: updated.notes || null,
+        next_due: updated.nextDue || null,
+      })
+      .eq("id", updated.id);
+
+    if (error) {
+      toast({ title: "Error", description: "Failed to update record.", variant: "destructive" });
+      return;
+    }
+
+    setHealthRecords(healthRecords.map(r => r.id === updated.id ? updated : r));
+    toast({ title: "Updated", description: `Record for ${updated.animalName} updated.` });
+  };
+
+  const handleDeleteRecord = async (id: string) => {
+    const { error } = await supabase.from("health_records").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete record.", variant: "destructive" });
+      return;
+    }
+    setHealthRecords(healthRecords.filter(r => r.id !== id));
+    toast({ title: "Deleted", description: "Health record deleted." });
+  };
+
   const typeCounts = healthTypes.reduce((acc, { type }) => {
     acc[type] = healthRecords.filter(r => r.type === type).length;
     return acc;
@@ -338,7 +370,7 @@ export default function Health() {
             ) : healthRecords.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {healthRecords.map((record) => (
-                  <HealthRecordCard key={record.id} record={record} />
+                  <HealthRecordCard key={record.id} record={record} onEdit={handleEditRecord} onDelete={handleDeleteRecord} />
                 ))}
               </div>
             ) : (
@@ -354,7 +386,7 @@ export default function Health() {
                 {healthRecords
                   .filter(r => r.type === type)
                   .map((record) => (
-                    <HealthRecordCard key={record.id} record={record} />
+                    <HealthRecordCard key={record.id} record={record} onEdit={handleEditRecord} onDelete={handleDeleteRecord} />
                   ))}
               </div>
               {healthRecords.filter(r => r.type === type).length === 0 && (
