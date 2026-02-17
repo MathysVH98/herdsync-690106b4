@@ -47,7 +47,9 @@ serve(async (req) => {
       throw new Error(`Failed to fetch commodities: ${comError.message}`);
     }
 
-    const commodityList = commodities.map((c) => `${c.name} (${c.unit})`).join(", ");
+    // Build a map of index to commodity for reliable matching
+    const commodityMap = commodities.map((c, i) => ({ index: i, id: c.id, name: c.name, unit: c.unit }));
+    const commodityList = commodityMap.map((c) => `[${c.index}] ${c.name} (${c.unit})`).join("\n");
 
     const today = new Date().toISOString().split("T")[0];
 
@@ -99,15 +101,18 @@ Return prices that reflect current South African market conditions.`,
             },
             {
               role: "user",
-              content: `Provide current South African market prices for these commodities as of ${today}: ${commodityList}. 
+              content: `Provide current South African market prices for ALL of these commodities as of ${today}:
 
-IMPORTANT: Use the EXACT commodity names as listed above in your response. Each commodity must appear in the output with its exact name.
+${commodityList}
+
+IMPORTANT: You MUST return a price for EVERY commodity listed above, using the index number [0], [1], etc. as the identifier.
 
 Return ONLY a JSON object with this exact format, no other text:
 {
   "prices": [
-    {"commodity_name": "Beef (A2/A3 Carcass)", "price": 65.50, "unit": "R/kg"},
-    ...for each commodity listed above...
+    {"index": 0, "commodity_name": "Beef (A2/A3 Carcass)", "price": 65.50},
+    {"index": 1, "commodity_name": "...", "price": ...},
+    ...one entry for EVERY commodity above...
   ],
   "source": "SA Agricultural Market Estimates",
   "date": "${today}"
@@ -163,23 +168,29 @@ Return ONLY a JSON object with this exact format, no other text:
       throw new Error("Failed to parse price data from AI");
     }
 
-    // Match AI prices to commodity IDs and insert into database
+    // Match AI prices to commodity IDs using index
     const priceInserts = [];
     for (const price of priceData.prices) {
-      // Find matching commodity (flexible matching)
-      const commodity = commodities.find((c) => {
-        const aiName = price.commodity_name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        const dbName = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-        return aiName === dbName || 
-               aiName.includes(dbName) || 
-               dbName.includes(aiName) ||
-               // Match base name without parenthetical
-               aiName.includes(c.name.toLowerCase().split("(")[0].trim().replace(/[^a-z0-9]/g, ''));
-      });
-
-      if (commodity) {
+      // Primary: match by index
+      const byIndex = commodityMap.find((c) => c.index === price.index);
+      if (byIndex) {
         priceInserts.push({
-          commodity_id: commodity.id,
+          commodity_id: byIndex.id,
+          price: price.price,
+          price_date: today,
+          source: priceData.source,
+        });
+        continue;
+      }
+      // Fallback: match by name
+      const byName = commodities.find((c) => {
+        const aiName = (price.commodity_name || "").toLowerCase().replace(/[^a-z0-9]/g, '');
+        const dbName = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return aiName === dbName || aiName.includes(dbName) || dbName.includes(aiName);
+      });
+      if (byName) {
+        priceInserts.push({
+          commodity_id: byName.id,
           price: price.price,
           price_date: today,
           source: priceData.source,
