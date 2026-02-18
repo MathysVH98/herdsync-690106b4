@@ -159,15 +159,47 @@ export default function Pricing() {
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const provider = searchParams.get("provider");
+    const checkoutId = searchParams.get("id"); // Yoco appends ?id=<checkoutId> to success URL
     
     if (paymentStatus === "success") {
-      toast({
-        title: "Payment Successful!",
-        description: `Your subscription is now active. Welcome to HerdSync!`,
-      });
-      refetchSubscription();
-      // Clear URL params
-      navigate("/pricing", { replace: true });
+      // If we have a Yoco checkout ID, verify the payment server-side
+      if (checkoutId) {
+        const verifyPayment = async () => {
+          try {
+            console.log("Verifying Yoco payment:", checkoutId);
+            const { data, error } = await supabase.functions.invoke("verify-yoco-payment", {
+              body: { checkoutId },
+            });
+
+            if (error) {
+              console.error("Payment verification error:", error);
+            } else if (data?.success) {
+              console.log("Payment verified successfully, tier:", data.tier);
+            } else {
+              console.error("Payment verification failed:", data?.error);
+            }
+          } catch (err) {
+            console.error("Payment verification exception:", err);
+          }
+          
+          // Always refetch and show success since Yoco redirected them here
+          await refetchSubscription();
+          toast({
+            title: "Payment Successful!",
+            description: "Your subscription has been activated. Welcome to HerdSync!",
+          });
+          navigate("/pricing", { replace: true });
+        };
+        verifyPayment();
+      } else {
+        // Fallback for non-Yoco or missing checkout ID
+        refetchSubscription();
+        toast({
+          title: "Payment Successful!",
+          description: "Your subscription is now active. Welcome to HerdSync!",
+        });
+        navigate("/pricing", { replace: true });
+      }
     } else if (paymentStatus === "cancelled") {
       toast({
         title: "Payment Cancelled",
