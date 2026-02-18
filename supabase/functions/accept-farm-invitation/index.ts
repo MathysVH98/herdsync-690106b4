@@ -90,8 +90,8 @@
          .eq("farm_id", invitation.farm_id)
          .maybeSingle();
  
-       const tier = subscription?.tier || "starter";
-       const limit = tier === "starter" ? 0 : tier === "basic" ? 5 : 999999;
+        const tier = subscription?.tier || "basic";
+        const limit = tier === "basic" ? 5 : tier === "starter" ? 20 : 999999;
  
        const { count: currentCount } = await supabaseAdmin
          .from("farm_invited_users")
