@@ -81,6 +81,8 @@ serve(async (req) => {
 
     const checkout = await checkoutResponse.json();
 
+    console.log(`Yoco checkout created: ${checkout.id} for farm ${farmId}, tier ${tier}`);
+
     return new Response(
       JSON.stringify({
         success: true,

@@ -5,3 +5,12 @@ verify_jwt = false
 
 [functions.admin-get-users]
 verify_jwt = false
+
+[functions.yoco-webhook]
+verify_jwt = false
+
+[functions.capture-paypal-order]
+verify_jwt = false
+
+[functions.verify-yoco-payment]
+verify_jwt = false
