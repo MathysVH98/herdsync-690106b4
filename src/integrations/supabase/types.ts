@@ -2402,6 +2402,10 @@ export type Database = {
         Returns: boolean
       }
       count_invited_users: { Args: { _farm_id: string }; Returns: number }
+      create_farm_for_user: {
+        Args: { _address?: string; _name: string; _province?: string }
+        Returns: string
+      }
       get_admin_tier: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["subscription_tier"]
