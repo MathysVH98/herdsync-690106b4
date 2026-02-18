@@ -101,46 +101,17 @@ export function FarmSwitcher() {
         throw new Error("Your session has expired. Please sign in again.");
       }
 
-      // Create the farm
-      const { data: farmData, error: farmError } = await supabase
-        .from("farms")
-        .insert({
-          name: farmName.trim(),
-          owner_id: user.id,
-          address: address.trim() || null,
-          province: province || null,
-        })
-        .select()
-        .single();
+      // Create the farm using secure RPC function
+      const { data: farmId, error: farmError } = await supabase
+        .rpc("create_farm_for_user", {
+          _name: farmName.trim(),
+          _address: address.trim() || null,
+          _province: province || null,
+        });
 
       if (farmError) {
         console.error("Farm creation error:", farmError);
         throw farmError;
-      }
-
-      // Add the user as a farm member with 'owner' role
-      const { error: memberError } = await supabase.from("farm_members").insert({
-        farm_id: farmData.id,
-        user_id: user.id,
-        role: "owner",
-      });
-
-      if (memberError) {
-        console.error("Farm member creation error:", memberError);
-        // Don't throw - farm was created, this is secondary
-      }
-
-      // Create a subscription for the new farm (14-day trial)
-      const { error: subError } = await supabase.from("subscriptions").insert({
-        farm_id: farmData.id,
-        user_id: user.id,
-        tier: "basic",
-        status: "trialing",
-      });
-
-      if (subError) {
-        console.error("Subscription creation error:", subError);
-        // Don't throw - farm was created, this is secondary
       }
 
       toast({
@@ -150,7 +121,7 @@ export function FarmSwitcher() {
 
       // Refresh farms and set the new one as active
       await refetchFarms();
-      setActiveFarm(farmData.id);
+      if (farmId) setActiveFarm(farmId);
 
       // Reset form and close dialog
       setFarmName("");

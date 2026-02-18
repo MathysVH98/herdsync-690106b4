@@ -166,43 +166,17 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
         throw new Error("Your session has expired. Please sign in again.");
       }
 
-      const { data, error } = await supabase
-        .from("farms")
-        .insert({
-          name: farmName.trim(),
-          owner_id: user.id,
-          address: address.trim() || null,
-          province: province || null,
-        })
-        .select()
-        .single();
+      // Create the farm using secure RPC function
+      const { data: farmId, error } = await supabase
+        .rpc("create_farm_for_user", {
+          _name: farmName.trim(),
+          _address: address.trim() || null,
+          _province: province || null,
+        });
 
       if (error) {
         console.error("Farm creation error:", error);
         throw error;
-      }
-
-      // Also add the user as a farm member with 'owner' role
-      const { error: memberError } = await supabase.from("farm_members").insert({
-        farm_id: data.id,
-        user_id: user.id,
-        role: "owner",
-      });
-
-      if (memberError) {
-        console.error("Farm member creation error:", memberError);
-      }
-
-      // Create a subscription for the new farm (14-day trial)
-      const { error: subError } = await supabase.from("subscriptions").insert({
-        farm_id: data.id,
-        user_id: user.id,
-        tier: "basic",
-        status: "trialing",
-      });
-
-      if (subError) {
-        console.error("Subscription creation error:", subError);
       }
 
       toast({
@@ -212,7 +186,7 @@ export function CreateFarmDialog({ trigger }: CreateFarmDialogProps) {
 
       // Refresh farms and set the new one as active
       await refetchFarms();
-      setActiveFarm(data.id);
+      if (farmId) setActiveFarm(farmId);
 
       // Reset form and close dialog
       setFarmName("");
