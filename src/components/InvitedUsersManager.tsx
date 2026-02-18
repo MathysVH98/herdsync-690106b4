@@ -70,11 +70,11 @@
      }
    };
  
-   const tierLabel = subscription?.tier === "starter" 
-     ? "Starter (0 users)" 
-     : subscription?.tier === "basic" 
-       ? "Basic (5 users)" 
-       : "Pro (Unlimited)";
+    const tierLabel = subscription?.tier === "basic" 
+      ? "Basic (5 users)" 
+      : subscription?.tier === "starter" 
+        ? "Starter (20 users)" 
+        : "Pro (Unlimited)";
  
    return (
      <div className="space-y-6">
@@ -89,7 +89,7 @@
              Invite others to access your farm • {tierLabel}
            </p>
          </div>
-         <Button onClick={() => setIsInviteDialogOpen(true)} disabled={!canInvite && subscription?.tier !== "starter"}>
+         <Button onClick={() => setIsInviteDialogOpen(true)} disabled={!canInvite}>
            <UserPlus className="w-4 h-4 mr-2" />
            Invite User
          </Button>
@@ -97,24 +97,17 @@
  
        {/* Usage Card */}
        <Card>
-         <CardHeader className="pb-3">
-           <CardTitle className="text-base">User Slots</CardTitle>
-           <CardDescription>
-             {subscription?.tier === "starter" ? (
-               <span className="flex items-center gap-1">
-                 <Crown className="w-4 h-4 text-amber-500" />
-                 <Link to="/pricing" className="text-primary hover:underline">
-                   Upgrade your plan to invite users
-                 </Link>
-               </span>
-             ) : limit === 999999 ? (
-               "Unlimited users with Pro plan"
-             ) : (
-               `${currentCount} of ${limit} slots used`
-             )}
-           </CardDescription>
-         </CardHeader>
-         {subscription?.tier !== "starter" && limit !== 999999 && (
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">User Slots</CardTitle>
+            <CardDescription>
+              {limit === 999999 ? (
+                "Unlimited users with Pro plan"
+              ) : (
+                `${currentCount} of ${limit} slots used`
+              )}
+            </CardDescription>
+          </CardHeader>
+          {limit !== 999999 && (
            <CardContent>
              <div className="h-2 bg-muted rounded-full overflow-hidden">
                <div

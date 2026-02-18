@@ -35,7 +35,7 @@ serve(async (req) => {
     const pricing: Record<string, { amountInCents: number; description: string; animalLimit: number }> = {
       basic: { amountInCents: 9900, description: "FarmTrack Basic - Up to 80 animals", animalLimit: 80 },
       starter: { amountInCents: 24900, description: "FarmTrack Starter - Up to 250 animals", animalLimit: 250 },
-      pro: { amountInCents: 59900, description: "FarmTrack Pro - Unlimited animals", animalLimit: -1 },
+      pro: { amountInCents: 59900, description: "FarmTrack Pro - Unlimited animals", animalLimit: 999999 },
     };
 
     const plan = pricing[tier];
