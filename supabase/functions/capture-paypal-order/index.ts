@@ -81,7 +81,7 @@ serve(async (req) => {
     const animalLimits: Record<string, number> = {
       basic: 80,
       starter: 250,
-      pro: -1, // Unlimited
+      pro: 999999,
     };
 
     // Update subscription in database

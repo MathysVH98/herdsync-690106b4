@@ -27,19 +27,19 @@
    const queryClient = useQueryClient();
  
    // Get tier limits
-   const getTierLimit = (): number => {
-     if (!subscription) return 0;
-     switch (subscription.tier) {
-       case "starter":
-         return 0;
-       case "basic":
-         return 5;
-       case "pro":
-         return 999999;
-       default:
-         return 0;
-     }
-   };
+  const getTierLimit = (): number => {
+    if (!subscription) return 0;
+    switch (subscription.tier) {
+      case "basic":
+        return 5;
+      case "starter":
+        return 20;
+      case "pro":
+        return 999999;
+      default:
+        return 0;
+    }
+  };
  
    // Fetch pending invitations
    const { data: invitations = [], isLoading: invitationsLoading } = useQuery({
