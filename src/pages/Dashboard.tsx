@@ -12,6 +12,7 @@ import { CreateFarmDialog } from "@/components/CreateFarmDialog";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { useFarm } from "@/hooks/useFarm";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   PawPrint, 
@@ -63,6 +64,14 @@ export default function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
    const { user, loading: authLoading } = useAuth();
    const { farm, loading: farmLoading } = useFarm();
+  const { subscription, isActive, loading: subLoading, adminInfo } = useSubscription();
+
+  // Redirect expired trial users to dedicated page (admins bypass)
+  useEffect(() => {
+    if (!subLoading && subscription && !isActive && !adminInfo.isAdmin) {
+      navigate("/trial-expired", { replace: true });
+    }
+  }, [subLoading, subscription, isActive, adminInfo.isAdmin, navigate]);
   const [livestock, setLivestock] = useState<LivestockItem[]>([]);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [feedingSchedule, setFeedingSchedule] = useState<FeedingItem[]>([]);
