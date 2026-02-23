@@ -37,6 +37,7 @@ import Disclaimer from "./pages/Disclaimer";
 import AskAPro from "./pages/AskAPro";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
+import ResetPassword from "./pages/ResetPassword";
  import AdminDashboard from "./pages/AdminDashboard";
  import { AdminProvider } from "@/hooks/useAdmin";
 
@@ -81,6 +82,7 @@ const App = () => (
                   <Route path="/disclaimer" element={<Disclaimer />} />
                   <Route path="/ask-a-pro" element={<AskAPro />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/admin" element={<AdminDashboard />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />

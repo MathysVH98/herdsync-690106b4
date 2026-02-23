@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFarm } from "@/hooks/useFarm";
 import { Separator } from "@/components/ui/separator";
+import { ForgotPasswordDialog } from "@/components/ForgotPasswordDialog";
 
 export default function Auth() {
   const [loginIdentifier, setLoginIdentifier] = useState("");
@@ -263,6 +264,9 @@ export default function Auth() {
                       required
                     />
                   </div>
+                </div>
+                <div className="flex justify-end">
+                  <ForgotPasswordDialog />
                 </div>
                 <Button
                   type="submit"
