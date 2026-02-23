@@ -73,9 +73,18 @@ export default function Auth() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     const identifier = loginIdentifier.trim();
+    if (!identifier || !password) {
+      toast({
+        title: "Missing Fields",
+        description: "Please enter your email/username and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
 
     try {
       if (isEmail(identifier)) {
