@@ -52,7 +52,9 @@ import {
    Image,
    X,
    ExternalLink,
+   FileDown,
 } from "lucide-react";
+import { useExpensesPdf } from "@/hooks/useExpensesPdf";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -70,6 +72,7 @@ export default function FarmExpenses() {
   const { farm } = useFarm();
   const { isEmployee } = useEmployeePermissions();
   const { addItem: addInventoryItem } = useInventory();
+  const { generateExpensesPdf } = useExpensesPdf();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [linkToInventory, setLinkToInventory] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
@@ -266,14 +269,33 @@ export default function FarmExpenses() {
               Track medicine, fuel, and all farm operating costs
             </p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Expense
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                generateExpensesPdf({
+                  farmName: farm?.name || "My Farm",
+                  selectedMonth,
+                  expenses: monthlyExpenses,
+                  employees,
+                  expensesByCategory,
+                  monthlyExpenseTotal,
+                  totalSalaries,
+                  grandTotal,
+                })
+              }
+            >
+              <FileDown className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Expense
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New Expense</DialogTitle>
               </DialogHeader>
@@ -530,6 +552,7 @@ export default function FarmExpenses() {
               </form>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Month Selector */}
