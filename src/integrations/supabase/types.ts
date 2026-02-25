@@ -1840,6 +1840,8 @@ export type Database = {
           previous_owners_count: number | null
           previous_owners_notes: string | null
           purchase_cost: number | null
+          removal_reason: string | null
+          removed_at: string | null
           sale_price: number | null
           sex: string | null
           sire_id: string | null
@@ -1875,6 +1877,8 @@ export type Database = {
           previous_owners_count?: number | null
           previous_owners_notes?: string | null
           purchase_cost?: number | null
+          removal_reason?: string | null
+          removed_at?: string | null
           sale_price?: number | null
           sex?: string | null
           sire_id?: string | null
@@ -1910,6 +1914,8 @@ export type Database = {
           previous_owners_count?: number | null
           previous_owners_notes?: string | null
           purchase_cost?: number | null
+          removal_reason?: string | null
+          removed_at?: string | null
           sale_price?: number | null
           sex?: string | null
           sire_id?: string | null

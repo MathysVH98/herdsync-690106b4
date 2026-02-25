@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { LivestockCard, Animal, AnimalStatus } from "@/components/LivestockCard";
 import { AnimalDetailDialog, AnimalDetails } from "@/components/AnimalDetailDialog";
 import { MarkForSaleDialog } from "@/components/MarkForSaleDialog";
+import { RemoveAnimalDialog, RemovalReason } from "@/components/RemoveAnimalDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,7 @@ export default function Livestock() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isSellDialogOpen, setIsSellDialogOpen] = useState(false);
   const [isMarkForSaleDialogOpen, setIsMarkForSaleDialogOpen] = useState(false);
+  const [isRemoveDialogOpen, setIsRemoveDialogOpen] = useState(false);
   const [selectedAnimalId, setSelectedAnimalId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("active");
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -122,6 +124,8 @@ export default function Livestock() {
         soldAt: a.sold_at,
         soldTo: a.sold_to,
         plannedSaleDate: a.planned_sale_date,
+        removedAt: a.removed_at,
+        removalReason: a.removal_reason,
       })));
     }
     setLoading(false);
@@ -142,13 +146,14 @@ export default function Livestock() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [farm?.id]);
 
-  const activeAnimals = animals.filter(a => !a.soldAt);
+  const activeAnimals = animals.filter(a => !a.soldAt && !a.removedAt);
   const soldAnimals = animals.filter(a => a.soldAt);
+  const removedAnimals = animals.filter(a => a.removedAt && !a.soldAt);
   const markedForSaleAnimals = activeAnimals.filter(a => a.plannedSaleDate);
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    if (value === "sold" || value === "marked-for-sale") {
+    if (value !== "active") {
       setFilterStatus("all");
       setFilterType("all");
       setSearchTerm("");
@@ -161,6 +166,8 @@ export default function Livestock() {
         return markedForSaleAnimals;
       case "sold":
         return soldAnimals;
+      case "removed":
+        return removedAnimals;
       default:
         return activeAnimals;
     }
@@ -246,15 +253,36 @@ export default function Livestock() {
     toast({ title: "Feeding Recorded", description: `${animal?.name} has been fed.` });
   };
 
-  const handleRemove = async (id: string) => {
-    const animal = animals.find((a) => a.id === id);
-    const { error } = await supabase.from("livestock").delete().eq("id", id);
+  const handleOpenRemoveDialog = (id: string) => {
+    setSelectedAnimalId(id);
+    setIsRemoveDialogOpen(true);
+  };
+
+  const handleRemoveAnimal = async (reason: RemovalReason, notes: string) => {
+    if (!selectedAnimalId) return;
+    const animal = animals.find((a) => a.id === selectedAnimalId);
+    
+    const { error } = await supabase
+      .from("livestock")
+      .update({ 
+        removed_at: new Date().toISOString(), 
+        removal_reason: notes ? `${reason}: ${notes}` : reason,
+      })
+      .eq("id", selectedAnimalId);
+
     if (error) {
       toast({ title: "Error", description: "Failed to remove animal.", variant: "destructive" });
       return;
     }
-    setAnimals(animals.filter((a) => a.id !== id));
-    toast({ title: "Animal Removed", description: `${animal?.name} has been removed from your livestock.` });
+    
+    setAnimals(animals.map(a => 
+      a.id === selectedAnimalId 
+        ? { ...a, removedAt: new Date().toISOString(), removalReason: notes ? `${reason}: ${notes}` : reason } 
+        : a
+    ));
+    setIsRemoveDialogOpen(false);
+    setSelectedAnimalId(null);
+    toast({ title: "Animal Removed", description: `${animal?.name} has been removed (${reason}).` });
   };
 
   const handleOpenSellDialog = (id: string) => {
@@ -572,10 +600,10 @@ export default function Livestock() {
 
         {/* Tabs for Active vs Marked for Sale vs Sold */}
         <Tabs value={activeTab} onValueChange={handleTabChange}>
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="active">Active ({activeAnimals.length})</TabsTrigger>
             <TabsTrigger value="marked-for-sale" className="relative">
-              Marked for Sale
+              For Sale
               {markedForSaleAnimals.length > 0 && (
                 <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
                   {markedForSaleAnimals.length}
@@ -583,6 +611,14 @@ export default function Livestock() {
               )}
             </TabsTrigger>
             <TabsTrigger value="sold">Sold ({soldAnimals.length})</TabsTrigger>
+            <TabsTrigger value="removed" className="relative">
+              Removed
+              {removedAnimals.length > 0 && (
+                <Badge variant="secondary" className="ml-1.5 h-5 px-1.5 text-xs">
+                  {removedAnimals.length}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-4 mt-4">
@@ -641,7 +677,7 @@ export default function Livestock() {
                       animal={animal} 
                       onFeed={handleFeed} 
                       onHealthRecord={handleHealthRecord} 
-                      onRemove={handleRemove} 
+                      onRemove={handleOpenRemoveDialog} 
                       onSell={handleOpenSellDialog}
                       onMarkForSale={handleOpenMarkForSaleDialog}
                       onCancelPlannedSale={handleCancelPlannedSale}
@@ -693,7 +729,7 @@ export default function Livestock() {
                       animal={animal} 
                       onFeed={handleFeed} 
                       onHealthRecord={handleHealthRecord} 
-                      onRemove={handleRemove} 
+                      onRemove={handleOpenRemoveDialog} 
                       onSell={handleOpenSellDialog}
                       onMarkForSale={handleOpenMarkForSaleDialog}
                       onCancelPlannedSale={handleCancelPlannedSale}
@@ -763,6 +799,60 @@ export default function Livestock() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="removed" className="space-y-4 mt-4">
+            {removedAnimals.length > 0 && (
+              <div className="card-elevated p-4">
+                <h3 className="font-semibold text-foreground mb-3">Removal Summary</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {["Dead", "Stolen", "Lost", "Other"].map((reason) => {
+                    const count = removedAnimals.filter(a => a.removalReason?.startsWith(reason)).length;
+                    return count > 0 ? (
+                      <div key={reason} className="text-center p-3 bg-muted/30 rounded-lg">
+                        <p className="text-sm text-muted-foreground">{reason}</p>
+                        <p className="text-xl font-semibold text-foreground">{count}</p>
+                      </div>
+                    ) : null;
+                  })}
+                  <div className="text-center p-3 bg-destructive/10 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Total Removed</p>
+                    <p className="text-xl font-semibold text-destructive">{removedAnimals.length}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="card-elevated p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input placeholder="Search removed animals..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {[1, 2, 3].map((i) => (<div key={i} className="h-48 bg-muted/50 animate-pulse rounded-xl" />))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredAnimals.map((animal) => (
+                  <div key={animal.id} onClick={() => handleAnimalClick(animal.id)} className="cursor-pointer">
+                    <LivestockCard animal={animal} isSold hideFinancials={isEmployee} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && filteredAnimals.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {removedAnimals.length === 0 
+                    ? "No removed animals. Animals removed from your herd will appear here for year-end reporting." 
+                    : "No removed animals found matching your search."}
+                </p>
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -809,6 +899,14 @@ export default function Livestock() {
         onOpenChange={setIsMarkForSaleDialogOpen}
         animalName={animals.find(a => a.id === selectedAnimalId)?.name || ""}
         onConfirm={handleMarkForSale}
+      />
+
+      {/* Remove Animal Dialog */}
+      <RemoveAnimalDialog
+        open={isRemoveDialogOpen}
+        onOpenChange={setIsRemoveDialogOpen}
+        animalName={animals.find(a => a.id === selectedAnimalId)?.name || ""}
+        onConfirm={handleRemoveAnimal}
       />
     </Layout>
   );
