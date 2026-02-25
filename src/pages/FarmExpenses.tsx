@@ -70,7 +70,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
 export default function FarmExpenses() {
   const { expenses, loading, addExpense, deleteExpense, getTotalByMonth, getTotalByCategory } = useFarmExpenses();
   const { farm } = useFarm();
-  const { isEmployee } = useEmployeePermissions();
+  const { isEmployee, isFarmOwner } = useEmployeePermissions();
   const { addItem: addInventoryItem } = useInventory();
   const { generateExpensesPdf } = useExpensesPdf();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -270,24 +270,26 @@ export default function FarmExpenses() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={() =>
-                generateExpensesPdf({
-                  farmName: farm?.name || "My Farm",
-                  selectedMonth,
-                  expenses: monthlyExpenses,
-                  employees,
-                  expensesByCategory,
-                  monthlyExpenseTotal,
-                  totalSalaries,
-                  grandTotal,
-                })
-              }
-            >
-              <FileDown className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
+            {isFarmOwner && (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  generateExpensesPdf({
+                    farmName: farm?.name || "My Farm",
+                    selectedMonth,
+                    expenses: monthlyExpenses,
+                    employees,
+                    expensesByCategory,
+                    monthlyExpenseTotal,
+                    totalSalaries,
+                    grandTotal,
+                  })
+                }
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                Export PDF
+              </Button>
+            )}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
