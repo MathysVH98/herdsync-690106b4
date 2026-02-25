@@ -31,6 +31,8 @@ export interface Animal {
   soldAt?: string | null;
   soldTo?: string | null;
   plannedSaleDate?: string | null;
+  removedAt?: string | null;
+  removalReason?: string | null;
 }
 
 interface LivestockCardProps {
@@ -73,9 +75,14 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
             <Badge variant="outline" className="text-xs font-mono">
               #{animal.tag}
             </Badge>
-            {isSold && (
+            {isSold && animal.soldAt && (
               <Badge variant="secondary" className="text-xs">
                 Sold
+              </Badge>
+            )}
+            {isSold && animal.removedAt && !animal.soldAt && (
+              <Badge variant="destructive" className="text-xs">
+                {animal.removalReason?.split(":")[0] || "Removed"}
               </Badge>
             )}
             {!isSold && animal.plannedSaleDate && (
@@ -99,6 +106,11 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
             {isSold && animal.soldAt && (
               <span className="text-xs text-muted-foreground">
                 Sold: {new Date(animal.soldAt).toLocaleDateString("en-ZA")}
+              </span>
+            )}
+            {isSold && animal.removedAt && !animal.soldAt && (
+              <span className="text-xs text-muted-foreground">
+                Removed: {new Date(animal.removedAt).toLocaleDateString("en-ZA")}
               </span>
             )}
           </div>
@@ -195,6 +207,12 @@ export function LivestockCard({ animal, onFeed, onHealthRecord, onRemove, onSell
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Sold To:</span>
             <span className="font-medium text-foreground">{animal.soldTo}</span>
+          </div>
+        )}
+        {isSold && animal.removedAt && animal.removalReason && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Reason:</span>
+            <span className="font-medium text-foreground">{animal.removalReason}</span>
           </div>
         )}
       </div>
