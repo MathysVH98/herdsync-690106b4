@@ -96,16 +96,18 @@
            province: f.province,
            created_at: f.created_at,
          })),
-         subscriptions: userSubscriptions.map(s => ({
-           id: s.id,
-           farm_id: s.farm_id,
-           farm_name: (s.farms as { name: string })?.name || "Unknown",
-           tier: s.tier,
-           status: s.status,
-           trial_ends_at: s.trial_ends_at,
-           current_period_end: s.current_period_end,
-           animal_limit: s.animal_limit,
-         })),
+          subscriptions: userSubscriptions.map(s => ({
+            id: s.id,
+            farm_id: s.farm_id,
+            farm_name: (s.farms as { name: string })?.name || "Unknown",
+            tier: s.tier,
+            status: s.status,
+            trial_ends_at: s.trial_ends_at,
+            current_period_end: s.current_period_end,
+            animal_limit: s.animal_limit,
+            payment_provider: s.payment_provider || null,
+            payment_reference: s.payment_reference || null,
+          })),
        };
      });
  

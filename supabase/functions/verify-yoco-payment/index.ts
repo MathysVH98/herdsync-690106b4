@@ -167,6 +167,35 @@ serve(async (req) => {
 
     console.log(`Subscription activated for farm ${farmId}: ${tier}`);
 
+    // Send admin notification
+    try {
+      const { data: userData } = await adminClient.auth.admin.getUserById(userId);
+      const userEmail = userData?.user?.email || "Unknown";
+
+      const { data: farmData } = await adminClient
+        .from("farms")
+        .select("name")
+        .eq("id", farmId)
+        .single();
+
+      await fetch(`${supabaseUrl}/functions/v1/notify-admin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+          event: "subscription_activated",
+          userEmail,
+          farmName: farmData?.name || "Unknown",
+          tier,
+          paymentProvider: "yoco",
+        }),
+      });
+    } catch (notifyError) {
+      console.error("Failed to send admin notification:", notifyError);
+    }
+
     return new Response(
       JSON.stringify({ success: true, tier }),
       {

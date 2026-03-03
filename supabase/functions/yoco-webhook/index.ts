@@ -119,6 +119,40 @@ serve(async (req) => {
       }
 
       console.log(`Subscription activated for farm ${farmId}: ${tier}`);
+
+      // Look up user email for notification
+      try {
+        const { data: userData } = await supabase.auth.admin.getUserById(userId);
+        const userEmail = userData?.user?.email || "Unknown";
+
+        // Look up farm name
+        const { data: farmData } = await supabase
+          .from("farms")
+          .select("name")
+          .eq("id", farmId)
+          .single();
+
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+        await fetch(`${supabaseUrl}/functions/v1/notify-admin`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${supabaseAnonKey}`,
+          },
+          body: JSON.stringify({
+            event: "payment_received",
+            userEmail,
+            farmName: farmData?.name || "Unknown",
+            tier,
+            paymentProvider: "yoco",
+          }),
+        });
+      } catch (notifyError) {
+        console.error("Failed to send admin notification:", notifyError);
+        // Don't fail the webhook for notification errors
+      }
     }
 
     // Acknowledge receipt of webhook
