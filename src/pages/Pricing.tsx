@@ -161,48 +161,67 @@ export default function Pricing() {
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const provider = searchParams.get("provider");
-    const checkoutId = searchParams.get("id"); // Yoco appends ?id=<checkoutId> to success URL
+    // Yoco may append ?id=<checkoutId> to success URL, also check localStorage fallback
+    const urlCheckoutId = searchParams.get("id");
+    const storedCheckoutId = localStorage.getItem("yoco_checkout_id");
+    const checkoutId = urlCheckoutId || storedCheckoutId;
     
     if (paymentStatus === "success") {
-      // If we have a Yoco checkout ID, verify the payment server-side
-      if (checkoutId) {
-        const verifyPayment = async () => {
-          try {
-            console.log("Verifying Yoco payment:", checkoutId);
-            const { data, error } = await supabase.functions.invoke("verify-yoco-payment", {
-              body: { checkoutId },
-            });
+      const verifyAndActivate = async () => {
+        if (checkoutId) {
+          // Verify the payment server-side with retry logic
+          let verified = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              console.log(`Verifying Yoco payment (attempt ${attempt}):`, checkoutId);
+              const { data, error } = await supabase.functions.invoke("verify-yoco-payment", {
+                body: { checkoutId },
+              });
 
-            if (error) {
-              console.error("Payment verification error:", error);
-            } else if (data?.success) {
-              console.log("Payment verified successfully, tier:", data.tier);
-            } else {
-              console.error("Payment verification failed:", data?.error);
+              if (error) {
+                console.error(`Verification attempt ${attempt} error:`, error);
+              } else if (data?.success) {
+                console.log("Payment verified successfully, tier:", data.tier);
+                verified = true;
+                break;
+              } else {
+                console.error(`Verification attempt ${attempt} failed:`, data?.error);
+              }
+            } catch (err) {
+              console.error(`Verification attempt ${attempt} exception:`, err);
             }
-          } catch (err) {
-            console.error("Payment verification exception:", err);
+            // Wait before retrying
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+            }
           }
-          
-          // Always refetch and show success since Yoco redirected them here
-          await refetchSubscription();
-          toast({
-            title: "Payment Successful!",
-            description: "Your subscription has been activated. Welcome to HerdSync!",
-          });
-          navigate("/pricing", { replace: true });
-        };
-        verifyPayment();
-      } else {
-        // Fallback for non-Yoco or missing checkout ID
-        refetchSubscription();
+
+          if (!verified) {
+            console.warn("Payment verification failed after 3 attempts - subscription may need manual activation");
+          }
+        }
+
+        // Clean up stored checkout data
+        localStorage.removeItem("yoco_checkout_id");
+        localStorage.removeItem("yoco_checkout_tier");
+        localStorage.removeItem("yoco_checkout_farm");
+        
+        // Always refetch and show success since Yoco redirected them here
+        await refetchSubscription();
         toast({
           title: "Payment Successful!",
-          description: "Your subscription is now active. Welcome to HerdSync!",
+          description: checkoutId 
+            ? "Your subscription has been activated. Welcome to HerdSync!"
+            : "Your payment was received. Your subscription will be activated shortly.",
         });
         navigate("/pricing", { replace: true });
-      }
+      };
+      verifyAndActivate();
     } else if (paymentStatus === "cancelled") {
+      // Clean up stored checkout data on cancel too
+      localStorage.removeItem("yoco_checkout_id");
+      localStorage.removeItem("yoco_checkout_tier");
+      localStorage.removeItem("yoco_checkout_farm");
       toast({
         title: "Payment Cancelled",
         description: "Your payment was cancelled. You can try again when ready.",
@@ -210,6 +229,9 @@ export default function Pricing() {
       });
       navigate("/pricing", { replace: true });
     } else if (paymentStatus === "failed") {
+      localStorage.removeItem("yoco_checkout_id");
+      localStorage.removeItem("yoco_checkout_tier");
+      localStorage.removeItem("yoco_checkout_farm");
       toast({
         title: "Payment Failed",
         description: "There was an issue processing your payment. Please try again.",
@@ -254,6 +276,13 @@ export default function Pricing() {
 
       if (error) throw error;
       if (!data.success) throw new Error(data.error);
+
+      // Store checkout ID in localStorage as fallback for verification
+      if (data.checkoutId) {
+        localStorage.setItem("yoco_checkout_id", data.checkoutId);
+        localStorage.setItem("yoco_checkout_tier", tier);
+        localStorage.setItem("yoco_checkout_farm", farm.id);
+      }
 
       // Redirect to Yoco checkout page
       if (data.redirectUrl) {
